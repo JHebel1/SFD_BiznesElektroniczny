@@ -1,5 +1,85 @@
-fn main() {
-    println!("Hello, world!");
+mod models;
+
+use std::collections::BTreeSet;
+use std::fs::File;
+use std::io::Write;
+use std::pin::Pin;
+use anyhow::Result;
+use regex::Regex;
+use reqwest::Client;
+use scraper::{Html, Selector};
+use crate::models::categories::{Category, CATEGORIES_DESTINATION, CATEGORIES_SOURCE_PATH};
+
+const USER_AGENT: &str = "Mozilla/5.0 (compatible; sfd-rust-scraper/0.1)";
+
+async fn categories() -> Result<()> {
+    let url = CATEGORIES_SOURCE_PATH;
+    let client = Client::builder()
+        .user_agent(USER_AGENT)
+        .build()?;
+    let html = client.get(url).send().await?.text().await?;
+    let document = Html::parse_document(&html);
+
+    let a_selector = Selector::parse("li.primary-menu__main-list-item > a").unwrap();
+
+    let category_href_re = Regex::new(r"-k\d+\.html$")?;
+    let id_re =  Regex::new(r"-k(\d+)\.html$")?;
+
+    println!("\nZnalezione kategorie:");
+
+    let mut seen = BTreeSet::new();
+
+    let mut roots: Vec<Category> = Vec::new();
+    for a in document.select(&a_selector) {
+        let href = match a.value().attr("href") {
+            Some(h) => h,
+            None => continue,
+        };
+
+        if !category_href_re.is_match(href) {
+            continue;
+        }
+
+        let text = clean_text(&a);
+
+        if text.is_empty() {
+            continue;
+        }
+
+        let full_url = if href.starts_with("http") {
+            href.to_string()
+        } else {
+            format!("{}{}", CATEGORIES_SOURCE_PATH , href)
+        };
+
+        let id = id_re
+            .captures(href)
+            .and_then(|c| c.get(1))
+            .map(|m| m.as_str().to_string());
+
+        if !seen.insert(full_url.clone()) {
+            continue;
+        }
+
+        let root = crawl_category(
+            id,
+            text.clone(),
+            full_url.clone(),
+            &client,
+            &category_href_re,
+            3,
+            0,
+            &mut seen,
+        ).await.await?;
+
+        root.print(0);
+        roots.push(root);
+    }
+    save_categories_csv(&roots, CATEGORIES_DESTINATION)?;
+
+    Ok(())
+}
+
 async fn crawl_category<'a>(
         id: Option<String>,
         name: String,
