@@ -1,4 +1,5 @@
 mod models;
+mod utils;
 
 use std::collections::BTreeSet;
 use std::fs::File;
@@ -196,16 +197,6 @@ fn save_categories_csv(categories: &[Category], path: &str) -> std::io::Result<(
     }
 
     Ok(())
-}
-
-fn clean_text(a: &scraper::ElementRef<'_>) -> String {
-    a.text()
-        .collect::<String>()
-        .trim()
-        .replace('\n', " ")
-        .replace(char::is_whitespace, " ")
-        .trim()
-        .to_string()
 }
 
 #[tokio::main]
