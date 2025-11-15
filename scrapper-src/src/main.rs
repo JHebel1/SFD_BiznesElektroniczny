@@ -9,8 +9,9 @@ use regex::Regex;
 use reqwest::Client;
 use scraper::{Html, Selector};
 use crate::models::categories::{Category, CATEGORIES_DESTINATION, CATEGORIES_SOURCE_PATH};
+use crate::utils::constants::USER_AGENT;
+use crate::utils::text::clean_text;
 
-const USER_AGENT: &str = "Mozilla/5.0 (compatible; sfd-rust-scraper/0.1)";
 
 async fn categories() -> Result<()> {
     let url = CATEGORIES_SOURCE_PATH;
