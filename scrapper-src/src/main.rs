@@ -170,4 +170,39 @@ async fn crawl_category<'a>(
         Ok(Category { id, name, url, childrens })
     })
 }
+fn save_categories_csv(categories: &[Category], path: &str) -> std::io::Result<()> {
+    let mut rows = Vec::new();
+
+    for cat in categories {
+        cat.flatten(None, 0, &mut rows);
+    }
+
+    let mut file = File::create(path)?;
+
+    writeln!(file, "id,name,url,parent_id,depth")?;
+
+    for row in rows {
+        writeln!(
+            file,
+            "{},{},{},{},{}",
+            row.id,
+            row.name,
+            row.url,
+            row.parent_id,
+            row.depth
+        )?;
+    }
+
+    Ok(())
+}
+
+fn clean_text(a: &scraper::ElementRef<'_>) -> String {
+    a.text()
+        .collect::<String>()
+        .trim()
+        .replace('\n', " ")
+        .replace(char::is_whitespace, " ")
+        .trim()
+        .to_string()
+}
 }
