@@ -1,5 +1,11 @@
 pub const CATEGORIES_DESTINATION: &str = "../../scrapper-results/categories.csv";
 pub const CATEGORIES_SOURCE_PATH: &str = "https://sklep.sfd.pl/";
+pub const REGEX_CATEGORY: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"-k\d+\.html$").unwrap()
+});
+pub const REGEX_CATEGORY_ID: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"-k(\d+)\.html$").unwrap()
+});
 
 #[derive(Debug)]
 pub struct CategoryRow {

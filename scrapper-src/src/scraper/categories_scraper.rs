@@ -19,9 +19,6 @@ pub(crate) async fn categories() -> anyhow::Result<()> {
 
     let a_selector = Selector::parse("li.primary-menu__main-list-item > a").unwrap();
 
-    let category_href_re = Regex::new(r"-k\d+\.html$")?;
-    let id_re =  Regex::new(r"-k(\d+)\.html$")?;
-
     println!("\nZnalezione kategorie:");
 
     let mut seen = BTreeSet::new();
@@ -33,7 +30,7 @@ pub(crate) async fn categories() -> anyhow::Result<()> {
             None => continue,
         };
 
-        if !category_href_re.is_match(href) {
+        if !REGEX_CATEGORY.is_match(href) {
             continue;
         }
 
@@ -49,7 +46,7 @@ pub(crate) async fn categories() -> anyhow::Result<()> {
             format!("{}{}", CATEGORIES_SOURCE_PATH , href)
         };
 
-        let id = id_re
+        let id = REGEX_CATEGORY_ID
             .captures(href)
             .and_then(|c| c.get(1))
             .map(|m| m.as_str().to_string());
@@ -63,7 +60,7 @@ pub(crate) async fn categories() -> anyhow::Result<()> {
             text.clone(),
             full_url.clone(),
             &client,
-            &category_href_re,
+            &REGEX_CATEGORY,
             3,
             0,
             &mut seen,
