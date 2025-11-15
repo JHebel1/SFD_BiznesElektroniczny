@@ -170,6 +170,7 @@ async fn crawl_category<'a>(
         Ok(Category { id, name, url, childrens })
     })
 }
+
 fn save_categories_csv(categories: &[Category], path: &str) -> std::io::Result<()> {
     let mut rows = Vec::new();
 
@@ -205,4 +206,8 @@ fn clean_text(a: &scraper::ElementRef<'_>) -> String {
         .trim()
         .to_string()
 }
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    categories().await
 }
