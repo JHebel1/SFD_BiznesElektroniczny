@@ -16,3 +16,11 @@ pub fn clean_text_html(a: &String) -> String {
         .collect::<Vec<_>>()
         .join(" ")
 }
+
+pub fn escape_csv_field(value: &str) -> String {
+    let mut v = value.replace('"', "\"\"");
+    if v.contains([',', '\n', '\r']) {
+        v = format!("\"{}\"", v);
+    }
+    v
+}
