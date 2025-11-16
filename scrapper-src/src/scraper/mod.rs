@@ -6,8 +6,12 @@ pub mod categories_scraper;
 pub mod brands_scraper;
 pub mod products_scraper;
 
-pub async fn run() -> anyhow::Result<()> {
-    //categories().await
-    //brands().await
-    products().await
+pub async fn run(args:Vec<String>) -> anyhow::Result<()> {
+    match args[0].as_str() {
+        "categories" => categories().await?,
+        "brands" => brands().await?,
+        "products" => products().await?,
+        _ => println!("Nieznana komenda")
+    }
+    Ok(())
 }
