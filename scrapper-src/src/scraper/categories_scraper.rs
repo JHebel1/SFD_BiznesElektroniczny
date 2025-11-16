@@ -1,19 +1,18 @@
 use std::collections::BTreeSet;
 use std::fs::File;
-use std::io::Write;
+use std::io::{BufRead, BufReader, Write};
 use std::pin::Pin;
 use regex::Regex;
+use anyhow::Result;
 use reqwest::Client;
 use scraper::{Html, Selector};
-use crate::models::categories::{Category, CATEGORIES_DESTINATION, CATEGORIES_SOURCE_PATH};
+use crate::models::categories::{Category, CategoryRow, CATEGORIES_DESTINATION, CATEGORIES_SOURCE_PATH, REGEX_CATEGORY, REGEX_CATEGORY_ID};
 use crate::utils::constants::USER_AGENT;
 use crate::utils::text::clean_text;
 
-pub(crate) async fn categories() -> anyhow::Result<()> {
+pub(crate) async fn categories() -> Result<()> {
     let url = CATEGORIES_SOURCE_PATH;
-    let client = Client::builder()
-        .user_agent(USER_AGENT)
-        .build()?;
+    let client = Client::builder().user_agent(USER_AGENT).build()?;
     let html = client.get(url).send().await?.text().await?;
     let document = Html::parse_document(&html);
 
@@ -163,6 +162,48 @@ async fn crawl_category<'a>(
 
         Ok(Category { id, name, url, childrens })
     })
+}
+
+pub fn load_categories(
+    path: &str,
+    target_depth: usize,
+) -> Result<Vec<CategoryRow>> {
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
+
+    let mut result = Vec::new();
+
+    for (i, line) in reader.lines().enumerate() {
+        let line = line?;
+        if i == 0 {
+            continue;
+        }
+
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+
+        let parts: Vec<&str> = line.split(',').collect();
+        if parts.len() < 5 {
+            continue;
+        }
+
+        let depth: usize = parts[4].parse().unwrap_or(0);
+        if depth != target_depth {
+            continue;
+        }
+
+        result.push(CategoryRow {
+            id: parts[0].to_string(),
+            name: parts[1].to_string(),
+            url: parts[2].to_string(),
+            parent_id: parts[3].to_string(),
+            depth,
+        });
+    }
+
+    Ok(result)
 }
 
 fn save_categories_csv(categories: &[Category], path: &str) -> std::io::Result<()> {
