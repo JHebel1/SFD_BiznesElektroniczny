@@ -5,7 +5,7 @@ To run the scraper, use:
 
 `cargo run -- {command}`
 or after building:
-`./scraper {command}`
+`./rust-scrapper {command}`
 
 ## `categories`
 Scrapes all product categories from the store and generates:
