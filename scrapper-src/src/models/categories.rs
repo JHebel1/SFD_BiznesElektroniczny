@@ -2,7 +2,7 @@ use regex::Regex;
 use once_cell::sync::Lazy;
 
 pub const CATEGORIES_DESTINATION: &str = "../../scrapper-results/categories.csv";
-pub const CATEGORIES_SOURCE_PATH: &str = "https://sklep.sfd.pl/";
+pub const CATEGORIES_SOURCE_PATH: &str = "https://sklep.sfd.pl";
 pub const REGEX_CATEGORY: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"-k\d+\.html$").unwrap()
 });
