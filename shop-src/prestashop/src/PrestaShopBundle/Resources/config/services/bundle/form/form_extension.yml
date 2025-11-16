@@ -1,0 +1,141 @@
+# This file will be removed in next version, do not add any service here
+services:
+  form.extension.comma_transformer:
+    alias: 'PrestaShopBundle\Form\Extension\CommaTransformerExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.type.extension.money:
+    alias: 'PrestaShopBundle\Form\Extension\CustomMoneyTypeExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.type.extension.resizable_text:
+    alias: 'PrestaShopBundle\Form\Extension\ResizableTextTypeExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.help_text:
+    alias: 'PrestaShopBundle\Form\Extension\HelpTextExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.hint_text:
+    alias: 'PrestaShopBundle\Form\Extension\HintTextExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.default_empty_data:
+    alias: 'PrestaShopBundle\Form\Extension\DefaultEmptyDataExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.data_list:
+    alias: 'PrestaShopBundle\Form\Extension\DataListExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.row_attributes:
+    alias: 'PrestaShopBundle\Form\Extension\RowAttributesExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.external_link:
+    alias: 'PrestaShopBundle\Form\Extension\ExternalLinkExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.alert:
+    alias: 'PrestaShopBundle\Form\Extension\AlertExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.label_options:
+    alias: 'PrestaShopBundle\Form\Extension\LabelOptionsExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.form_theme:
+    alias: 'PrestaShopBundle\Form\Extension\FormThemeExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.columns_number:
+    alias: 'PrestaShopBundle\Form\Extension\ColumnsNumberExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.multistore_configuration:
+    alias: 'PrestaShopBundle\Form\Extension\MultistoreConfigurationTypeExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.unit:
+    alias: 'PrestaShopBundle\Form\Extension\UnitTypeExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.multistore_dropdown:
+    alias: 'PrestaShopBundle\Form\Extension\MultistoreExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.downloadable_file:
+    alias: 'PrestaShopBundle\Form\Extension\DownloadFileExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.alerts_tracking_extension:
+    alias: 'PrestaShopBundle\Form\Extension\AlertsTrackingExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.modify_all_shops_extension:
+    alias: 'PrestaShopBundle\Form\Extension\ModifyAllShopsExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  form.extension.disabling_switch_extension:
+    alias: 'PrestaShopBundle\Form\Extension\DisablingSwitchExtension'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true

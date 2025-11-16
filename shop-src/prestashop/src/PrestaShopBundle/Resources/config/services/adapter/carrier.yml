@@ -1,0 +1,54 @@
+services:
+  _defaults:
+    public: true
+    autoconfigure: true
+    autowire: true
+
+  PrestaShop\PrestaShop\Adapter\Carrier\Repository\CarrierRepository:
+    autowire: true
+    arguments:
+      $connection: '@doctrine.dbal.default_connection'
+      $prefix: '%database_prefix%'
+
+  PrestaShop\PrestaShop\Adapter\Carrier\Repository\CarrierRangeRepository:
+    arguments:
+      - '@doctrine.dbal.default_connection'
+      - '%database_prefix%'
+
+  prestashop.adapter.carrier.carrier_thumbnail_logo_provider:
+    class: 'PrestaShop\PrestaShop\Adapter\Carrier\CarrierThumbnailLogoProvider'
+    arguments:
+      - '@prestashop.core.image.parser.image_tag_source_parser'
+
+  prestashop.adapter.carrier.command_handler.toggle_carrier_status:
+    class: 'PrestaShop\PrestaShop\Adapter\Carrier\CommandHandler\ToggleCarrierStatusHandler'
+
+  prestashop.adapter.carrier.command_handler.toggle_carrier_is_free_status:
+    class: 'PrestaShop\PrestaShop\Adapter\Carrier\CommandHandler\ToggleCarrierIsFreeHandler'
+
+  prestashop.adapter.carrier.command_handler.delete_carrier:
+    class: 'PrestaShop\PrestaShop\Adapter\Carrier\CommandHandler\DeleteCarrierHandler'
+
+  prestashop.adapter.carrier.command_handler.bulk_delete_carrier:
+    class: 'PrestaShop\PrestaShop\Adapter\Carrier\CommandHandler\BulkDeleteCarrierHandler'
+
+  prestashop.adapter.carrier.command_handler.bulk_toggle_carrier_status:
+    class: 'PrestaShop\PrestaShop\Adapter\Carrier\CommandHandler\BulkToggleCarrierStatusHandler'
+
+  PrestaShop\PrestaShop\Adapter\Carrier\CarrierModuleAdviceAlertChecker: ~
+
+  PrestaShop\PrestaShop\Adapter\Carrier\QueryHandler\GetCarrierForEditingHandler:
+
+  PrestaShop\PrestaShop\Adapter\Carrier\CommandHandler\AddCarrierHandler:
+
+  PrestaShop\PrestaShop\Adapter\Carrier\CommandHandler\EditCarrierHandler:
+
+  PrestaShop\PrestaShop\Adapter\Carrier\CommandHandler\SetCarrierTaxRuleGroupHandler:
+
+  PrestaShop\PrestaShop\Adapter\File\Uploader\CarrierLogoFileUploader:
+
+  PrestaShop\PrestaShop\Adapter\Carrier\Validate\CarrierValidator:
+
+  PrestaShop\PrestaShop\Adapter\Carrier\QueryHandler\GetCarrierRangesHandler:
+
+  PrestaShop\PrestaShop\Adapter\Carrier\CommandHandler\SetCarrierRangesHandler:

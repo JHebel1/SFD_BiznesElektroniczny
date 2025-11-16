@@ -1,0 +1,24 @@
+// Global custom styles
+
+// List
+.list-detail {
+  dd:not(:last-child) {
+    margin-bottom: 10px;
+  }
+}
+
+// Colors square for attributes color type
+.attributes-color-container {
+  display: block;
+  width: var(--#{$cdk}size-32);
+  height: var(--#{$cdk}size-32);
+  border: 1px solid var(--#{$cdk}primary-800);
+}
+
+// Color picker hex value text
+@at-root {
+  #mColorPickerInput {
+    font-family: var(--#{$cdk}font-family-primary);
+    color: var(--#{$cdk}primary-800);
+  }
+}

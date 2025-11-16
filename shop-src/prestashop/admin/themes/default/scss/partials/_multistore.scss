@@ -1,0 +1,192 @@
+.breadcrumb-multishop {
+  position: relative;
+  width: auto;
+
+  &::after {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    padding: 0 7px;
+    font-family: FontAwesome, sans-serif;
+    font-size: 14px;
+    line-height: 22px;
+    color: #fff;
+    pointer-events: none;
+    content: "\f0d7";
+    background-color: darken($secondary-color, 15%);
+    @include right(0);
+    @include border-radius(0 4px 4px 0);
+  }
+
+  select {
+    position: relative;
+    display: inline-block;
+    height: 22px;
+    margin: 0;
+    line-height: 20px;
+    color: #666;
+    background: #fff;
+    border: 1px solid darken($secondary-color, 15%);
+    outline: none;
+    -webkit-appearance: none;
+    @include padding(0, 5px, 0, 8px);
+    @include border-radius(4px);
+
+    &:focus {
+      box-shadow: 0 0 0 1px darken($secondary-color, 15%);
+    }
+  }
+}
+
+#header_shop {
+  padding: 0;
+
+  .dropdown {
+    display: inline-flex;
+    gap: var(--#{$cdk}size-8);
+    align-items: center;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    font-size: var(--#{$cdk}size-14);
+    line-height: 1;
+    color: var(--#{$cdk}header-text-color);
+
+    > span {
+      height: 100%;
+    }
+
+    .dropdown-toggle {
+      display: flex;
+      gap: var(--#{$cdk}size-8);
+      align-items: center;
+      height: 100%;
+      padding: var(--#{$cdk}size-8);
+      color: var(--#{$cdk}header-text-color);
+
+      &:hover,
+      &:focus {
+        color: var(--#{$cdk}header-text-color-hover);
+        text-decoration: none;
+      }
+    }
+  }
+
+  .dropdown-menu {
+    min-width: var(--#{$cdk}size-240);
+    max-width: var(--#{$cdk}size-320);
+
+    li {
+      &.active {
+        a {
+          color: var(--#{$cdk}white);
+        }
+      }
+
+      a {
+        color: var(--#{$cdk}primary-800);
+        white-space: normal;
+      }
+    }
+
+    .all-stores {
+      a {
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+    }
+
+    .group {
+      > a {
+        color: var(--#{$cdk}primary-500);
+
+        &::before {
+          @extend .material-icons;
+          font-size: var(--#{$cdk}size-14);
+          content: "\e1a0";
+        }
+      }
+    }
+
+    .shop {
+      display: flex;
+      justify-content: space-between;
+      padding-block: var(--#{$cdk}size-4);
+
+      &.active {
+        a {
+          &.link-shop {
+            color: var(--#{$cdk}white);
+
+            i {
+              color: currentcolor;
+            }
+          }
+        }
+      }
+
+      a {
+        &.link-shop {
+          margin: 0 0 0 auto;
+          border: 1px solid var(--#{$cdk}primary-800);
+        }
+      }
+    }
+  }
+
+  @include media-breakpoint-down(lg) {
+    .multistore-toggle {
+      > span {
+        display: none;
+      }
+    }
+  }
+}
+
+// stylelint-disable-next-line
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .custom-select select {
+    @include padding-right(30px);
+  }
+}
+
+
+.no-pointer-events .custom-select::after {
+  content: none;
+}
+
+.multishop-well {
+  @extend .row;
+  padding: 20px 20px 10px;
+  margin-bottom: 15px;
+  background-color: #faf8f0;
+  border: none;
+  @include border-left(3px solid #FBECCB);
+}
+
+@at-root .adminshop .bootstrap {
+  .table-responsive-row {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+
+    /* stylelint-disable */
+    .dropdown-menu {
+      position: fixed !important;
+      top: auto !important;
+      margin-right: 36px;
+    }
+    /* stylelint-enable */
+
+    table {
+      max-width: 100%;
+
+      @include media-breakpoint-down(sm) {
+        td::before {
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+    }
+  }
+}

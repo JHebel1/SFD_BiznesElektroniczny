@@ -1,0 +1,215 @@
+#carrier_wizard {
+  position: relative;
+  display: block;
+  padding: var(--#{$cdk}size-16);
+
+  .translatable-field {
+    color: var(--#{$cdk}primary-800);
+
+    li {
+      a {
+        color: var(--#{$cdk}primary-800);
+      }
+    }
+  }
+
+  .stepContainer {
+    position: relative;
+    display: block;
+    clear: both;
+
+    div.content {
+      display: block;
+      width: 100%;
+      clear: both;
+    }
+
+    .StepTitle {
+      position: relative;
+      display: block;
+      clear: both;
+    }
+  }
+
+  ul.anchor {
+    position: relative;
+    display: block;
+    float: left;
+    width: 100%;
+    padding: 0;
+    margin: 0 0 var(--#{$cdk}size-10);
+    clear: both;
+    list-style: none;
+
+    &.nbr_steps_4 {
+      li {
+        float: left;
+        width: 25%;
+      }
+    }
+
+    &.nbr_steps_5 {
+      li {
+        float: left;
+        width: 25%;
+      }
+    }
+  }
+
+  li {
+    position: relative;
+    display: block;
+    overflow: hidden;
+
+    a {
+      position: relative;
+      display: block;
+      height: var(--#{$cdk}size-32);
+      margin: 0 var(--#{$cdk}size-16) 0 0;
+      color: var(--#{$cdk}primary-500);
+      text-decoration: none;
+      outline-style: none;
+
+      .stepNumber {
+        position: relative;
+        float: left;
+        width: var(--#{$cdk}size-24);
+        height: var(--#{$cdk}size-32);
+        padding: 0 var(--#{$cdk}size-4);
+        margin-right: var(--#{$cdk}size-2);
+        font-size: var(--#{$cdk}size-30);
+        line-height: var(--#{$cdk}size-32);
+        color: var(--#{$cdk}white);
+        text-align: center;
+      }
+
+      .stepDesc {
+        position: relative;
+        display: table-cell;
+        height: var(--#{$cdk}size-32);
+        font-size: var(--#{$cdk}size-14);
+        line-height: var(--#{$cdk}size-14);
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      .chevron {
+        position: absolute;
+        top: 0;
+        right: calc(-1 * var(--#{$cdk}size-16));
+        border: var(--#{$cdk}size-16) solid transparent;
+        border-right: 0;
+        border-left: var(--#{$cdk}size-14) solid var(--#{$cdk}white);
+
+        &::after {
+          position: absolute;
+          top: calc(-1 * var(--#{$cdk}size-16));
+          right: var(--#{$cdk}size-2);
+          content: "";
+          border: var(--#{$cdk}size-16) solid transparent;
+          border-right: 0;
+          border-left: var(--#{$cdk}size-14) solid var(--#{$cdk}primary-500);
+        }
+      }
+    }
+
+    a.disabled {
+      color: var(--#{$cdk}primary-600);
+      background-color: var(--#{$cdk}primary-500);
+
+      .chevron::after {
+        border-left: var(--#{$cdk}size-14) solid var(--#{$cdk}primary-500);
+      }
+    }
+
+    a.selected {
+      color: var(--#{$cdk}primary-200);
+      cursor: text;
+      background-color: var(--#{$cdk}primary-800);
+
+      .chevron::after {
+        border-left: var(--#{$cdk}size-14) solid var(--#{$cdk}primary-800);
+      }
+    }
+
+    a.done {
+      color: var(--#{$cdk}white);
+      background-color: $brand-success;
+
+      .chevron::after {
+        border-left: var(--#{$cdk}size-14) solid $brand-success;
+      }
+    }
+  }
+
+  .loader {
+    display: none;
+  }
+
+  .msgBox {
+    position: relative;
+    display: none;
+    float: left;
+    padding: var(--#{$cdk}size-4);
+    margin: var(--#{$cdk}size-4) 0 0 var(--#{$cdk}size-4);
+    color: var(--#{$cdk}primary-600);
+    background-color: var(--#{$cdk}primary-200);
+    border: 1px solid var(--#{$cdk}amber-500);
+
+    .content {
+      float: left;
+      padding: 0;
+    }
+  }
+
+  #carrier_logo_block {
+    right: var(--#{$cdk}size-10);
+  }
+
+  .wizard_error {
+    @extend .alert;
+    @extend .alert-danger;
+  }
+
+  .range_inf td,
+  .range_sup td {
+    background-color: var(--#{$cdk}primary-500);
+  }
+
+  .range_type {
+    width: 220px;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .range_data {
+    width: 110px;
+  }
+
+  .range_sign {
+    width: var(--#{$cdk}size-18);
+    font-size: var(--#{$cdk}size-20);
+    text-align: center;
+  }
+
+  .range_data_new {
+    width: 110px;
+  }
+
+  table#zones_table {
+    width: auto;
+  }
+
+  .field_error {
+    border-color: $brand-danger;
+  }
+
+  .actionBar {
+    display: flex;
+    flex-direction: row-reverse;
+
+    a {
+      margin-right: var(--#{$cdk}size-10);
+    }
+  }
+}

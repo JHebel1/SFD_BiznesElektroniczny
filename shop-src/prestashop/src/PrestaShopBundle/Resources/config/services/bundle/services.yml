@@ -1,0 +1,122 @@
+parameters:
+  ps_root_dir: "%kernel.project_dir%/"
+  ps_config_dir: "%ps_root_dir%config"
+  translations_dir: "%kernel.project_dir%/translations"
+  themes_translations_dir: "%kernel.cache_dir%/themes"
+  modules_dir: "%kernel.project_dir%/modules"
+  themes_dir: "%kernel.project_dir%/themes"
+  translation_catalogues_export_dir: "%kernel.cache_dir%/export"
+  translations_catalogue_extract_excluded_dirs: [ 'vendor', 'lib', 'tests' ]
+
+services:
+  _defaults:
+    public: true
+
+  # Interfaced services to decorate
+  prestashop.core.admin.page_preference_interface:
+    class: PrestaShopBundle\Service\TransitionalBehavior\AdminPagePreferenceInterface
+  PrestaShopBundle\Service\DataProvider\Admin\ModuleInterface:
+    public: false
+
+  prestashop.core.admin.data_provider.module_interface:
+    alias: PrestaShopBundle\Service\DataProvider\Admin\ModuleInterface
+    public: true
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+
+  # URL generation
+  prestashop.core.admin.url_generator_factory:
+    class: PrestaShopBundle\Service\TransitionalBehavior\AdminUrlGeneratorFactory
+    arguments:
+      - "@router"
+
+  prestashop.core.admin.url_generator_legacy:
+    class: Symfony\Component\Routing\Generator\UrlGeneratorInterface
+    factory: [ "@prestashop.core.admin.url_generator_factory", forLegacy ]
+    arguments:
+      - "@prestashop.adapter.legacy.context"
+
+  prestashop.core.admin.url_generator:
+    class: Symfony\Component\Routing\Generator\UrlGeneratorInterface
+    factory: [ "@prestashop.core.admin.url_generator_factory", forSymfony ]
+
+  prestashop.database.naming_strategy:
+    class: PrestaShopBundle\Service\Database\DoctrineNamingStrategy
+    autowire: true
+    arguments:
+      $prefix: "%database_prefix%"
+
+  prestashop.service.translation:
+    class: PrestaShopBundle\Service\TranslationService
+    properties:
+      container: "@service_container"
+
+  # Interfaced services to decorate
+  prestashop.core.data_provider.stock_interface:
+    class: PrestaShopBundle\Service\DataProvider\StockInterface
+
+  # DISPATCHERS
+  prestashop.hook.dispatcher:
+    class: PrestaShop\PrestaShop\Adapter\Hook\HookDispatcher
+    arguments:
+      - '@request_stack'
+      - !tagged core.legacy.hook.subscriber
+      - '@prestashop.hooks_registry'
+      - '@=service("prestashop.adapter.environment").isDebug()'
+
+  prestashop.hook.finder:
+    class: PrestaShopBundle\Service\Hook\HookFinder
+
+  # EVENT HANDLER
+  prestashop.handler.log:
+    class: PrestaShopBundle\Service\Log\LogHandler
+    arguments:
+      - "@service_container"
+
+  # CSRF/XSS additional protection middleware
+  PrestaShopBundle\Service\DataProvider\UserProvider:
+    autowire: true
+    public: false
+
+  # Only used in legacy code, otherwise prefer using the Security service
+  prestashop.user_provider:
+    alias: PrestaShopBundle\Service\DataProvider\UserProvider
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  prestashop.router:
+    class: PrestaShopBundle\Service\Routing\Router
+    parent: 'router.default'
+    public: true
+    arguments:
+      $container: '@service_container'
+    calls:
+      - [ 'setUserTokenManager', [ '@PrestaShopBundle\Security\Admin\UserTokenManager' ] ]
+      - [ 'setAnonymousRouteProvider', [ '@PrestaShopBundle\Routing\AnonymousRouteProvider' ] ]
+
+  PrestaShopBundle\Service\Multistore\CustomizedConfigurationChecker:
+    arguments:
+      - "@prestashop.adapter.legacy.configuration"
+
+  PrestaShopBundle\DependencyInjection\RuntimeConstEnvVarProcessor:
+    public: false
+    tags: [ 'container.env_var_processor' ]
+
+  PrestaShopBundle\Security\Admin\SessionRenewer:
+    arguments:
+      $storage: "@security.csrf.token_storage"
+    autowire: true
+
+  PrestaShopBundle\Security\Admin\UserTokenManager:
+    autowire: true
+
+  PrestaShopBundle\Service\Database\TransactionManager:
+    public: false
+    autowire: true
+    arguments:
+      - '@doctrine.orm.entity_manager'
+
+  PrestaShop\PrestaShop\Core\Repository\TransactionManagerInterface: '@PrestaShopBundle\Service\Database\TransactionManager'

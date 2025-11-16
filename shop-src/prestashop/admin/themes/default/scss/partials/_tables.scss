@@ -1,0 +1,397 @@
+.table {
+  thead {
+    > tr > th {
+      font-weight: 400;
+      vertical-align: top;
+      border: none;
+      border-bottom: 2px solid var(--#{$cdk}primary-800);
+
+      .title_box {
+        display: block;
+        color: var(--#{$cdk}primary-800);
+        word-wrap: nowrap;
+        white-space: nowrap;
+
+        &.active {
+          font-weight: 700;
+        }
+
+        a {
+          text-decoration: none;
+
+          .active {
+            color: var(--#{$cdk}primary-800);
+          }
+        }
+
+        .label-tooltip {
+          padding: 0 var(--#{$cdk}size-4);
+          color: var(--#{$cdk}primary-700);
+          background-color: var(--#{$cdk}primary-200);
+          border: none;
+          border-bottom: solid var(--#{$cdk}size-1) var(--#{$cdk}primary-200);
+        }
+      }
+    }
+
+    > tr.filter > th {
+      vertical-align: middle;
+      background-color: var(--#{$cdk}primary-100);
+      border-color: var(--#{$cdk}primary-400);
+      border-width: var(--#{$cdk}size-1);
+
+      input[type="text"].filter,
+      input[type="password"].filter {
+        padding: var(--#{$cdk}size-4);
+        font-size: var(--#{$cdk}size-12);
+      }
+
+      select.filter {
+        padding: var(--#{$cdk}size-4) var(--#{$cdk}size-16) var(--#{$cdk}size-4) var(--#{$cdk}size-4);
+      }
+    }
+  }
+
+  input,
+  select {
+    margin: 0;
+
+    &.center {
+      margin: 0 auto;
+    }
+  }
+
+  tbody {
+    > tr > td {
+      padding: var(--#{$cdk}size-4) var(--#{$cdk}size-8);
+      font-size: 12px;
+      color: var(--#{$cdk}primary-800);
+      word-wrap: nowrap;
+      vertical-align: middle;
+      background-color: var(--#{$cdk}white);
+      border-top: none;
+      border-bottom: solid 1px var(--#{$cdk}primary-400);
+    }
+
+    > tr.odd > td {
+      background-color: var(--#{$cdk}primary-200);
+    }
+
+    > tr:hover > td {
+      background-color: var(--#{$cdk}primary-100);
+    }
+  }
+
+  td.center,
+  th.center {
+    text-align: center;
+  }
+
+  td.pointer {
+    cursor: pointer;
+  }
+
+  td.dragHandle {
+    .dragGroup {
+      position: relative;
+      width: var(--#{$cdk}size-80);
+      padding: var(--#{$cdk}size-4) var(--#{$cdk}size-4) var(--#{$cdk}size-4) var(--#{$cdk}size-28);
+      font-size: $icon-size-base;
+      text-align: center;
+      cursor: move;
+      transition: all 0.3s;
+
+      &:hover {
+        color: var(--#{$cdk}white);
+        background-color: var(--#{$cdk}primary-800);
+      }
+
+      &::before {
+        @extend .icon;
+        @extend .icon-arrows;
+        position: absolute;
+        top: 50%;
+        left: var(--#{$cdk}size-6);
+        display: block;
+        width: var(--#{$cdk}size-16);
+        height: var(--#{$cdk}size-16);
+        transform: translateY(-7px);
+      }
+
+      .positions {
+        display: inline-block;
+        width: var(--#{$cdk}size-44);
+        padding: 0 var(--#{$cdk}size-4);
+        color: var(--#{$cdk}primary-600);
+        background-color: var(--#{$cdk}primary-200);
+        border: solid 1px var(--#{$cdk}primary-400);
+      }
+    }
+  }
+
+  tr.actions {
+    @include text-align(right);
+  }
+
+  tr.parent {
+    td {
+      background-color: var(--#{$cdk}primary-300) !important;
+      border-bottom: 1px solid var(--#{$cdk}primary-500) !important;
+    }
+  }
+
+  td.actions {
+    @include text-align(right);
+    padding-right: var(--#{$cdk}size-4);
+  }
+
+  th.actions .btn {
+    margin-bottom: var(--#{$cdk}size-4) !important;
+  }
+
+  tr.myDragClass {
+    padding: var(--#{$cdk}size-10);
+    background-color: var(--#{$cdk}primary-300);
+
+    td {
+      color: var(--#{$cdk}white);
+      background-color: $brand-primary !important;
+      transform: translate(5px, 10px);
+    }
+  }
+
+  &.tableDnD td {
+    @include transition-property(all);
+    @include transition-duration(0.2s);
+    @include transition-timing-function(ease-out);
+  }
+
+  .btn-group-action,
+  .btn-group {
+    .btn {
+      white-space: nowrap;
+    }
+  }
+}
+
+tr.highlighted td {
+  color: var(--#{$cdk}white);
+  background-color: $brand-primary !important;
+}
+
+.bulk-actions {
+  @include margin(17px, 0, 0, 0);
+
+  ul i {
+    font-size: 14px;
+  }
+}
+
+.list-action-enable {
+  display: inline-block;
+  width: 30px;
+  font-size: 1.3em;
+  color: rgba(var(--#{$cdk}white), 0.8);
+  text-align: center;
+  @include border-radius(3px);
+
+  &.action-enabled {
+    color: $brand-success;
+  }
+
+  &.action-disabled {
+    color: $brand-danger;
+  }
+
+  &:hover {
+    color: var(--#{$cdk}primary-800);
+  }
+}
+
+.list-empty {
+  background-color: var(--#{$cdk}primary-200) !important;
+
+  .list-empty-msg {
+    display: block;
+    width: 50%;
+    margin: var(--#{$cdk}size-20) auto;
+    font-family: $headings-font-family;
+    font-size: var(--#{$cdk}size-16);
+    color: var(--#{$cdk}primary-800);
+    text-align: center;
+  }
+
+  .list-empty-icon {
+    display: block;
+    clear: both;
+    font-size: $icon-size-base * 6;
+    color: var(--#{$cdk}primary-400);
+  }
+}
+
+.date_range .input-group:first-child {
+  margin-bottom: 5px;
+}
+@media (max-width: $screen-sm-max) {
+  .table-responsive-row {
+    overflow: visible;
+
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+      display: block;
+    }
+
+    thead {
+      @include clearfix();
+
+      tr {
+        display: block;
+        float: left;
+        width: 70%;
+        margin-bottom: var(--#{$cdk}size-8);
+
+        &:first-child {
+          width: 30%;
+
+          th {
+            width: 100% !important;
+          }
+        }
+
+        &:first-child:last-child {
+          display: none;
+        }
+      }
+    }
+
+    th {
+      height: var(--#{$cdk}size-60);
+      text-align: center;
+      border-color: var(--#{$cdk}primary-400) !important;
+      border-width: var(--#{$cdk}size-1) !important;
+    }
+
+    th .fixed-width-md {
+      float: left;
+    }
+
+    th .fixed-width-sm {
+      width: 100% !important;
+    }
+
+    tr {
+      width: 100%;
+      margin-bottom: var(--#{$cdk}size-8);
+      border: 1px solid var(--#{$cdk}primary-400);
+
+      &:last-child {
+        border-bottom: 1px solid var(--#{$cdk}primary-400);
+      }
+    }
+
+    td {
+      position: relative;
+      width: 100% !important;
+      min-height: var(--#{$cdk}size-40);
+      padding-left: calc(30% + var(--#{$cdk}size-16)) !important;
+      overflow: hidden;
+      font-size: 1.15em !important;
+      line-height: 2em !important;
+      text-align: left !important;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      &:last-child {
+        padding: 0 !important;
+        text-align: right !important;
+        border: none;
+
+        &::before {
+          content: none !important;
+        }
+      }
+
+      .btn-group-action {
+        .dropdown-toggle {
+          display: none !important;
+        }
+
+        ul.dropdown-menu,
+        .dropdown-menu li {
+          position: relative;
+          z-index: 13;
+          display: inline-block;
+          float: right;
+          padding: 0;
+          margin: 0;
+          background: transparent;
+          border: none;
+          @include box-shadow(none);
+        }
+      }
+
+      .dropdown-menu li a,
+      a.btn,
+      button.btn {
+        z-index: 13;
+        display: inline-block;
+        float: right;
+        padding: 12px 10px !important;
+        margin: 0 !important;
+        margin-right: 5px;
+        font-weight: 700;
+        color: $brand-primary;
+        background-color: var(--#{$cdk}white);
+        border: none;
+        border-left: 1px solid #eaedef;
+        @include box-shadow(none);
+        @include border-radius(0);
+
+        i {
+          color: $brand-primary;
+        }
+
+        &:hover {
+          color: var(--#{$cdk}white);
+          background-color: $brand-primary;
+
+          i {
+            color: var(--#{$cdk}white);
+          }
+        }
+      }
+    }
+
+    .odd td {
+      background-color: var(--#{$cdk}primary-200);
+    }
+
+    td.row-selector {
+      display: none;
+    }
+
+    td::before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 30%;
+      height: 100%;
+      padding-right: var(--#{$cdk}size-16);
+      padding-left: var(--#{$cdk}size-8);
+      font-size: 0.9em;
+      font-style: italic;
+      color: var(--#{$cdk}primary-600);
+      text-align: right;
+      white-space: nowrap;
+      border-right: 1px solid var(--#{$cdk}primary-400);
+    }
+
+    .btn-group {
+      float: none !important;
+    }
+  }
+}

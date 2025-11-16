@@ -1,0 +1,19 @@
+services:
+  _defaults:
+    public: true
+
+  PrestaShop\Module\LinkList\Repository\LinkBlockRepository:
+    arguments:
+      $connection: '@doctrine.dbal.default_connection'
+      $dbPrefix: '%database_prefix%'
+      $languages: '@=service("prestashop.adapter.legacy.context").getLanguages(false, service("prestashop.adapter.shop.context").getContextShopID())'
+      $translator: '@translator'
+      $isMultiStoreUsed: '@=service("prestashop.adapter.feature.multistore").isUsed()'
+      $multiStoreContext: '@prestashop.adapter.shop.context'
+      $objectModelHandler: '@prestashop.module.link_block.adapter.object_model_handler'
+
+  prestashop.module.link_block.repository:
+    alias: PrestaShop\Module\LinkList\Repository\LinkBlockRepository
+
+  prestashop.module.link_block.adapter.object_model_handler:
+    class: 'PrestaShop\Module\LinkList\Adapter\ObjectModelHandler'

@@ -1,0 +1,120 @@
+/*
+ * jQuery Growl
+ * Copyright 2013 Kevin Sylvestre
+ * 1.1.4
+ */
+
+$namespace: "growl";
+$duration: 0.3s;
+
+#growls {
+  position: fixed;
+  z-index: 50000;
+
+  &.default {
+    top: 10px;
+    @include right(10px);
+  }
+
+  &.tl {
+    top: 10px;
+    @include left(10px);
+  }
+
+  &.tr {
+    top: 10px;
+    @include right(10px);
+  }
+
+  &.bl {
+    bottom: 10px;
+    @include left(10px);
+  }
+
+  &.br {
+    bottom: 10px;
+    @include right(10px);
+  }
+}
+
+.growl {
+  position: relative;
+  box-shadow: var(--#{$cdk}box-shadow-lg);
+  opacity: 1;
+  @include transition(all $duration ease-in-out);
+
+  &.#{$namespace}-incoming {
+    opacity: 0;
+  }
+
+  &.#{$namespace}-outgoing {
+    opacity: 0;
+  }
+
+  &.#{$namespace}-small {
+    width: 200px;
+    padding: 10px;
+    padding-right: 3rem;
+    margin: 10px;
+  }
+
+  &.#{$namespace}-medium {
+    width: 250px;
+    padding: 15px;
+    padding-right: 3rem;
+    margin: 10px;
+  }
+
+  &.#{$namespace}-large {
+    width: 300px;
+    padding: 15px;
+    padding-right: 3rem;
+    margin: 10px;
+  }
+
+  &.#{$namespace}-default {
+    color: var(--#{$cdk}primary-800);
+    background: var(--#{$cdk}blue-50);
+    border: 1px solid var(--#{$cdk}blue-500);
+  }
+
+  &.#{$namespace}-error {
+    color: var(--#{$cdk}primary-800);
+    background: var(--#{$cdk}red-50);
+    border: 1px solid var(--#{$cdk}red-500);
+  }
+
+  &.#{$namespace}-notice {
+    color: var(--#{$cdk}primary-800);
+    background: var(--#{$cdk}green-50);
+    border: 1px solid var(--#{$cdk}green-500);
+  }
+
+  &.#{$namespace}-warning {
+    color: var(--#{$cdk}primary-800);
+    background: var(--#{$cdk}yellow-50);
+    border: 1px solid var(--#{$cdk}yellow-500);
+  }
+
+  .#{$namespace}-close {
+    position: absolute;
+    top: 50%;
+    right: 1.125rem;
+    font-family: helvetica, verdana, sans-serif;
+    font-size: 1.6rem;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    transform: translateY(-50%);
+  }
+
+  .#{$namespace}-title {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .#{$namespace}-message {
+    font-size: 14px;
+    line-height: 18px;
+  }
+}

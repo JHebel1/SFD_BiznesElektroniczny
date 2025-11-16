@@ -1,0 +1,103 @@
+.btn {
+  display: inline-flex;
+  gap: var(--#{$cdk}size-4);
+  align-items: center;
+  justify-content: center;
+  white-space: normal;
+
+  i {
+    &.material-icons {
+      font-size: var(--#{$cdk}size-20);
+    }
+  }
+
+  // Default
+  &.btn-default {
+    &:focus,
+    &.focus {
+      color: var(--#{$cdk}primary-800);
+      background-color: var(--#{$cdk}primary-400);
+      border-color: var(--#{$cdk}primary-800);
+    }
+
+    &:hover {
+      color: var(--#{$cdk}primary-800);
+      background-color: var(--#{$cdk}primary-300);
+      border-color: var(--#{$cdk}primary-800);
+    }
+
+    &:active,
+    &.active,
+    .open > &.dropdown-toggle {
+      color: var(--#{$cdk}primary-800);
+      background-color: var(--#{$cdk}primary-300);
+      background-image: none;
+      border-color: var(--#{$cdk}primary-800);
+
+      &:hover,
+      &:focus,
+      &.focus {
+        color: var(--#{$cdk}primary-800);
+        background-color: var(--#{$cdk}primary-400);
+        border-color: var(--#{$cdk}primary-800);
+      }
+    }
+  }
+
+  // Secondary
+  &.btn-secondary {
+    @include button-variant($btn-secondary-color, $btn-secondary-bg, $btn-secondary-border);
+  }
+
+  // Group
+  &-group {
+    > .btn {
+      display: block;
+      height: 100%;
+    }
+
+    .btn {
+      &:not(.btn-default):not(.btn-link) {
+        &.dropdown-toggle {
+          &:not(:first-child){
+            margin-left: var(--#{$cdk}size-0);
+            border-left-color: var(--#{$cdk}white);
+          }
+        }
+      }
+
+      &-default {
+        &:not(:active),
+        &:not(.active){
+          &:hover {
+            color: var(--#{$cdk}primary-800);
+            background: var(--#{$cdk}primary-300);
+            border-color: var(--#{$cdk}primary-800);
+          }
+        }
+
+        &:not(.active){
+          &:active,
+          &:focus {
+            color: var(--#{$cdk}primary-800);
+            background: var(--#{$cdk}primary-400);
+            border-color: var(--#{$cdk}primary-800);
+          }
+        }
+
+        &.active {
+          color: var(--#{$cdk}white);
+          background: var(--#{$cdk}primary-800);
+          border-color: var(--#{$cdk}primary-800);
+
+          &:hover,
+          &:focus {
+            color: var(--#{$cdk}white);
+            background: var(--#{$cdk}primary-700);
+            border-color: var(--#{$cdk}primary-700);
+          }
+        }
+      }
+    }
+  }
+}

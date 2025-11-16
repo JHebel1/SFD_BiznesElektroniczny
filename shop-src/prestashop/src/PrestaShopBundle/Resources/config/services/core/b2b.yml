@@ -1,0 +1,15 @@
+services:
+  _defaults:
+    public: true
+
+  PrestaShop\PrestaShop\Core\B2b\B2bFeature:
+    public: false
+    arguments:
+      - '@prestashop.adapter.legacy.configuration'
+
+  prestashop.core.b2b.b2b_feature:
+    alias: 'PrestaShop\PrestaShop\Core\B2b\B2bFeature'
+    public: true
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0

@@ -1,0 +1,136 @@
+services:
+  _defaults:
+    public: true
+
+  PrestaShop\PrestaShop\Adapter\Module\CommandHandler\BulkToggleModuleStatusHandler:
+    autoconfigure: true
+    autowire: true
+
+  PrestaShop\PrestaShop\Adapter\Module\CommandHandler\UpdateModuleStatusHandler:
+    autoconfigure: true
+    autowire: true
+    public: false
+
+  PrestaShop\PrestaShop\Adapter\Module\CommandHandler\UploadModuleHandler:
+    autoconfigure: true
+    autowire: true
+    public: false
+
+  PrestaShop\PrestaShop\Adapter\Module\CommandHandler\InstallModuleHandler:
+    autoconfigure: true
+    autowire: true
+    public: false
+
+  PrestaShop\PrestaShop\Adapter\Module\CommandHandler\UninstallModuleHandler:
+    autoconfigure: true
+    autowire: true
+    public: false
+
+  PrestaShop\PrestaShop\Adapter\Module\CommandHandler\UpgradeModuleHandler:
+    autoconfigure: true
+    autowire: true
+    public: false
+
+  PrestaShop\PrestaShop\Adapter\Module\CommandHandler\BulkUninstallModuleHandler:
+    autoconfigure: true
+    autowire: true
+    public: false
+
+  PrestaShop\PrestaShop\Adapter\Module\CommandHandler\ResetModuleHandler:
+    autoconfigure: true
+    autowire: true
+    public: false
+
+  PrestaShop\PrestaShop\Adapter\Module\QueryHandler\GetModuleInfosHandler:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  PrestaShop\PrestaShop\Adapter\Module\Configuration\ModuleSelfConfigurator:
+    arguments:
+      - '@PrestaShop\PrestaShop\Core\Module\ModuleRepository'
+      - "@prestashop.adapter.legacy.configuration"
+      - "@doctrine.dbal.default_connection"
+      - "@filesystem"
+    lazy: true
+    public: false
+
+  prestashop.adapter.module.self_configurator:
+    alias: PrestaShop\PrestaShop\Adapter\Module\Configuration\ModuleSelfConfigurator
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  # MODULE TAB MANAGEMENT
+  prestashop.adapter.module.tab.register:
+    class: PrestaShop\PrestaShop\Adapter\Module\Tab\ModuleTabRegister
+    arguments:
+      - '@PrestaShopBundle\Entity\Repository\TabRepository'
+      - "@prestashop.core.admin.lang.repository"
+      - "@logger"
+      - "@translator"
+      - "@filesystem"
+      - "@=service('prestashop.adapter.legacy.context').getLanguages()"
+      - "@routing.loader.yml"
+
+  prestashop.adapter.module.tab.unregister:
+    class: PrestaShop\PrestaShop\Adapter\Module\Tab\ModuleTabUnregister
+    arguments:
+      - '@PrestaShopBundle\Entity\Repository\TabRepository'
+      - "@prestashop.core.admin.lang.repository"
+      - "@logger"
+      - "@translator"
+
+  prestashop.adapter.module.tab.eventsubscriber:
+    class: PrestaShop\PrestaShop\Adapter\Module\Tab\ModuleTabManagementSubscriber
+    arguments:
+      - "@prestashop.adapter.module.tab.register"
+      - "@prestashop.adapter.module.tab.unregister"
+    tags:
+      - { name: kernel.event_subscriber }
+
+  PrestaShop\PrestaShop\Adapter\Presenter\Module\ModulePresenter:
+    public: false
+    arguments: [ "@=service('prestashop.adapter.legacy.context').getContext().currency", "@prestashop.adapter.formatter.price" ]
+
+  prestashop.adapter.presenter.module:
+    alias: PrestaShop\PrestaShop\Adapter\Presenter\Module\ModulePresenter
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true
+
+  PrestaShop\PrestaShop\Adapter\Presenter\Module\PaymentModulesPresenter:
+    arguments:
+      - '@prestashop.adapter.presenter.module'
+      - '@prestashop.adapter.module.payment_module_provider'
+
+  prestashop.adapter.presenter.module.payment:
+    alias: PrestaShop\PrestaShop\Adapter\Presenter\Module\PaymentModulesPresenter
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+
+  prestashop.adapter.module.payment_module_provider:
+    class: PrestaShop\PrestaShop\Adapter\Module\PaymentModuleListProvider
+    arguments:
+      - '@PrestaShop\PrestaShop\Core\Module\ModuleRepository'
+      - '@prestashop.bundle.repository.module'
+      - '@=service("prestashop.adapter.legacy.context").getContext().shop.id'
+
+  prestashop.adapter.legacy.module:
+    class: PrestaShop\PrestaShop\Adapter\Module\Module
+
+  PrestaShop\PrestaShop\Adapter\Module\Repository\ModuleRepository:
+    public: false
+    arguments:
+      - !php/const _PS_ROOT_DIR_
+      - !php/const _PS_MODULE_DIR_
+
+  prestashop.adapter.module.repository.module_repository:
+    alias: 'PrestaShop\PrestaShop\Adapter\Module\Repository\ModuleRepository'
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+    public: true

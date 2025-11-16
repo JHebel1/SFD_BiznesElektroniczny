@@ -1,0 +1,11 @@
+services:
+  _defaults:
+    public: false
+
+  prestashop.adapter.legacy_db:
+    public: true
+    class: 'Db'
+    factory: [ 'Db', 'getInstance' ]
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 8.0

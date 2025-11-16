@@ -1,0 +1,33 @@
+services:
+  _defaults:
+    public: true
+
+  PrestaShopBundle\Service\Grid\ResponseBuilder:
+    public: false
+    arguments:
+      - '@prestashop.core.grid.filter.form_factory'
+      - '@router'
+      - '@prestashop.core.admin.admin_filter.repository'
+      - '@=service("prestashop.adapter.legacy.context").getContext().employee.id'
+      - '@=service("prestashop.adapter.legacy.context").getContext().shop.id'
+      - '@request_stack'
+
+  prestashop.bundle.grid.response_builder:
+    alias: PrestaShopBundle\Service\Grid\ResponseBuilder
+    public: true
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0
+
+  PrestaShopBundle\Service\Grid\ControllerResponseBuilder:
+    public: false
+    arguments:
+      - '@prestashop.core.grid.filter.form_factory'
+      - '@router'
+
+  prestashop.bundle.grid.controller_response_builder:
+    alias: PrestaShopBundle\Service\Grid\ControllerResponseBuilder
+    public: true
+    deprecated:
+      package: PrestaShop\PrestaShop
+      version: 9.0

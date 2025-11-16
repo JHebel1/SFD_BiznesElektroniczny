@@ -1,0 +1,186 @@
+html,
+body {
+  height: 100%;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--#{$cdk}font-family-primary);
+  font-size: $font-size-base;
+  font-weight: 400;
+  line-height: $line-height-base;
+  color: $text-color;
+  background-color: $body-bg;
+
+  &.mobile {
+    #content.bootstrap {
+      .page-head {
+        ul.page-breadcrumb {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+#main {
+  z-index: 10;
+  width: 100%;
+  padding: var(--#{$cdk}header-height) 0 var(--#{$cdk}size-60);
+}
+
+#content.bootstrap {
+  padding: var(--#{$cdk}page-head-height) var(--#{$cdk}size-16) 0 calc(var(--#{$cdk}sidebar-width) + var(--#{$cdk}size-16));
+
+  &.with-tabs {
+    padding-top: var(--#{$cdk}page-head-with-tabs-height);
+  }
+
+  form .alert {
+    clear: both;
+  }
+
+  .mobile & {
+    padding: var(--#{$cdk}page-head-with-tabs-height) var(--#{$cdk}size-16) var(--#{$cdk}size-16) var(--#{$cdk}size-16);
+    margin: 0;
+  }
+
+  .help-block {
+    font-style: italic;
+  }
+
+  .nav.nav-tabs li.active a {
+    z-index: 99;
+  }
+
+  // Links
+  a {
+    &[href] {
+      // Exclude classes that don't need underline
+      &:not(
+      .breadcrumb a,
+      .dropdown-menu a,
+      table a,
+      [class*="btn"],
+      [class*="dropdown"],
+      [class*="list-group-item"],
+      [class*="kpi-container"],
+      [class*="nav-link"]) {
+        text-decoration: underline;
+        text-underline-offset: var(--#{$cdk}size-2);
+        transition: var(--#{$cdk}default-transition);
+
+        &:hover {
+          text-underline-offset: var(--#{$cdk}size-4);
+        }
+      }
+    }
+  }
+}
+
+body.adminmodules {
+  #content.bootstrap {
+    padding-top: var(--#{$cdk}page-head-with-tabs-height);
+  }
+}
+
+.data-focus {
+  &.data-focus-primary {
+    color: var(--#{$cdk}white);
+    background-color: $brand-primary;
+    @include border-radius(10px);
+  }
+}
+
+#customer_part {
+  .customerCard {
+    &.selected-customer .panel {
+      color: $brand-success;
+      border: solid 2px $brand-success;
+    }
+  }
+}
+
+body.display-modal {
+  #content,
+  #main {
+    padding: 0;
+    margin: 0;
+    background: var(--#{$cdk}primary-200);
+  }
+}
+
+.bootstrap {
+  input[type="text"],
+  input[type="number"],
+  input[type="search"],
+  input[type="password"],
+  textarea,
+  select {
+    @extend .form-control;
+  }
+
+  .modal {
+    .alert {
+      h3 {
+        margin-top: 0;
+      }
+    }
+  }
+
+  .modal-footer {
+    .alert {
+      text-align: left;
+    }
+  }
+}
+
+#main.helpOpen {
+  float: left;
+  width: 70%;
+
+  @media (max-width: $screen-lg) {
+    width: 100%;
+  }
+}
+
+#help-container {
+  position: relative;
+  box-sizing: border-box;
+  float: right;
+  width: 30%;
+  padding: 0;
+  margin: calc(var(--#{$cdk}page-head-with-tabs-height) + var(--#{$cdk}header-height)) 0 0 0;
+  overflow-x: hidden;
+  background-color: var(--#{$cdk}white);
+
+  @media (max-width: $screen-lg) {
+    display: none;
+  }
+}
+
+.page-sidebar-closed {
+  &:not(.mobile) {
+    #content {
+      padding-left: calc(var(--#{$cdk}sidebar-width-collapse) + var(--#{$cdk}size-16));
+
+      .page-head {
+        padding-left: var(--#{$cdk}sidebar-width-collapse);
+      }
+    }
+  }
+}
+
+div[data-role="search-panels"] {
+  .panel {
+    a[target="_blank"]::after {
+      position: relative;
+      top: 2px;
+      left: 10px;
+      font-family: var(--#{$cdk}font-family-material-icons);
+      color: var(--#{$cdk}primary-500);
+      content: "\e89e";
+      opacity: 0.7;
+    }
+  }
+}
