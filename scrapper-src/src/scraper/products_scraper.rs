@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use anyhow::Result;
 use reqwest::Client;
 use scraper::{Html, Selector};
@@ -13,7 +14,7 @@ use regex::Regex;
 use crate::models::brands::REGEX_BRAND_ID;
 use crate::scraper::categories_scraper::load_categories;
 
-const MAX_NUMBER_OF_PRODUCTS: usize = 1;
+const MAX_NUMBER_OF_PRODUCTS: usize = 12;
 const TARGET_DEPTH: usize = 3;
 
 use crate::utils::constants::USER_AGENT;pub async fn products() -> Result<()> {
@@ -36,6 +37,11 @@ use crate::utils::constants::USER_AGENT;pub async fn products() -> Result<()> {
             products.push(product);
         }
     }
+
+    products.retain(|p| p.id.is_some());
+
+    let mut seen = HashSet::new();
+    products.retain(|p| seen.insert(p.id.clone().unwrap()));
 
     save_products_csv(&products, PRODUCTS_DESTINATION)?;
 
@@ -215,7 +221,7 @@ fn save_products_csv(products: &[Product], path: &str) -> std::io::Result<()> {
 
     writeln!(
         file,
-        "id;name;url;category_id;price;weight;unit_weight;brand_id;price_on_unit;currency;weight_on_unit;unit;img;description;recommended_serving;product_composition;reviews"
+        "id;name;url;category_id;price;weight;brand_id;price_on_unit;img;description;recommended_serving;product_composition;reviews"
     )?;
 
     for row in rows {
