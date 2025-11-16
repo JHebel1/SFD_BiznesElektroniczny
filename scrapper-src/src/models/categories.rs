@@ -1,3 +1,6 @@
+use regex::Regex;
+use once_cell::unsync::Lazy;
+
 pub const CATEGORIES_DESTINATION: &str = "../../scrapper-results/categories.csv";
 pub const CATEGORIES_SOURCE_PATH: &str = "https://sklep.sfd.pl/";
 pub const REGEX_CATEGORY: Lazy<Regex> = Lazy::new(|| {
