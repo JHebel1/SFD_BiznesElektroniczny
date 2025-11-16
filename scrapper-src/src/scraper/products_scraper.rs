@@ -1,18 +1,19 @@
-
 use anyhow::Result;
 use reqwest::Client;
 use scraper::{Html, Selector};
 
 use crate::models::categories::{CategoryRow, CATEGORIES_DESTINATION};
-use crate::models::products::{Product, PRODUCTS_DESTINATION};
+use crate::models::products::{Product, IMAGE_DESTINATION, PRODUCTS_DESTINATION};
 use crate::utils::text::{clean_text, clean_text_html, escape_csv_field};
 use std::fs::File;
+use tokio::fs as tokio_fs;
 use std::io::Write;
+use std::path::{Path, PathBuf};
 use regex::Regex;
 use crate::models::brands::REGEX_BRAND_ID;
 use crate::scraper::categories_scraper::load_categories;
 
-const MAX_NUMBER_OF_PRODUCTS: usize = 1;
+const MAX_NUMBER_OF_PRODUCTS: usize = 2;
 
 use crate::utils::constants::USER_AGENT;pub async fn products() -> Result<()> {
     let categories: Vec<CategoryRow> = load_categories(CATEGORIES_DESTINATION, MAX_NUMBER_OF_PRODUCTS)?;
@@ -180,6 +181,23 @@ async fn scrape_product_page(
         })
         .unwrap_or_default();
 
+    let gallery_selector = Selector::parse("div.product-gallery a.product-gallery__img").unwrap();
+
+    let img_url = document
+        .select(&gallery_selector)
+        .next()
+        .and_then(|a| a.value().attr("href"))
+        .map(|s| s.to_string());
+
+    let mut local_img_path = None;
+
+    if let Some(url) = &img_url {
+        match download_image(url, IMAGE_DESTINATION).await {
+            Ok(path) => local_img_path = Some(path),
+            Err(e) => eprintln!("Error downloading image {}: {}", url, e),
+        }
+    }
+
     let reviews = String::new();
 
     Ok(Product {
@@ -191,7 +209,7 @@ async fn scrape_product_page(
         weight,
         brand_id,
         price_on_unit: price_on_unit.clone(),
-        img,
+        img: local_img_path,
         description: escape_csv_field(&*description),
         recommended_serving: escape_csv_field(&*recommended_serving),
         product_composition: escape_csv_field(&*product_composition),
@@ -233,4 +251,23 @@ fn save_products_csv(products: &[Product], path: &str) -> std::io::Result<()> {
     }
 
     Ok(())
+}
+
+pub async fn download_image(url: &str, dest_dir: &str) -> anyhow::Result<String> {
+    let client = Client::new();
+
+    let resp = client.get(url).send().await?.error_for_status()?;
+    let bytes = resp.bytes().await?;
+
+    let filename = url.split('/').last().unwrap_or("image.jpg");
+
+    let path: PathBuf = Path::new(dest_dir).join(filename);
+
+    if let Some(parent) = path.parent() {
+        tokio_fs::create_dir_all(parent).await?;
+    }
+
+    tokio_fs::write(&path, &bytes).await?;
+
+    Ok(path.to_string_lossy().to_string())
 }

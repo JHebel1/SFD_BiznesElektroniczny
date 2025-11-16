@@ -1,4 +1,5 @@
 pub const PRODUCTS_DESTINATION: &str = "../../scrapper-results/product.csv";
+pub const IMAGE_DESTINATION: &str = "../../scrapper-results/images";
 
 #[derive(Debug)]
 pub struct ProductRow {
