@@ -13,10 +13,11 @@ use regex::Regex;
 use crate::models::brands::REGEX_BRAND_ID;
 use crate::scraper::categories_scraper::load_categories;
 
-const MAX_NUMBER_OF_PRODUCTS: usize = 2;
+const MAX_NUMBER_OF_PRODUCTS: usize = 1;
+const TARGET_DEPTH: usize = 3;
 
 use crate::utils::constants::USER_AGENT;pub async fn products() -> Result<()> {
-    let categories: Vec<CategoryRow> = load_categories(CATEGORIES_DESTINATION, MAX_NUMBER_OF_PRODUCTS)?;
+    let categories: Vec<CategoryRow> = load_categories(CATEGORIES_DESTINATION, TARGET_DEPTH)?;
 
     let client = Client::builder()
         .user_agent(USER_AGENT)
@@ -27,7 +28,7 @@ use crate::utils::constants::USER_AGENT;pub async fn products() -> Result<()> {
     for cat in &categories {
         println!("Kategorie: {} ({})", cat.name, cat.url);
 
-        let product_links = collect_product_links_for_category(&client, &cat.url, 5).await?;
+        let product_links = collect_product_links_for_category(&client, &cat.url, MAX_NUMBER_OF_PRODUCTS).await?;
 
         for product_url in product_links {
             let product = scrape_product_page(&client, &product_url, cat).await?;
@@ -54,6 +55,7 @@ async fn collect_product_links_for_category(
 
     let mut links = Vec::new();
 
+    println!("{}", links.len());
     for tile in document.select(&product_tile_selector) {
         if links.len() >= max_products {
             break;
@@ -109,7 +111,7 @@ async fn scrape_product_page(
         })
         .unwrap_or_default();
 
-    let name_selector = Selector::parse("h1.product-name").unwrap();
+    let name_selector = Selector::parse("span.product-name__name").unwrap();
     let name = document
         .select(&name_selector)
         .next()
@@ -136,20 +138,6 @@ async fn scrape_product_page(
         .next()
         .map(|el| clean_text(&el))
         .unwrap_or_default();
-
-
-    let img_selector = Selector::parse(".product-image img").unwrap();
-    let img = document
-        .select(&img_selector)
-        .next()
-        .and_then(|img_el| img_el.value().attr("src"))
-        .map(|src| {
-            if src.starts_with("http") {
-                src.to_string()
-            } else {
-                format!("https://sklep.sfd.pl{src}")
-            }
-        });
 
     let description_selector = Selector::parse("#opis").unwrap();
     let description = document
@@ -227,13 +215,13 @@ fn save_products_csv(products: &[Product], path: &str) -> std::io::Result<()> {
 
     writeln!(
         file,
-        "id,name,url,category_id,price,weight,unit_weight,brand_id,price_on_unit,currency,weight_on_unit,unit,img,description,recommended_serving,product_composition,reviews"
+        "id;name;url;category_id;price;weight;unit_weight;brand_id;price_on_unit;currency;weight_on_unit;unit;img;description;recommended_serving;product_composition;reviews"
     )?;
 
     for row in rows {
         writeln!(
             file,
-            "{},{},{},{},{},{},{},{},{},{},{},{},{}",
+            "{};{};{};{};{};{};{};{};{};{};{};{};{}",
             row.id,
             row.name,
             row.url,
