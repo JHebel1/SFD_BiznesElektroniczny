@@ -26,7 +26,7 @@
 
 namespace PrestaShopBundle\Entity\Repository;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Connection;
 use PrestaShop\PrestaShop\Adapter\LegacyContext as ContextAdapter;
 use PrestaShopBundle\Exception\NotImplementedException;
 use RuntimeException;
@@ -102,9 +102,9 @@ class ManufacturerRepository
 
         $statement->bindValue('shop_id', $this->shopId);
 
-        $result = $statement->executeQuery();
+        $statement->execute();
 
-        $rows = $result->fetchAllAssociative();
+        $rows = $statement->fetchAll();
 
         return $this->castNumericToInt($rows);
     }

@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Core\Domain\Language\Exception;
 
-use Exception;
 use PrestaShop\PrestaShop\Core\Domain\Language\ValueObject\LanguageId;
 
 /**
@@ -43,7 +42,7 @@ class LanguageNotFoundException extends LanguageException
      * @param LanguageId $languageId
      * @param string $message
      * @param int $code
-     * @param Exception|null $previous
+     * @param \Exception|null $previous
      */
     public function __construct(LanguageId $languageId, $message = '', $code = 0, $previous = null)
     {

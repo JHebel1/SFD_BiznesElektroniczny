@@ -26,9 +26,9 @@
 var importCancelRequest = false;
 var importContinueRequest = false;
 
-$(function(){
+$(document).ready(function(){
 
-	$('#saveImportMatchs').off('click').on('click', function(){
+	$('#saveImportMatchs').unbind('click').click(function(){
 
 	var newImportMatchs = $('#newImportMatchs').val();
 	if (newImportMatchs == '')
@@ -45,7 +45,7 @@ $(function(){
 	       async: false,
 	       cache: false,
 	       dataType : "json",
-	       data: 'ajax=1&action=saveImportMatchs&controller=AdminImport&token=' + token + '&skip=' + $('input[name=skip]').val() + '&newImportMatchs=' + newImportMatchs + matchFields,
+	       data: 'ajax=1&action=saveImportMatchs&tab=AdminImport&token=' + token + '&skip=' + $('input[name=skip]').val() + '&newImportMatchs=' + newImportMatchs + matchFields,
 	       success: function(jsonData)
 	       {
 				$('#valueImportMatchs').append('<option id="'+jsonData.id+'" value="'+matchFields+'" selected="selected">'+newImportMatchs+'</option>');
@@ -60,7 +60,7 @@ $(function(){
 	}
 	});
 
-	$('#loadImportMatchs').off('click').on('click', function(){
+	$('#loadImportMatchs').unbind('click').click(function(){
 
 		var idToLoad = $('select#valueImportMatchs option:selected').attr('id');
 		$.ajax({
@@ -69,13 +69,13 @@ $(function(){
 		       async: false,
 		       cache: false,
 		       dataType : "json",
-		       data: 'ajax=1&action=loadImportMatchs&controller=AdminImport&token=' + token + '&idImportMatchs=' + idToLoad,
+		       data: 'ajax=1&action=loadImportMatchs&tab=AdminImport&token=' + token + '&idImportMatchs=' + idToLoad,
 		       success: function(jsonData)
 		       {
 					var matchs = jsonData.matchs.split('|')
 					$('input[name=skip]').val(jsonData.skip);
 					for (i=0;i<matchs.length;i++)
-						$('#type_value\\['+i+'\\]').val(matchs[i]).attr('selected',true).trigger("chosen:updated");
+						$('#type_value\\['+i+'\\]').val(matchs[i]).attr('selected',true);
 		       },
 		      error: function(XMLHttpRequest, textStatus, errorThrown)
 		       {
@@ -85,7 +85,7 @@ $(function(){
 		   });
 	});
 
-	$('#deleteImportMatchs').off('click').on('click', function(){
+	$('#deleteImportMatchs').unbind('click').click(function(){
 
 		var idToDelete = $('select#valueImportMatchs option:selected').attr('id');
 		$.ajax({
@@ -94,7 +94,7 @@ $(function(){
 		       async: false,
 		       cache: false,
 		       dataType : "json",
-		       data: 'ajax=1&action=deleteImportMatchs&controller=AdminImport&token=' + token + '&idImportMatchs=' + idToDelete ,
+		       data: 'ajax=1&action=deleteImportMatchs&tab=AdminImport&token=' + token + '&idImportMatchs=' + idToDelete ,
 		       success: function(jsonData)
 		       {
 					$('select#valueImportMatchs option[id=\''+idToDelete+'\']').remove();
@@ -109,7 +109,7 @@ $(function(){
 
 	});
 
-	$('#import_stop_button').off('click').on('click', function(){
+	$('#import_stop_button').unbind('click').click(function(){
 		if (importContinueRequest) {
 			$('#importProgress').modal('hide');
 			importContinueRequest = false;
@@ -124,7 +124,7 @@ $(function(){
 		}
 	});
 
-	$('#import_continue_button').off('click').on('click', function(){
+	$('#import_continue_button').unbind('click').click(function(){
 		$('#import_continue_button').hide();
 		importContinueRequest = false;
 		$('#import_progress_div').show();
@@ -145,8 +145,8 @@ function validateImportation(mandatory)
 	toggle(getE('required_column'), false);
     for (i = 0; elem = getE('type_value['+i+']'); i++)
     {
-    if ($.inArray(elem.options[elem.selectedIndex].value, seted_value) !== -1)
-    {
+		if (seted_value[elem.options[elem.selectedIndex].value])
+		{
 			scroll(0,0);
 			toggle(getE('error_duplicate_type'), true);
 			return false;
@@ -186,7 +186,7 @@ function importNow(offset, limit, total, validateOnly, crossStepsVariables, more
     var startingTime = new Date().getTime();
     $.ajax({
        type: 'POST',
-       url: 'index.php?ajax=1&action=import&controller=AdminImport&offset='+offset+'&limit='+limit+'&token='+token+(validateOnly?'&validateOnly=1':'')+((moreStep>0)?'&moreStep='+moreStep:''),
+       url: 'index.php?ajax=1&action=import&tab=AdminImport&offset='+offset+'&limit='+limit+'&token='+token+(validateOnly?'&validateOnly=1':'')+((moreStep>0)?'&moreStep='+moreStep:''),
        cache: false,
        dataType: "json",
        data: data,
@@ -361,13 +361,8 @@ function updateProgression(currentPosition, total, nextPosition, finish, moreSte
 			$('#import_progressbar_next').width((progressionNext-progressionDone)+'%');
 		} else {
 			$('#import_progressbar_next').width('0%');
-      if (progressionDone === 100) {
-        $('#import_progressbar_done').width('100%');
-        $('#import_progressbar_done2').width('0%');
-      } else {
-        $('#import_progressbar_done').width((100-progressionDone)+'%');
-        $('#import_progressbar_done2').width(progressionDone+'%');
-      }
+			$('#import_progressbar_done').width((100-progressionDone)+'%');
+			$('#import_progressbar_done2').width(progressionDone+'%');
 			if (moreStepLabel) $('#import_progressbar_done2 span').html(moreStepLabel);
 		}
 	}

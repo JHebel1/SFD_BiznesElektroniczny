@@ -17,18 +17,19 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-declare(strict_types=1);
 
 namespace PrestaShop\Module\Mbo\Tab;
 
 class TabCollectionDecoderXml
 {
-    /**
-     * @var string
-     */
-    protected $content;
+    private $content;
 
-    public function __construct(string $content)
+    /**
+     * Constructor.
+     *
+     * @param string $content
+     */
+    public function __construct($content)
     {
         $this->content = $content;
     }
@@ -36,7 +37,7 @@ class TabCollectionDecoderXml
     /**
      * @return array
      */
-    public function toArray(): array
+    public function toArray()
     {
         $data = [];
 

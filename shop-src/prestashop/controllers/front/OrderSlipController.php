@@ -25,13 +25,9 @@
  */
 class OrderSlipControllerCore extends FrontController
 {
-    /** @var bool */
     public $auth = true;
-    /** @var string */
     public $php_self = 'order-slip';
-    /** @var string */
     public $authRedirection = 'order-slip';
-    /** @var bool */
     public $ssl = true;
 
     /**
@@ -39,24 +35,30 @@ class OrderSlipControllerCore extends FrontController
      *
      * @see FrontController::initContent()
      */
-    public function initContent(): void
+    public function initContent()
     {
         if (Configuration::isCatalogMode()) {
             Tools::redirect('index.php');
         }
 
+        $credit_slips = $this->getTemplateVarCreditSlips();
+
+        if (count($credit_slips) <= 0) {
+            $this->warning[] = $this->trans('You have not received any credit slips.', [], 'Shop.Notifications.Warning');
+        }
+
         $this->context->smarty->assign([
-            'credit_slips' => $this->getTemplateVarCreditSlips(),
+            'credit_slips' => $credit_slips,
         ]);
 
         parent::initContent();
         $this->setTemplate('customer/order-slip');
     }
 
-    public function getTemplateVarCreditSlips(): array
+    public function getTemplateVarCreditSlips()
     {
         $credit_slips = [];
-        $orders_slip = OrderSlip::getOrdersSlip((int) $this->context->cookie->id_customer);
+        $orders_slip = OrderSlip::getOrdersSlip(((int) $this->context->cookie->id_customer));
 
         foreach ($orders_slip as $order_slip) {
             $order = new Order($order_slip['id_order']);
@@ -64,15 +66,15 @@ class OrderSlipControllerCore extends FrontController
             $credit_slips[$order_slip['id_order_slip']]['credit_slip_number'] = $this->trans('#%id%', ['%id%' => $order_slip['id_order_slip']], 'Shop.Theme.Customeraccount');
             $credit_slips[$order_slip['id_order_slip']]['order_number'] = $this->trans('#%id%', ['%id%' => $order_slip['id_order']], 'Shop.Theme.Customeraccount');
             $credit_slips[$order_slip['id_order_slip']]['order_reference'] = $order->reference;
-            $credit_slips[$order_slip['id_order_slip']]['credit_slip_date'] = Tools::displayDate($order_slip['date_add'], false);
-            $credit_slips[$order_slip['id_order_slip']]['url'] = $this->context->link->getPageLink('pdf-order-slip', null, null, 'id_order_slip=' . (int) $order_slip['id_order_slip']);
-            $credit_slips[$order_slip['id_order_slip']]['order_url_details'] = $this->context->link->getPageLink('order-detail', null, null, 'id_order=' . (int) $order_slip['id_order']);
+            $credit_slips[$order_slip['id_order_slip']]['credit_slip_date'] = Tools::displayDate($order_slip['date_add'], null, false);
+            $credit_slips[$order_slip['id_order_slip']]['url'] = $this->context->link->getPageLink('pdf-order-slip', true, null, 'id_order_slip=' . (int) $order_slip['id_order_slip']);
+            $credit_slips[$order_slip['id_order_slip']]['order_url_details'] = $this->context->link->getPageLink('order-detail', true, null, 'id_order=' . (int) $order_slip['id_order']);
         }
 
         return $credit_slips;
     }
 
-    public function getBreadcrumbLinks(): array
+    public function getBreadcrumbLinks()
     {
         $breadcrumb = parent::getBreadcrumbLinks();
 

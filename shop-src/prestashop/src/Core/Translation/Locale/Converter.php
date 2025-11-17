@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -49,7 +50,7 @@ final class Converter
     }
 
     /**
-     * @param string $locale the locale (like "fr-FR")
+     * @var string the locale (like "fr-FR")
      *
      * @return string|bool the legacy PrestaShop locale (like "fr")
      *

@@ -31,77 +31,72 @@ namespace PrestaShop\PrestaShop\Core\Form\IdentifiableObject\CommandBuilder\Prod
 use PrestaShop\PrestaShop\Core\Domain\Product\FeatureValue\Command\RemoveAllFeatureValuesFromProductCommand;
 use PrestaShop\PrestaShop\Core\Domain\Product\FeatureValue\Command\SetProductFeatureValuesCommand;
 use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\ProductId;
-use PrestaShop\PrestaShop\Core\Domain\Shop\ValueObject\ShopConstraint;
 
 final class FeatureValuesCommandsBuilder implements ProductCommandsBuilderInterface
 {
     /**
      * {@inheritDoc}
      */
-    public function buildCommands(ProductId $productId, array $formData, ShopConstraint $singleShopConstraint): array
+    public function buildCommands(ProductId $productId, array $formData): array
     {
-        if (!isset($formData['details']['features']['feature_collection'])) {
+        if (!isset($formData['basic']['features']['feature_values'])) {
             return [];
         }
 
-        $featuresCollection = $formData['details']['features']['feature_collection'];
-        if (empty($featuresCollection)) {
+        $featureValuesData = $formData['basic']['features']['feature_values'];
+        if (empty($featureValuesData)) {
             return [new RemoveAllFeatureValuesFromProductCommand($productId->getValue())];
         }
 
         $command = new SetProductFeatureValuesCommand(
             $productId->getValue(),
-            $this->formatFeatureValues($featuresCollection)
+            $this->formatFeatureValues($featureValuesData)
         );
 
         return [$command];
     }
 
     /**
-     * @param array $featuresCollection
+     * @param array $featureValuesData
      *
      * @return array
      */
-    private function formatFeatureValues(array $featuresCollection): array
+    private function formatFeatureValues(array $featureValuesData): array
     {
         $featureValues = [];
-        foreach ($featuresCollection as $featureData) {
-            if (empty($featureData['feature_id']) || empty($featureData['feature_values'])) {
+        foreach ($featureValuesData as $featureValueDatum) {
+            if (empty($featureValueDatum['feature_id'])) {
                 continue;
             }
 
-            $featureId = (int) $featureData['feature_id'];
-            foreach ($featureData['feature_values'] as $featureValueData) {
-                $formattedFeature = [
-                    'feature_id' => $featureId,
-                ];
-
-                if (isset($featureValueData['feature_value_id'])) {
-                    $formattedFeature['feature_value_id'] = (int) $featureValueData['feature_value_id'];
+            $formattedFeature = ['feature_id' => (int) $featureValueDatum['feature_id']];
+            if ($this->hasCustomValues($featureValueDatum)) {
+                $formattedFeature['custom_values'] = $featureValueDatum['custom_value'];
+                if (!empty($featureValueDatum['custom_value_id'])) {
+                    $formattedFeature['feature_value_id'] = (int) $featureValueDatum['custom_value_id'];
                 }
-                if ($this->hasCustomValues($featureValueData)) {
-                    $formattedFeature['custom_values'] = $featureValueData['custom_value'];
-                }
-
-                $featureValues[] = $formattedFeature;
+            } elseif (!empty($featureValueDatum['feature_value_id'])) {
+                $formattedFeature['feature_value_id'] = (int) $featureValueDatum['feature_value_id'];
             }
+
+            $featureValues[] = $formattedFeature;
         }
 
         return $featureValues;
     }
 
     /**
-     * @param array $featureValueData
+     * @param array $featureValueDatum
      *
      * @return bool
      */
-    private function hasCustomValues(array $featureValueData): bool
+    private function hasCustomValues(array $featureValueDatum): bool
     {
-        if (empty($featureValueData['custom_value']) || empty($featureValueData['is_custom'])) {
+        if (empty($featureValueDatum['custom_value'])) {
             return false;
         }
 
-        foreach ($featureValueData['custom_value'] as $localizedValue) {
+        foreach ($featureValueDatum['custom_value'] as $localizedValue) {
             if (!empty($localizedValue)) {
                 return true;
             }

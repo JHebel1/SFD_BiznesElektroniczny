@@ -26,84 +26,101 @@
 
 namespace PrestaShopBundle\Controller\Admin\Configure\ShopParameters;
 
+use PrestaShop\PrestaShop\Adapter\Tools;
 use PrestaShop\PrestaShop\Core\Domain\Tab\Command\UpdateTabStatusByClassNameCommand;
-use PrestaShop\PrestaShop\Core\Form\FormHandlerInterface;
-use PrestaShopBundle\Controller\Admin\PrestaShopAdminController;
-use PrestaShopBundle\Security\Attribute\AdminSecurity;
-use PrestaShopBundle\Security\Attribute\DemoRestricted;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
+use PrestaShopBundle\Security\Annotation\AdminSecurity;
+use PrestaShopBundle\Security\Annotation\DemoRestricted;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Responsible for "Configure > Shop Parameters > General" page.
+ * Responsible of "Configure > Shop Parameters > General" page.
  */
-class PreferencesController extends PrestaShopAdminController
+class PreferencesController extends FrameworkBundleAdminController
 {
     public const CONTROLLER_NAME = 'AdminPreferences';
 
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))")]
-    public function indexAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.adapter.preferences.form_handler')]
-        FormHandlerInterface $preferencesFormHandler,
-    ): Response {
-        $form = $preferencesFormHandler->getForm();
+    /**
+     * @param Request $request
+     * @param FormInterface|null $form
+     *
+     * @return Response
+     *
+     * @throws \Exception
+     * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))")
+     */
+    public function indexAction(Request $request, FormInterface $form = null)
+    {
+        $form = $this->get('prestashop.adapter.preferences.form_handler')->getForm();
 
-        return $this->doRenderForm($request, $form);
+        return $this->renderForm($request, $form);
     }
 
-    #[DemoRestricted(redirectRoute: 'admin_preferences')]
-    #[AdminSecurity("is_granted('update', request.get('_legacy_controller')) && is_granted('create', request.get('_legacy_controller')) && is_granted('delete', request.get('_legacy_controller'))", message: 'You do not have permission to update this.', redirectRoute: 'admin_preferences')]
-    public function processFormAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.adapter.preferences.form_handler')]
-        FormHandlerInterface $preferencesFormHandler,
-    ): Response {
-        $this->dispatchHookWithParameters('actionAdminPreferencesControllerPostProcessBefore', ['controller' => $this]);
+    /**
+     * @param Request $request
+     *
+     * @AdminSecurity("is_granted(['update', 'create', 'delete'], request.get('_legacy_controller'))",
+     *     message="You do not have permission to update this.",
+     *     redirectRoute="admin_preferences")
+     *
+     * @DemoRestricted(redirectRoute="admin_preferences")
+     *
+     * @return Response
+     *
+     * @throws \LogicException
+     */
+    public function processFormAction(Request $request)
+    {
+        $this->dispatchHook('actionAdminPreferencesControllerPostProcessBefore', ['controller' => $this]);
 
-        $form = $preferencesFormHandler->getForm();
+        /** @var FormInterface $form */
+        $form = $this->get('prestashop.adapter.preferences.form_handler')->getForm();
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
-            $saveErrors = $preferencesFormHandler->save($data);
+            $saveErrors = $this->get('prestashop.adapter.preferences.form_handler')->save($data);
 
             if (0 === count($saveErrors)) {
-                $this->dispatchCommand(
+                $this->getCommandBus()->handle(
                     new UpdateTabStatusByClassNameCommand(
                         'AdminShopGroup',
-                        $this->getConfiguration()->get('PS_MULTISHOP_FEATURE_ACTIVE')
+                        $this->configuration->get('PS_MULTISHOP_FEATURE_ACTIVE')
                     )
                 );
 
-                $this->addFlash('success', $this->trans('Successful update', [], 'Admin.Notifications.Success'));
+                $this->addFlash('success', $this->trans('Successful update.', 'Admin.Notifications.Success'));
 
                 return $this->redirectToRoute('admin_preferences');
             }
 
-            $this->addFlashErrors($saveErrors);
+            $this->flashErrors($saveErrors);
         }
 
-        return $this->doRenderForm($request, $form);
+        return $this->renderForm($request, $form);
     }
 
-    private function doRenderForm(Request $request, FormInterface $form): Response
+    private function renderForm(Request $request, FormInterface $form): Response
     {
+        /** @var Tools $toolsAdapter */
+        $toolsAdapter = $this->get('prestashop.adapter.tools');
+
         // SSL URI is used for the merchant to check if he has SSL enabled
-        $sslUri = 'https://' . $this->getShopContext()->getDomainSSL() . $request->getRequestUri();
+        $sslUri = 'https://' . $toolsAdapter->getShopDomainSsl() . $request->getRequestUri();
 
         return $this->render('@PrestaShop/Admin/Configure/ShopParameters/preferences.html.twig', [
             'layoutHeaderToolbarBtn' => [],
-            'layoutTitle' => $this->trans('Preferences', [], 'Admin.Navigation.Menu'),
+            'layoutTitle' => $this->trans('Preferences', 'Admin.Navigation.Menu'),
+            'requireAddonsSearch' => true,
             'requireBulkActions' => false,
             'showContentHeader' => true,
             'enableSidebar' => true,
             'help_link' => $this->generateSidebarLink('AdminPreferences'),
             'requireFilterStatus' => false,
             'generalForm' => $form->createView(),
-            'isSslEnabled' => $this->getConfiguration()->get('PS_SSL_ENABLED'),
+            'isSslEnabled' => $this->configuration->get('PS_SSL_ENABLED'),
             'sslUri' => $sslUri,
         ]);
     }

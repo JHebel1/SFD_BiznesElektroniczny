@@ -20,92 +20,84 @@
 
 namespace PrestaShop\Module\Mbo\Tab;
 
+use PrestaShop\Module\Mbo\RecommendedModule\RecommendedModuleCollectionInterface;
+
 interface TabInterface
 {
-    /**
-     * @var string
-     */
-    public const RECOMMENDED_BUTTON_TYPE = 'button';
+    const DISPLAY_MODE_MODAL = 'slider_list';
 
-    /**
-     * @var string
-     */
-    public const RECOMMENDED_AFTER_CONTENT_TYPE = 'after_content';
-
-    /**
-     * @var string[]
-     */
-    public const TABS_WITH_RECOMMENDED_MODULES_BUTTON = [
-        'AdminOrders',
-        'AdminInvoices',
-        'AdminSlip',
-        'AdminDeliverySlip',
-        'AdminProducts',
-        'AdminFeatures',
-        'AdminManufacturers',
-        'AdminCartRules',
-        'AdminSpecificPriceRule',
-        'AdminCustomers',
-        'AdminCustomerThreads',
-        'AdminStats',
-        'AdminCmsContent',
-        'AdminImages',
-        'AdminShipping',
-        'AdminStatuses', // Shop Parameters > Order Settings > Statuses
-        'AdminGroups', // Shop Parameters > Customer Settings > Groups
-        'AdminContacts', // Shop Parameters > Contact > Contact
-        'AdminMeta', // Shop Parameters > Traffic & SEO > SEO & URLs
-        'AdminSearchConf', // Shop Parameters > Search > Search
-        'AdminAdminPreferences', // Advanced Parameters > Administration
-        'AdminEmails', // Advanced Parameters > E-mail
-    ];
-
-    /**
-     * @var string[]
-     */
-    public const TABS_WITH_RECOMMENDED_MODULES_AFTER_CONTENT = [
-        'AdminMarketing',
-        'AdminPayment',
-        'AdminCarriers',
-    ];
+    const DISPLAY_MODE_AFTER_CONTENT = 'default_list';
 
     /**
      * Get the class name of the tab.
      *
      * @return string
      */
-    public function getLegacyClassName(): string;
+    public function getLegacyClassName();
 
     /**
      * @param string $legacyClassName
      *
      * @return TabInterface
      */
-    public function setLegacyClassName(string $legacyClassName): TabInterface;
+    public function setLegacyClassName($legacyClassName);
 
     /**
      * Get the display mode of the tab.
      *
      * @return string
      */
-    public function getDisplayMode(): string;
+    public function getDisplayMode();
 
     /**
      * @param string $displayMode
      *
      * @return TabInterface
      */
-    public function setDisplayMode(string $displayMode): TabInterface;
+    public function setDisplayMode($displayMode);
 
     /**
-     * @return bool
+     * Get the recommended modules of the tab.
+     *
+     * @return RecommendedModuleCollectionInterface
      */
-    public function shouldDisplayAfterContent(): bool;
+    public function getRecommendedModules();
 
     /**
-     * @param string $controllerName
+     * @param RecommendedModuleCollectionInterface $recommendedModules
+     *
+     * @return TabInterface
+     */
+    public function setRecommendedModules(RecommendedModuleCollectionInterface $recommendedModules);
+
+    /**
+     * Check if the tab has recommended modules.
      *
      * @return bool
      */
-    public static function mayDisplayRecommendedModules(string $controllerName): bool;
+    public function hasRecommendedModules();
+
+    /**
+     * Get the installed recommended modules of the tab.
+     *
+     * @return RecommendedModuleCollectionInterface
+     */
+    public function getRecommendedModulesInstalled();
+
+    /**
+     * Get the not installed recommended modules of the tab.
+     *
+     * @return RecommendedModuleCollectionInterface
+     */
+    public function getRecommendedModulesNotInstalled();
+
+    /**
+     * @return bool
+     */
+    public function shouldDisplayButton();
+
+    /**
+     * @return bool
+     */
+    public function shouldDisplayAfterContent();
 }

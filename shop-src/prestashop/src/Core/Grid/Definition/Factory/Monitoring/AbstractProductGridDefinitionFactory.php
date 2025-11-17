@@ -36,9 +36,9 @@ use PrestaShop\PrestaShop\Core\Grid\Action\Type\SimpleGridAction;
 use PrestaShop\PrestaShop\Core\Grid\Column\ColumnCollection;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ActionColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\BulkActionColumn;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\IdentifierColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ToggleColumn;
+use PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn;
 use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\AbstractGridDefinitionFactory;
 use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\BulkDeleteActionTrait;
 use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\DeleteActionTrait;
@@ -106,7 +106,7 @@ abstract class AbstractProductGridDefinitionFactory extends AbstractGridDefiniti
                     ->setOptions([
                         'field' => 'active',
                         'primary_field' => 'id_product',
-                        'route' => 'admin_products_toggle_status_for_all_shops',
+                        'route' => 'admin_product_toggle_status',
                         'route_param_name' => 'productId',
                     ])
             )
@@ -199,17 +199,18 @@ abstract class AbstractProductGridDefinitionFactory extends AbstractGridDefiniti
                     ->setName($this->trans('Edit', [], 'Admin.Actions'))
                     ->setIcon('edit')
                     ->setOptions([
-                        'route' => 'admin_products_edit',
-                        'route_param_name' => 'productId',
+                        'route' => 'admin_product_form',
+                        'route_param_name' => 'id',
                         'route_param_field' => 'id_product',
                     ])
             )
             ->add(
                 $this->buildDeleteAction(
-                    'admin_products_delete_from_all_shops',
-                    'productId',
+                    'admin_product_unit_action',
+                    'id',
                     'id_product',
                     Request::METHOD_POST,
+                    ['action' => 'delete']
                 )
             );
     }

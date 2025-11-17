@@ -17,7 +17,6 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-declare(strict_types=1);
 
 namespace PrestaShop\Module\Mbo\Addons\User;
 
@@ -26,17 +25,17 @@ interface UserInterface
     /**
      * @return bool
      */
-    public function isAuthenticated(): bool;
+    public function isAuthenticated();
 
     /**
      * @pararm bool $encrypted
      *
      * @return array{username?: string, password?: string, accounts_token?: string}
      */
-    public function getCredentials(bool $encrypted = false): ?array;
+    public function getCredentials($encrypted = false);
 
     /**
      * @return array{username: string}
      */
-    public function getEmail(): array;
+    public function getEmail();
 }

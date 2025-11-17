@@ -1,4 +1,4 @@
-{# **
+{#**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
  *
@@ -21,7 +21,7 @@
  * @author    PrestaShop SA and Contributors <contact@prestashop.com>
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
- * #}
+ *#}
 <div class="modal fade" id="{{ id }}" tabindex="-1">
     <div class="modal-dialog {% if class is defined %}{{ class }}{% endif %}">
         <div class="modal-content">
@@ -54,13 +54,7 @@
                 {% if actions is defined %}
                     <div class="modal-footer">
                         {% if closable is defined and closable == true %}
-                            <button type="button" class="btn btn-outline-secondary btn-lg" data-dismiss="modal">
-                              {% if closeLabel is defined %}
-                                {{ closeLabel }}
-                              {% else %}
-                                {{ 'Close'|trans({}, 'Admin.Actions') }}
-                              {% endif %}
-                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-lg" data-dismiss="modal">{{ 'Close'|trans({}, 'Admin.Actions') }}</button>
                         {% endif %}
                         {% for action in actions %}
                             {% if action.type is defined and action.type == 'link' %}
@@ -78,7 +72,7 @@
     </div>
 </div>
 <script>
-    $(function() {
+    $(document).ready(function() {
         var closable = {% if closable is defined and closable == true %}true{% else %}false{% endif %};
         $('#{{ id }}').modal({
             backdrop: (closable ? true : 'static'),

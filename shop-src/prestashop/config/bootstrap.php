@@ -86,7 +86,7 @@ if ($lastParametersModificationTime) {
 
     $config = require_once _PS_CACHE_DIR_ . 'appParameters.php';
     array_walk($config['parameters'], function (&$param) {
-        $param = str_replace('%%', '%', $param ?? '');
+        $param = str_replace('%%', '%', $param);
     });
 
     $database_host = $config['parameters']['database_host'];
@@ -145,4 +145,6 @@ if ($lastParametersModificationTime) {
         define('_RIJNDAEL_KEY_', $config['parameters']['_rijndael_key']);
         define('_RIJNDAEL_IV_', $config['parameters']['_rijndael_iv']);
     }
+} elseif (file_exists(_PS_ROOT_DIR_.'/config/settings.inc.php')) {
+    require_once _PS_ROOT_DIR_.'/config/settings.inc.php';
 }

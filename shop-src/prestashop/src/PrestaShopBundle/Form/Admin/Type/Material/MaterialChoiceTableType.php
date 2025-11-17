@@ -28,8 +28,6 @@ namespace PrestaShopBundle\Form\Admin\Type\Material;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\FormInterface;
-use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -45,7 +43,6 @@ class MaterialChoiceTableType extends AbstractType
         $resolver->setDefaults([
             'expanded' => true,
             'multiple' => true,
-            'display_total_items' => false,
         ]);
     }
 
@@ -55,15 +52,6 @@ class MaterialChoiceTableType extends AbstractType
     public function getParent()
     {
         return ChoiceType::class;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function buildView(FormView $view, FormInterface $form, array $options): void
-    {
-        $view->vars['isCheckSelectAll'] = count($form->getViewData()) === count($options['choices']);
-        $view->vars['displayTotalItems'] = (bool) $options['display_total_items'];
     }
 
     /**

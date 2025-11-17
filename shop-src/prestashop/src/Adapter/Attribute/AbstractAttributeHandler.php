@@ -26,11 +26,11 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Attribute;
 
-use PrestaShop\PrestaShop\Core\Domain\AttributeGroup\Attribute\Exception\AttributeException;
-use PrestaShop\PrestaShop\Core\Domain\AttributeGroup\Attribute\Exception\AttributeNotFoundException;
-use PrestaShop\PrestaShop\Core\Domain\AttributeGroup\Attribute\ValueObject\AttributeId;
+use Attribute;
+use PrestaShop\PrestaShop\Core\Domain\Product\AttributeGroup\Attribute\Exception\AttributeException;
+use PrestaShop\PrestaShop\Core\Domain\Product\AttributeGroup\Attribute\Exception\AttributeNotFoundException;
+use PrestaShop\PrestaShop\Core\Domain\Product\AttributeGroup\Attribute\ValueObject\AttributeId;
 use PrestaShopException;
-use ProductAttribute;
 
 /**
  * Provides common methods for attribute command/query handlers
@@ -40,7 +40,7 @@ abstract class AbstractAttributeHandler
     /**
      * @param AttributeId $attributeId
      *
-     * @return ProductAttribute
+     * @return Attribute
      *
      * @throws AttributeException
      */
@@ -49,12 +49,12 @@ abstract class AbstractAttributeHandler
         $idValue = $attributeId->getValue();
 
         try {
-            $attribute = new ProductAttribute($idValue);
+            $attribute = new Attribute($idValue);
 
             if ($attribute->id !== $idValue) {
                 throw new AttributeNotFoundException(sprintf('Attribute with id "%s" was not found.', $idValue));
             }
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new AttributeException(sprintf('An error occurred when trying to get attribute with id %s', $idValue));
         }
 
@@ -62,17 +62,17 @@ abstract class AbstractAttributeHandler
     }
 
     /**
-     * @param ProductAttribute $attribute
+     * @param Attribute $attribute
      *
      * @return bool
      *
      * @throws AttributeException
      */
-    protected function deleteAttribute(ProductAttribute $attribute)
+    protected function deleteAttribute(Attribute $attribute)
     {
         try {
             return $attribute->delete();
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new AttributeException(sprintf('An error occurred when trying to delete attribute with id %s', $attribute->id));
         }
     }

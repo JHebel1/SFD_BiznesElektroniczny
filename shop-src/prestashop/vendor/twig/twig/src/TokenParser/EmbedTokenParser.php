@@ -13,29 +13,28 @@ namespace Twig\TokenParser;
 
 use Twig\Node\EmbedNode;
 use Twig\Node\Expression\ConstantExpression;
-use Twig\Node\Expression\Variable\ContextVariable;
-use Twig\Node\Node;
+use Twig\Node\Expression\NameExpression;
 use Twig\Token;
 
 /**
  * Embeds a template.
  *
- * @internal
+ * @final
  */
-final class EmbedTokenParser extends IncludeTokenParser
+class EmbedTokenParser extends IncludeTokenParser
 {
-    public function parse(Token $token): Node
+    public function parse(Token $token)
     {
         $stream = $this->parser->getStream();
 
         $parent = $this->parser->getExpressionParser()->parseExpression();
 
-        [$variables, $only, $ignoreMissing] = $this->parseArguments();
+        list($variables, $only, $ignoreMissing) = $this->parseArguments();
 
         $parentToken = $fakeParentToken = new Token(Token::STRING_TYPE, '__parent__', $token->getLine());
         if ($parent instanceof ConstantExpression) {
             $parentToken = new Token(Token::STRING_TYPE, $parent->getAttribute('value'), $token->getLine());
-        } elseif ($parent instanceof ContextVariable) {
+        } elseif ($parent instanceof NameExpression) {
             $parentToken = new Token(Token::NAME_TYPE, $parent->getAttribute('name'), $token->getLine());
         }
 
@@ -58,16 +57,18 @@ final class EmbedTokenParser extends IncludeTokenParser
 
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        return new EmbedNode($module->getTemplateName(), $module->getAttribute('index'), $variables, $only, $ignoreMissing, $token->getLine());
+        return new EmbedNode($module->getTemplateName(), $module->getAttribute('index'), $variables, $only, $ignoreMissing, $token->getLine(), $this->getTag());
     }
 
-    public function decideBlockEnd(Token $token): bool
+    public function decideBlockEnd(Token $token)
     {
         return $token->test('endembed');
     }
 
-    public function getTag(): string
+    public function getTag()
     {
         return 'embed';
     }
 }
+
+class_alias('Twig\TokenParser\EmbedTokenParser', 'Twig_TokenParser_Embed');

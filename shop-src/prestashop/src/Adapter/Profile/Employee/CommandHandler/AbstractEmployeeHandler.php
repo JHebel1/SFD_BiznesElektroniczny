@@ -29,13 +29,12 @@ namespace PrestaShop\PrestaShop\Adapter\Profile\Employee\CommandHandler;
 use Context;
 use Employee;
 use PrestaShop\PrestaShop\Adapter\Domain\AbstractObjectModelHandler;
-use PrestaShop\PrestaShop\Core\Context\EmployeeContext;
 use PrestaShop\PrestaShop\Core\Domain\Employee\Exception\AdminEmployeeException;
+use PrestaShop\PrestaShop\Core\Domain\Employee\Exception\CannotDeleteWarehouseManagerException;
 use PrestaShop\PrestaShop\Core\Domain\Employee\Exception\EmployeeCannotChangeItselfException;
-use PrestaShop\PrestaShop\Core\Domain\Employee\Exception\EmployeeConstraintException;
 use PrestaShop\PrestaShop\Core\Domain\Employee\Exception\EmployeeNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Employee\ValueObject\EmployeeId;
-use Profile;
+use Warehouse;
 
 /**
  * Class AbstractEmployeeStatusHandler.
@@ -80,19 +79,20 @@ abstract class AbstractEmployeeHandler extends AbstractObjectModelHandler
     }
 
     /**
-     * @throws EmployeeConstraintException
+     * Make sure that given employee does not manage any warehouse.
+     *
+     * Even though Warehouse feature was removed in 1.7
+     * but the code related to it still exists
+     * thus assertion is kept for BC i guess.
+     *
+     * @param Employee $employee
      */
-    protected function assertHomepageIsAccessible(int $tabId, int $profileId): void
+    protected function assertEmployeeDoesNotManageWarehouse(Employee $employee)
     {
-        if (empty($tabId) || empty($profileId) || $profileId === EmployeeContext::SUPER_ADMIN_PROFILE_ID) {
-            return;
-        }
+        $warehouses = Warehouse::getWarehousesByEmployee($employee->id);
 
-        $tabAccess = Profile::getProfileAccesses($profileId);
-        if ($tabAccess[$tabId]['view'] === '1') {
-            return;
+        if (count($warehouses) > 0) {
+            throw new CannotDeleteWarehouseManagerException(sprintf('Employee with id %s is warehouse manager and cannot be deleted.', $employee->id));
         }
-
-        throw new EmployeeConstraintException('Selected homepage is not accessible for this profile', EmployeeConstraintException::INVALID_HOMEPAGE);
     }
 }

@@ -38,55 +38,53 @@ use PrestaShop\PrestaShop\Core\Domain\Profile\Exception\ProfileNotFoundException
 use PrestaShop\PrestaShop\Core\Domain\Profile\ProfileSettings;
 use PrestaShop\PrestaShop\Core\Domain\Profile\Query\GetProfileForEditing;
 use PrestaShop\PrestaShop\Core\Domain\Profile\QueryResult\EditableProfile;
-use PrestaShop\PrestaShop\Core\Form\IdentifiableObject\Builder\FormBuilderInterface;
-use PrestaShop\PrestaShop\Core\Form\IdentifiableObject\Handler\FormHandlerInterface;
-use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\GridDefinitionFactoryInterface;
-use PrestaShop\PrestaShop\Core\Grid\Filter\GridFilterFormFactory;
-use PrestaShop\PrestaShop\Core\Grid\GridFactoryInterface;
 use PrestaShop\PrestaShop\Core\Image\Uploader\Exception\UploadedImageConstraintException;
 use PrestaShop\PrestaShop\Core\Search\Filters\ProfileFilters;
-use PrestaShopBundle\Controller\Admin\PrestaShopAdminController;
-use PrestaShopBundle\Controller\Attribute\AllShopContext;
-use PrestaShopBundle\Security\Attribute\AdminSecurity;
-use PrestaShopBundle\Security\Attribute\DemoRestricted;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
+use PrestaShopBundle\Security\Annotation\AdminSecurity;
+use PrestaShopBundle\Security\Annotation\DemoRestricted;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Class ProfileController is responsible for displaying the
- * "Configure > Advanced parameters > Team > Roles" page.
+ * Class ProfilesController is responsible for displaying the
+ * "Configure > Advanced parameters > Team > Profiles" page.
  */
-#[AllShopContext]
-class ProfileController extends PrestaShopAdminController
+class ProfileController extends FrameworkBundleAdminController
 {
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))")]
-    public function indexAction(
-        ProfileFilters $filters,
-        #[Autowire(service: 'prestashop.core.grid.factory.profiles')]
-        GridFactoryInterface $profilesGridFactory,
-    ): Response {
+    /**
+     * Show profiles listing page.
+     *
+     * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))")
+     *
+     * @param ProfileFilters $filters
+     *
+     * @return Response
+     */
+    public function indexAction(ProfileFilters $filters)
+    {
+        $profilesGridFactory = $this->get('prestashop.core.grid.factory.profiles');
+
         return $this->render(
             '@PrestaShop/Admin/Configure/AdvancedParameters/Profiles/index.html.twig',
             [
                 'layoutHeaderToolbarBtn' => [
                     'add' => [
                         'href' => $this->generateUrl('admin_profiles_create'),
-                        'desc' => $this->trans('Add new role', [], 'Admin.Advparameters.Feature'),
+                        'desc' => $this->trans('Add new profile', 'Admin.Advparameters.Feature'),
                         'icon' => 'add_circle_outline',
                     ],
                 ],
                 'help_link' => $this->generateSidebarLink('AdminProfiles'),
                 'enableSidebar' => true,
-                'layoutTitle' => $this->trans('Roles', [], 'Admin.Navigation.Menu'),
+                'layoutTitle' => $this->trans('Profiles', 'Admin.Navigation.Menu'),
                 'grid' => $this->presentGrid($profilesGridFactory->getGrid($filters)),
                 'multistoreInfoTip' => $this->trans(
                     'Note that this page is available in all shops context only, this is why your context has just switched.',
-                    [],
                     'Admin.Notifications.Info'
                 ),
-                'multistoreIsUsed' => $this->getShopContext()->isMultiShopUsed(),
+                'multistoreIsUsed' => $this->get('prestashop.adapter.multistore_feature')->isUsed(),
             ]
         );
     }
@@ -94,18 +92,18 @@ class ProfileController extends PrestaShopAdminController
     /**
      * Used for applying filtering actions.
      *
+     * @AdminSecurity("is_granted(['read'], request.get('_legacy_controller'))")
+     *
      * @param Request $request
      *
      * @return RedirectResponse
      */
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))")]
-    public function searchAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.core.grid.definition.factory.profile')]
-        GridDefinitionFactoryInterface $definitionFactory,
-        GridFilterFormFactory $gridFilterFormFactory,
-    ): RedirectResponse {
+    public function searchAction(Request $request)
+    {
+        $definitionFactory = $this->get('prestashop.core.grid.definition.factory.profile');
         $definitionFactory = $definitionFactory->getDefinition();
+
+        $gridFilterFormFactory = $this->get('prestashop.core.grid.filter.form_factory');
         $searchParametersForm = $gridFilterFormFactory->create($definitionFactory);
         $searchParametersForm->handleRequest($request);
 
@@ -121,27 +119,24 @@ class ProfileController extends PrestaShopAdminController
     /**
      * Show profile's create page
      *
+     * @AdminSecurity("is_granted('create', request.get('_legacy_controller'))")
+     * @DemoRestricted(redirectRoute="admin_profiles_index")
+     *
      * @param Request $request
      *
      * @return Response
      */
-    #[DemoRestricted(redirectRoute: 'admin_profiles_index')]
-    #[AdminSecurity("is_granted('create', request.get('_legacy_controller'))")]
-    public function createAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.core.form.identifiable_object.builder.profile_form_builder')]
-        FormBuilderInterface $formBuilder,
-        #[Autowire(service: 'prestashop.core.form.identifiable_object.handler.profile_form_handler')]
-        FormHandlerInterface $formHandler,
-    ): Response {
-        $form = $formBuilder->getForm();
+    public function createAction(Request $request)
+    {
+        $form = $this->get('prestashop.core.form.identifiable_object.builder.profile_form_builder')->getForm();
         $form->handleRequest($request);
 
         try {
+            $formHandler = $this->get('prestashop.core.form.identifiable_object.handler.profile_form_handler');
             $handlerResult = $formHandler->handle($form);
 
             if (null !== $handlerResult->getIdentifiableObjectId()) {
-                $this->addFlash('success', $this->trans('Successful creation', [], 'Admin.Notifications.Success'));
+                $this->addFlash('success', $this->trans('Successful creation.', 'Admin.Notifications.Success'));
 
                 return $this->redirectToRoute('admin_profiles_index');
             }
@@ -151,36 +146,36 @@ class ProfileController extends PrestaShopAdminController
 
         return $this->render('@PrestaShop/Admin/Configure/AdvancedParameters/Profiles/create.html.twig', [
             'profileForm' => $form->createView(),
-            'layoutTitle' => $this->trans('New role', [], 'Admin.Navigation.Menu'),
+            'layoutTitle' => $this->trans('Add new profile', 'Admin.Advparameters.Feature'),
             'help_link' => $this->generateSidebarLink('AdminProfiles'),
             'enableSidebar' => true,
             'multistoreInfoTip' => $this->trans(
-                'Note that this feature is only available in the "all stores" context. It will be added to all your stores.',
-                [],
+                'Note that this feature is available in all shops context only. It will be added to all your stores.',
                 'Admin.Notifications.Info'
             ),
-            'multistoreIsUsed' => $this->getShopContext()->isMultiShopUsed(),
+            'multistoreIsUsed' => $this->get('prestashop.adapter.multistore_feature')->isUsed(),
         ]);
     }
 
     /**
      * Shows profile edit form.
      *
+     * @AdminSecurity(
+     *     "is_granted('update', request.get('_legacy_controller'))",
+     *     message="You do not have permission to edit this."
+     * )
+     * @DemoRestricted(redirectRoute="admin_profiles_index")
+     *
      * @param int $profileId
      * @param Request $request
      *
      * @return Response
      */
-    #[DemoRestricted(redirectRoute: 'admin_profiles_index')]
-    #[AdminSecurity("is_granted('update', request.get('_legacy_controller'))", message: 'You do not have permission to edit this.')]
-    public function editAction(
-        int $profileId,
-        Request $request,
-        #[Autowire(service: 'prestashop.core.form.identifiable_object.builder.profile_form_builder')]
-        FormBuilderInterface $formBuilder,
-        #[Autowire(service: 'prestashop.core.form.identifiable_object.handler.profile_form_handler')]
-        FormHandlerInterface $formHandler,
-    ): Response {
+    public function editAction($profileId, Request $request)
+    {
+        $formHandler = $this->get('prestashop.core.form.identifiable_object.handler.profile_form_handler');
+        $formBuilder = $this->get('prestashop.core.form.identifiable_object.builder.profile_form_builder');
+
         try {
             $form = $formBuilder->getFormFor((int) $profileId);
         } catch (Exception $exception) {
@@ -197,7 +192,7 @@ class ProfileController extends PrestaShopAdminController
             $handlerResult = $formHandler->handleFor((int) $profileId, $form);
 
             if ($handlerResult->isSubmitted() && $handlerResult->isValid()) {
-                $this->addFlash('success', $this->trans('Successful update', [], 'Admin.Notifications.Success'));
+                $this->addFlash('success', $this->trans('Successful update.', 'Admin.Notifications.Success'));
 
                 return $this->redirectToRoute('admin_profiles_index');
             }
@@ -210,39 +205,44 @@ class ProfileController extends PrestaShopAdminController
         }
 
         /** @var EditableProfile $editableProfile */
-        $editableProfile = $this->dispatchQuery(new GetProfileForEditing($profileId));
+        $editableProfile = $this->getQueryBus()->handle(new GetProfileForEditing((int) $profileId));
 
         return $this->render('@PrestaShop/Admin/Configure/AdvancedParameters/Profiles/edit.html.twig', [
             'profileForm' => $form->createView(),
             'layoutTitle' => $this->trans(
-                'Editing %role_name% role',
+                'Edit: %value%',
+                'Admin.Catalog.Feature',
                 [
-                    '%role_name%' => $editableProfile->getLocalizedNames()[$this->getLanguageContext()->getId()],
-                ],
-                'Admin.Navigation.Menu',
+                    '%value%' => $editableProfile->getLocalizedNames()[$this->getContextLangId()],
+                ]
             ),
             'help_link' => $this->generateSidebarLink('AdminProfiles'),
             'enableSidebar' => true,
+            'editableProfile' => $editableProfile,
         ]);
     }
 
     /**
      * Delete a profile.
      *
+     * @AdminSecurity(
+     *     "is_granted('delete', request.get('_legacy_controller')~'_')",
+     *     message="You do not have permission to edit this."
+     * )
+     * @DemoRestricted(redirectRoute="admin_profiles_index")
+     *
      * @param int $profileId
      *
      * @return RedirectResponse
      */
-    #[DemoRestricted(redirectRoute: 'admin_profiles_index')]
-    #[AdminSecurity("is_granted('delete', request.get('_legacy_controller'))", message: 'You do not have permission to edit this.')]
-    public function deleteAction(int $profileId): RedirectResponse
+    public function deleteAction($profileId)
     {
         try {
             $deleteProfileCommand = new DeleteProfileCommand($profileId);
 
-            $this->dispatchCommand($deleteProfileCommand);
+            $this->getCommandBus()->handle($deleteProfileCommand);
 
-            $this->addFlash('success', $this->trans('Successful deletion', [], 'Admin.Notifications.Success'));
+            $this->addFlash('success', $this->trans('Successful deletion', 'Admin.Notifications.Success'));
         } catch (ProfileException $e) {
             $this->addFlash('error', $this->getErrorMessageForException($e, $this->getErrorMessages()));
         }
@@ -253,20 +253,26 @@ class ProfileController extends PrestaShopAdminController
     /**
      * Bulk delete profiles.
      *
+     * @AdminSecurity(
+     *     "is_granted('delete', request.get('_legacy_controller')~'_')",
+     *     message="You do not have permission to edit this."
+     * )
+     * @DemoRestricted(redirectRoute="admin_profiles_index")
+     *
      * @param Request $request
      *
      * @return RedirectResponse
      */
-    #[DemoRestricted(redirectRoute: 'admin_profiles_index')]
-    #[AdminSecurity("is_granted('delete', request.get('_legacy_controller'))", message: 'You do not have permission to edit this.')]
-    public function bulkDeleteAction(Request $request): RedirectResponse
+    public function bulkDeleteAction(Request $request)
     {
-        $profileIds = $request->request->all('profile_bulk');
+        $profileIds = $request->request->get('profile_bulk');
 
         try {
-            $this->dispatchCommand(new BulkDeleteProfileCommand($profileIds));
+            $deleteProfilesCommand = new BulkDeleteProfileCommand($profileIds);
 
-            $this->addFlash('success', $this->trans('Successful deletion', [], 'Admin.Notifications.Success'));
+            $this->getCommandBus()->handle($deleteProfilesCommand);
+
+            $this->addFlash('success', $this->trans('Successful deletion', 'Admin.Notifications.Success'));
         } catch (ProfileException $e) {
             $this->addFlash('error', $this->getErrorMessageForException($e, $this->getErrorMessages()));
         }
@@ -275,49 +281,44 @@ class ProfileController extends PrestaShopAdminController
     }
 
     /**
-     * Get human-readable error for exception.
+     * Get human readable error for exception.
      *
      * @return array
      */
-    protected function getErrorMessages(): array
+    protected function getErrorMessages()
     {
         return [
             UploadedImageConstraintException::class => $this->trans(
                 'Image format not recognized, allowed formats are: %s',
-                [implode(', ', ImageManager::EXTENSIONS_SUPPORTED)],
                 'Admin.Notifications.Error',
+                [implode(', ', ImageManager::EXTENSIONS_SUPPORTED)]
             ),
             ProfileConstraintException::class => [
                 ProfileConstraintException::INVALID_NAME => $this->trans(
                     'This field cannot be longer than %limit% characters (incl. HTML tags)',
-                    ['%limit%' => ProfileSettings::NAME_MAX_LENGTH],
                     'Admin.Notifications.Error',
+                    ['%limit%' => ProfileSettings::NAME_MAX_LENGTH]
                 ),
             ],
             ProfileNotFoundException::class => $this->trans(
-                'The object cannot be loaded (or found).',
-                [],
+                'The object cannot be loaded (or found)',
                 'Admin.Notifications.Error'
             ),
             CannotDeleteSuperAdminProfileException::class => $this->trans(
-                'For security reasons, you cannot delete the Administrator\'s role.',
-                [],
+                'For security reasons, you cannot delete the Administrator\'s profile.',
                 'Admin.Advparameters.Notification'
             ),
             FailedToDeleteProfileException::class => [
                 FailedToDeleteProfileException::UNEXPECTED_ERROR => $this->trans(
                     'An error occurred while deleting the object.',
-                    [],
                     'Admin.Notifications.Error'
                 ),
                 FailedToDeleteProfileException::PROFILE_IS_ASSIGNED_TO_EMPLOYEE => $this->trans(
-                    'Role(s) assigned to employee cannot be deleted',
-                    [],
+                    'Profile(s) assigned to employee cannot be deleted',
                     'Admin.Notifications.Error'
                 ),
                 FailedToDeleteProfileException::PROFILE_IS_ASSIGNED_TO_CONTEXT_EMPLOYEE => $this->trans(
-                    'You cannot delete your own role',
-                    [],
+                    'You cannot delete your own profile',
                     'Admin.Notifications.Error'
                 ),
             ],

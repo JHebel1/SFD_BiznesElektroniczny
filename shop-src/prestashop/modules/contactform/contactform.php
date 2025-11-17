@@ -54,7 +54,7 @@ class Contactform extends Module implements WidgetInterface
         $this->name = 'contactform';
         $this->author = 'PrestaShop';
         $this->tab = 'front_office_features';
-        $this->version = '4.4.3';
+        $this->version = '4.4.1';
         $this->bootstrap = true;
 
         parent::__construct();
@@ -331,7 +331,7 @@ class Contactform extends Module implements WidgetInterface
             $contacts[$one_contact['id_contact']] = $one_contact;
         }
 
-        if (!empty($this->customer_thread['id_contact'])) {
+        if (isset($this->customer_thread['id_contact'])) {
             return [
                 $contacts[$this->customer_thread['id_contact']],
             ];
@@ -406,6 +406,8 @@ class Contactform extends Module implements WidgetInterface
                 [],
                 'Shop.Notifications.Error'
             );
+
+            return;
         }
         if (empty($message)) {
             $this->context->controller->errors[] = $this->trans(
@@ -413,6 +415,8 @@ class Contactform extends Module implements WidgetInterface
                 [],
                 'Shop.Notifications.Error'
             );
+
+            return;
         }
         if (!Validate::isCleanHtml($message)) {
             $this->context->controller->errors[] = $this->trans(
@@ -420,6 +424,8 @@ class Contactform extends Module implements WidgetInterface
                 [],
                 'Shop.Notifications.Error'
             );
+
+            return;
         }
 
         $id_contact = (int) Tools::getValue('id_contact');
@@ -431,6 +437,8 @@ class Contactform extends Module implements WidgetInterface
                 [],
                 'Modules.Contactform.Shop'
             );
+
+            return;
         }
 
         if (!empty($file_attachment['name']) && $file_attachment['error'] != 0) {
@@ -439,6 +447,8 @@ class Contactform extends Module implements WidgetInterface
                 [],
                 'Modules.Contactform.Shop'
             );
+
+            return;
         }
         if (!empty($file_attachment['name']) &&
                   !in_array(Tools::strtolower(Tools::substr($file_attachment['name'], -4)), $extension) &&
@@ -449,6 +459,8 @@ class Contactform extends Module implements WidgetInterface
                 [],
                 'Modules.Contactform.Shop'
             );
+
+            return;
         }
         if ($url !== ''
             || empty($serverToken)
@@ -461,9 +473,7 @@ class Contactform extends Module implements WidgetInterface
                 'Modules.Contactform.Shop'
             );
             $this->createNewToken();
-        }
 
-        if (!empty($this->context->controller->errors)) {
             return;
         }
 
@@ -557,13 +567,12 @@ class Contactform extends Module implements WidgetInterface
             && empty($mailAlreadySend)
             && ($sendConfirmationEmail || $sendNotificationEmail)
         ) {
-            $message = version_compare(_PS_VERSION_, '8.0.0', '>=') ? stripslashes($message) : Tools::stripslashes($message);
             $var_list = [
                 '{firstname}' => '',
                 '{lastname}' => '',
                 '{order_name}' => '-',
                 '{attached_file}' => '-',
-                '{message}' => Tools::nl2br(Tools::htmlentitiesUTF8($message)),
+                '{message}' => Tools::nl2br(Tools::htmlentitiesUTF8(Tools::stripslashes($message))),
                 '{email}' => $from,
                 '{product_name}' => '',
             ];

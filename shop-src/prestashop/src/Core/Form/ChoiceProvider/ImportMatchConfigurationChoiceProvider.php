@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Core\Form\ChoiceProvider;
 
-use PrestaShop\PrestaShop\Core\Form\FormChoiceFormatter;
 use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 
 /**
@@ -53,10 +52,12 @@ final class ImportMatchConfigurationChoiceProvider implements FormChoiceProvider
      */
     public function getChoices()
     {
-        return FormChoiceFormatter::formatFormChoices(
-            $this->matchConfigurations,
-            'id_import_match',
-            'name'
-        );
+        $choices = [];
+
+        foreach ($this->matchConfigurations as $configuration) {
+            $choices[$configuration['name']] = $configuration['id_import_match'];
+        }
+
+        return $choices;
     }
 }

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * This file is part of the FOSJsRoutingBundle package.
  *
@@ -15,7 +13,6 @@ namespace FOS\JsRoutingBundle\Extractor;
 
 use Symfony\Component\Config\Resource\ResourceInterface;
 use Symfony\Component\Routing\Route;
-use Symfony\Component\Routing\RouteCollection;
 
 /**
  * @author William DURAND <william.durand1@gmail.com>
@@ -23,51 +20,72 @@ use Symfony\Component\Routing\RouteCollection;
 interface ExposedRoutesExtractorInterface
 {
     /**
-     * Returns a collection of exposed routes.
-     */
-    public function getRoutes(): RouteCollection;
-
-    /**
-     * Return the Base URL.
-     */
-    public function getBaseUrl(): string;
-
-    /**
-     * Get the route prefix to use, i.e. the language if JMSI18nRoutingBundle is active.
-     */
-    public function getPrefix(string $locale): string;
-
-    /**
-     * Get the host and applicable port from RequestContext.
-     */
-    public function getHost(): string;
-
-    /**
-     * Get the port from RequestContext, only if non standard port (Eg: "8080").
-     */
-    public function getPort(): ?string;
-
-    /**
-     * Get the scheme from RequestContext.
-     */
-    public function getScheme(): string;
-
-    /**
-     * Get the cache path for this request.
+     * Returns a collection of exposed routes
      *
-     * @param string|null $locale the request locale
+     * @return \Symfony\Component\Routing\RouteCollection
      */
-    public function getCachePath(?string $locale): string;
+    public function getRoutes();
 
     /**
-     * Return an array of routing resources.
+     * Return the Base URL
+     *
+     * @return string
+     */
+    public function getBaseUrl();
+
+    /**
+     * Get the route prefix to use, i.e. the language if JMSI18nRoutingBundle is active
+     *
+     * @param string $locale the request locale
+     *
+     * @return string
+     */
+    public function getPrefix($locale);
+
+    /**
+     * Get the host and applicable port from RequestContext
+     *
+     * @return string
+     */
+    public function getHost();
+
+    /**
+     * Get the port from RequestContext, only if non standard port (Eg: "8080")
+     *
+     * @return string
+     */
+    public function getPort();
+
+    /**
+     * Get the scheme from RequestContext
+     *
+     * @return string
+     */
+    public function getScheme();
+
+    /**
+     * Get the cache path for this request
+     *
+     * @param string $locale the request locale
+     *
+     * @return string
+     */
+    public function getCachePath($locale);
+
+    /**
+     * Return an array of routing resources
      *
      * @return ResourceInterface[]
      */
-    public function getResources(): array;
+    public function getResources();
 
     /**
-     * Tell whether a route should be considered as exposed.
+     * Tell whether a route should be considered as exposed
+     *
+     * @param Route  $route
+     * @param string $name
+     *
+     * @return bool
      */
-    public function isRouteExposed(Route $route, string $name): bool;
+    public function isRouteExposed(Route $route, $name);
 }

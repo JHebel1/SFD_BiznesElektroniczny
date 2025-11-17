@@ -37,7 +37,7 @@ use PrestaShop\PrestaShop\Core\Grid\Column\ColumnCollection;
 use PrestaShop\PrestaShop\Core\Grid\Column\ColumnCollectionInterface;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ActionColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\BulkActionColumn;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn;
+use PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn;
 use PrestaShop\PrestaShop\Core\Grid\Filter\Filter;
 use PrestaShop\PrestaShop\Core\Grid\Filter\FilterCollection;
 use PrestaShop\PrestaShop\Core\Grid\Filter\FilterCollectionInterface;
@@ -134,29 +134,28 @@ final class AddressGridDefinitionFactory extends AbstractFilterableGridDefinitio
                     ])
             )
             ->add((new ActionColumn('actions'))
-                ->setName($this->trans('Actions', [], 'Admin.Global'))
-                ->setOptions([
-                    'actions' => (new RowActionCollection())
-                        ->add(
-                            (new LinkRowAction('edit'))
-                                ->setName($this->trans('Edit', [], 'Admin.Actions'))
-                                ->setIcon('edit')
-                                ->setOptions([
-                                    'route' => 'admin_addresses_edit',
-                                    'route_param_name' => 'addressId',
-                                    'route_param_field' => 'id_address',
-                                    'clickable_row' => true,
-                                ])
+            ->setName($this->trans('Actions', [], 'Admin.Global'))
+            ->setOptions([
+                'actions' => (new RowActionCollection())
+                    ->add(
+                        (new LinkRowAction('edit'))
+                            ->setName($this->trans('Edit', [], 'Admin.Actions'))
+                            ->setIcon('edit')
+                            ->setOptions([
+                                'route' => 'admin_addresses_edit',
+                                'route_param_name' => 'addressId',
+                                'route_param_field' => 'id_address',
+                            ])
+                    )
+                    ->add(
+                        $this->buildDeleteAction(
+                            'admin_addresses_delete',
+                            'addressId',
+                            'id_address',
+                            Request::METHOD_DELETE
                         )
-                        ->add(
-                            $this->buildDeleteAction(
-                                'admin_addresses_delete',
-                                'addressId',
-                                'id_address',
-                                Request::METHOD_DELETE
-                            )
-                        ),
-                ])
+                    ),
+            ])
             )
         ;
 

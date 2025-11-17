@@ -71,6 +71,7 @@ final class WebserviceKeyQueryBuilder extends AbstractDoctrineQueryBuilder
         parent::__construct($connection, $dbPrefix);
         $this->searchCriteriaApplicator = $searchCriteriaApplicator;
         $this->contextShopIds = $contextShopIds;
+        $this->connection = $connection;
         $this->doctrineFilterApplicator = $doctrineFilterApplicator;
     }
 

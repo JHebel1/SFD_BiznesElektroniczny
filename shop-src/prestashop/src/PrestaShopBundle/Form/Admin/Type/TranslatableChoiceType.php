@@ -42,7 +42,6 @@ class TranslatableChoiceType extends TranslatableType
 
         $view->vars['default_locale'] = reset($options['locales'])['iso_code'];
         $view->vars['choices'] = $options['choices'];
-        $view->vars['button'] = $options['button'];
     }
 
     /**
@@ -51,13 +50,11 @@ class TranslatableChoiceType extends TranslatableType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
-            'button' => [],
             'choices' => [],
             'choice_translation_domain' => false,
             'allow_extra_fields' => true,
         ]);
 
-        $resolver->setAllowedTypes('button', 'array');
         $resolver->setAllowedTypes('choices', 'array');
 
         parent::configureOptions($resolver);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -91,9 +92,9 @@ class ThemeTranslationsFactory extends TranslationsFactory
      * @param string $locale the catalogue locale
      * @param string|null $search
      *
-     * @return array
-     *
      * @throws ProviderNotFoundException
+     *
+     * @return array
      */
     protected function getFrontTranslationsForThemeAndLocale($themeName, $locale, $search = null)
     {

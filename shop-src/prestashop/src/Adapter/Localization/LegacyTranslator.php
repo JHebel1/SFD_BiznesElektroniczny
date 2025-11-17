@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -26,7 +27,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Localization;
 
-use Exception;
 use Translate;
 
 /**
@@ -40,14 +40,14 @@ class LegacyTranslator
      * @param string $moduleName Module name
      * @param string $originalString String to translate
      * @param string|false $source
-     * @param string|array|null $sprintf
+     * @param null $sprintf
      * @param bool $js
      * @param string|null $locale
      * @param bool $fallback [default=true] If true, this method falls back to the new translation system if no translation is found
      *
      * @return mixed|string
      *
-     * @throws Exception
+     * @throws \Exception
      */
     public function translate(
         $moduleName,

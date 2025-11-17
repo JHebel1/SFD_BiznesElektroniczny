@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * This file is part of the FOSJsRoutingBundle package.
  *
@@ -13,8 +11,8 @@ declare(strict_types=1);
 
 namespace FOS\JsRoutingBundle\DependencyInjection;
 
-use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 
 /**
  * Configuration class.
@@ -26,21 +24,25 @@ class Configuration implements ConfigurationInterface
     /**
      * Generates the configuration tree builder.
      *
-     * @return TreeBuilder The tree builder
+     * @return \Symfony\Component\Config\Definition\Builder\TreeBuilder The tree builder
      */
-    public function getConfigTreeBuilder(): TreeBuilder
+    public function getConfigTreeBuilder()
     {
         $builder = new TreeBuilder('fos_js_routing');
-
-        $rootNode = $builder->getRootNode();
+        if (\method_exists($builder, 'getRootNode')) {
+            $rootNode = $builder->getRootNode();
+        } else {
+            // BC layer for symfony/config 4.1 and older
+            $rootNode = $builder->root('fos_js_routing');
+        }
 
         $rootNode
             ->children()
                 ->scalarNode('serializer')->cannotBeEmpty()->end()
                 ->arrayNode('routes_to_expose')
                     ->beforeNormalization()
-                        ->ifTrue(fn ($v) => !is_array($v))
-                        ->then(fn ($v) => [$v])
+                        ->ifTrue(function ($v) { return !is_array($v); })
+                        ->then(function ($v) { return array($v); })
                     ->end()
                     ->prototype('scalar')->end()
                 ->end()
@@ -54,8 +56,8 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('smaxage')->defaultNull()->end()
                         ->arrayNode('vary')
                             ->beforeNormalization()
-                                ->ifTrue(fn ($v) => !is_array($v))
-                                ->then(fn ($v) => [$v])
+                                ->ifTrue(function ($v) { return !is_array($v); })
+                                ->then(function ($v) { return array($v); })
                             ->end()
                             ->prototype('scalar')->end()
                         ->end()

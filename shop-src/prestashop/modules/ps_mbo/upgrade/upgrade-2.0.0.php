@@ -46,22 +46,17 @@ function upgrade_module_2_0_0($module)
     }
 
     // Some hooks are added, we register them.
-    if (
-        false === $module->registerHook([
-            'actionAdminControllerSetMedia',
-            'displayDashboardTop',
-        ])
-    ) {
+    if (false === $module->registerHook(ps_mbo::HOOKS)) {
         return false;
     }
 
     // We migrate Module Selections Tab to MBO
-    if (false === $module->installTab(ps_mbo::$ADMIN_CONTROLLERS['AdminPsMboSelection'])) {
+    if (false === $module->installTab(ps_mbo::ADMIN_CONTROLLERS['AdminPsMboAddons'])) {
         return false;
     }
 
     // We create Module Recommended Tab to MBO
-    if (false === $module->installTab(ps_mbo::$ADMIN_CONTROLLERS['AdminPsMboRecommended'])) {
+    if (false === $module->installTab(ps_mbo::ADMIN_CONTROLLERS['AdminPsMboRecommended'])) {
         return false;
     }
 

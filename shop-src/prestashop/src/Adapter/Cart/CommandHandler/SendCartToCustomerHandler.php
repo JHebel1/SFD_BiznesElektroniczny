@@ -30,7 +30,6 @@ use Cart;
 use Context;
 use Customer;
 use Mail;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Command\SendCartToCustomerCommand;
 use PrestaShop\PrestaShop\Core\Domain\Cart\CommandHandler\SendCartToCustomerHanlderInterface;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartException;
@@ -40,10 +39,7 @@ use Validate;
 
 /**
  * @internal
- *
- * @deprecated Since 9.0 and will be removed in the next major.
  */
-#[AsCommandHandler]
 final class SendCartToCustomerHandler implements SendCartToCustomerHanlderInterface
 {
     /**
@@ -133,7 +129,7 @@ final class SendCartToCustomerHandler implements SendCartToCustomerHanlderInterf
     {
         return Context::getContext()->link->getPageLink(
             'order',
-            null,
+            false,
             (int) $cart->getAssociatedLanguage()->getId(),
             [
                 'step' => 3,

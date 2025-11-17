@@ -25,57 +25,64 @@
  */
 class AuthControllerCore extends FrontController
 {
-    /** @var bool */
     public $ssl = true;
-    /** @var string */
     public $php_self = 'authentication';
-    /** @var bool */
     public $auth = false;
 
-    /**
-     * Check if the controller is available for the current user/visitor.
-     *
-     * @see Controller::checkAccess()
-     *
-     * @return bool
-     */
-    public function checkAccess(): bool
+    public function checkAccess()
     {
         if ($this->context->customer->isLogged() && !$this->ajax) {
-            $this->redirect_after = $this->authRedirection ? urlencode($this->authRedirection) : 'my-account';
+            $this->redirect_after = ($this->authRedirection) ? urlencode($this->authRedirection) : 'my-account';
             $this->redirect();
         }
 
         return parent::checkAccess();
     }
 
-    /**
-     * Assign template vars related to page content.
-     *
-     * @see FrontController::initContent()
-     */
-    public function initContent(): void
+    public function initContent()
     {
-        if (Tools::isSubmit('create_account')) {
-            $this->redirectWithNotifications('registration');
-        }
-
         $should_redirect = false;
 
-        $login_form = $this->makeLoginForm()->fillWith(
-            Tools::getAllValues()
-        );
+        if (Tools::isSubmit('submitCreate') || Tools::isSubmit('create_account')) {
+            $register_form = $this
+                ->makeCustomerForm()
+                ->setGuestAllowed(false)
+                ->fillWith(Tools::getAllValues());
 
-        if (Tools::isSubmit('submitLogin')) {
-            if ($login_form->submit()) {
-                $should_redirect = true;
+            if (Tools::isSubmit('submitCreate')) {
+                $hookResult = array_reduce(
+                    Hook::exec('actionSubmitAccountBefore', [], null, true),
+                    function ($carry, $item) {
+                        return $carry && $item;
+                    },
+                    true
+                );
+                if ($hookResult && $register_form->submit()) {
+                    $should_redirect = true;
+                }
             }
-        }
 
-        $this->context->smarty->assign([
-            'login_form' => $login_form->getProxy(),
-        ]);
-        $this->setTemplate('customer/authentication');
+            $this->context->smarty->assign([
+                'register_form' => $register_form->getProxy(),
+                'hook_create_account_top' => Hook::exec('displayCustomerAccountFormTop'),
+            ]);
+            $this->setTemplate('customer/registration');
+        } else {
+            $login_form = $this->makeLoginForm()->fillWith(
+                Tools::getAllValues()
+            );
+
+            if (Tools::isSubmit('submitLogin')) {
+                if ($login_form->submit()) {
+                    $should_redirect = true;
+                }
+            }
+
+            $this->context->smarty->assign([
+                'login_form' => $login_form->getProxy(),
+            ]);
+            $this->setTemplate('customer/authentication');
+        }
 
         parent::initContent();
 
@@ -85,38 +92,37 @@ class AuthControllerCore extends FrontController
             if (Tools::urlBelongsToShop($back)) {
                 // Checks to see if "back" is a fully qualified
                 // URL that is on OUR domain, with the right protocol
-                $this->redirectWithNotifications($back);
+                return $this->redirectWithNotifications($back);
             }
 
             // Well we're not redirecting to a URL,
             // so...
             if ($this->authRedirection) {
                 // We may need to go there if defined
-                $this->redirectWithNotifications($this->authRedirection);
+                return $this->redirectWithNotifications($this->authRedirection);
             }
 
             // go home
-            $this->redirectWithNotifications(__PS_BASE_URI__);
+            return $this->redirectWithNotifications(__PS_BASE_URI__);
         }
     }
 
-    public function getBreadcrumbLinks(): array
+    public function getBreadcrumbLinks()
     {
         $breadcrumb = parent::getBreadcrumbLinks();
 
-        $breadcrumb['links'][] = [
-            'title' => $this->trans('Log in to your account', [], 'Shop.Theme.Customeraccount'),
-            'url' => $this->context->link->getPageLink('authentication'),
-        ];
+        if (Tools::isSubmit('submitCreate') || Tools::isSubmit('create_account')) {
+            $breadcrumb['links'][] = [
+                'title' => $this->trans('Create an account', [], 'Shop.Theme.Customeraccount'),
+                'url' => $this->context->link->getPageLink('authentication'),
+            ];
+        } else {
+            $breadcrumb['links'][] = [
+                'title' => $this->trans('Log in to your account', [], 'Shop.Theme.Customeraccount'),
+                'url' => $this->context->link->getPageLink('authentication'),
+            ];
+        }
 
         return $breadcrumb;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getCanonicalURL(): string
-    {
-        return $this->context->link->getPageLink('authentication');
     }
 }

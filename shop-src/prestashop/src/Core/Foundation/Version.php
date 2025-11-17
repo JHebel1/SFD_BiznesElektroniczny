@@ -223,6 +223,23 @@ class Version
     }
 
     /**
+     * Returns the current release version.
+     *
+     * @deprecated Since 1.7.6.0, use getPatchVersion();
+     *
+     * @return int
+     */
+    public function getReleaseVersion()
+    {
+        @trigger_error(
+            'getReleaseVersion() is deprecated since version 1.7.6.0 Use getPatchVersion() instead.',
+            E_USER_DEPRECATED
+        );
+
+        return $this->getPatchVersion();
+    }
+
+    /**
      * Returns the current pre release version (if any)
      *
      * @return string
@@ -368,7 +385,7 @@ class Version
      */
     private function removeLegacyPrefix($version, $majorVersionString)
     {
-        if (str_starts_with($version, '1.') && str_starts_with($version, $majorVersionString)) {
+        if ('1.' === substr($version, 0, 2) && substr($version, 0, strlen($majorVersionString)) === $majorVersionString) {
             $version = substr($version, 2);
         }
 

@@ -68,7 +68,7 @@ class IconButtonType extends ButtonType
     /**
      * {@inheritDoc}
      */
-    public function getParent(): ?string
+    public function getParent()
     {
         return ButtonType::class;
     }
@@ -76,7 +76,7 @@ class IconButtonType extends ButtonType
     /**
      * {@inheritdoc}
      */
-    public function getBlockPrefix(): string
+    public function getBlockPrefix()
     {
         return 'icon_button';
     }

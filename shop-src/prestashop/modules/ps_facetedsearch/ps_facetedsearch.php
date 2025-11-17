@@ -96,7 +96,7 @@ class Ps_Facetedsearch extends Module implements WidgetInterface
     {
         $this->name = 'ps_facetedsearch';
         $this->tab = 'front_office_features';
-        $this->version = '4.0.1';
+        $this->version = '3.14.1';
         $this->author = 'PrestaShop';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -107,7 +107,7 @@ class Ps_Facetedsearch extends Module implements WidgetInterface
         $this->displayName = $this->trans('Faceted search', [], 'Modules.Facetedsearch.Admin');
         $this->description = $this->trans('Filter your catalog to help visitors picture the category tree and browse your store easily.', [], 'Modules.Facetedsearch.Admin');
         $this->psLayeredFullTree = (int) Configuration::get('PS_LAYERED_FULL_TREE');
-        $this->ps_versions_compliancy = ['min' => '1.7.7.0', 'max' => _PS_VERSION_];
+        $this->ps_versions_compliancy = ['min' => '1.7.6.0', 'max' => _PS_VERSION_];
 
         $this->hookDispatcher = new HookDispatcher($this);
 
@@ -779,24 +779,20 @@ class Ps_Facetedsearch extends Module implements WidgetInterface
     public function renderAdminMain()
     {
         // General purpose variables
+        $moduleUrl = Tools::getProtocol(Tools::usingSecureMode()) . $_SERVER['HTTP_HOST'] . $this->getPathUri();
         $features = $this->getAvailableFeatures();
         $attributeGroups = $this->getAvailableAttributes();
 
-        $cronToken = substr(Tools::hash('ps_facetedsearch/index'), 0, 10);
         $this->context->smarty->assign([
             'PS_LAYERED_INDEXED' => (int) Configuration::getGlobalValue('PS_LAYERED_INDEXED'),
             'current_url' => Tools::safeOutput(preg_replace('/&deleteFilterTemplate=[0-9]*&id_layered_filter=[0-9]*/', '', $_SERVER['REQUEST_URI'])),
             'id_lang' => $this->getContext()->cookie->id_lang,
-            'token' => $cronToken,
+            'token' => substr(Tools::hash('ps_facetedsearch/index'), 0, 10),
             'base_folder' => urlencode(_PS_ADMIN_DIR_),
-            'price_indexer_url' => $this->context->link->getModuleLink('ps_facetedsearch', 'cron', ['ajax' => true, 'action' => 'indexPrices', 'token' => $cronToken]),
-            'full_price_indexer_url' => $this->context->link->getModuleLink('ps_facetedsearch', 'cron', ['ajax' => true, 'action' => 'indexPrices', 'full' => 1, 'token' => $cronToken]),
-            'attribute_indexer_url' => $this->context->link->getModuleLink('ps_facetedsearch', 'cron', ['ajax' => true, 'action' => 'indexAttributes', 'token' => $cronToken]),
-            'clear_cache_url' => $this->context->link->getModuleLink('ps_facetedsearch', 'cron', ['ajax' => true, 'action' => 'clearCache', 'token' => $cronToken]),
-            'price_indexer_url_for_cron' => $this->context->link->getModuleLink('ps_facetedsearch', 'cron', ['action' => 'indexPrices', 'token' => $cronToken]),
-            'full_price_indexer_url_for_cron' => $this->context->link->getModuleLink('ps_facetedsearch', 'cron', ['action' => 'indexPrices', 'full' => 1, 'token' => $cronToken]),
-            'attribute_indexer_url_for_cron' => $this->context->link->getModuleLink('ps_facetedsearch', 'cron', ['action' => 'indexAttributes', 'token' => $cronToken]),
-            'clear_cache_url_for_cron' => $this->context->link->getModuleLink('ps_facetedsearch', 'cron', ['action' => 'clearCache', 'token' => $cronToken]),
+            'price_indexer_url' => $moduleUrl . 'ps_facetedsearch-price-indexer.php' . '?token=' . substr(Tools::hash('ps_facetedsearch/index'), 0, 10),
+            'full_price_indexer_url' => $moduleUrl . 'ps_facetedsearch-price-indexer.php' . '?token=' . substr(Tools::hash('ps_facetedsearch/index'), 0, 10) . '&full=1',
+            'attribute_indexer_url' => $moduleUrl . 'ps_facetedsearch-attribute-indexer.php' . '?token=' . substr(Tools::hash('ps_facetedsearch/index'), 0, 10),
+            'clear_cache_url' => $moduleUrl . 'ps_facetedsearch-clear-cache.php' . '?token=' . substr(Tools::hash('ps_facetedsearch/index'), 0, 10),
             'filters_templates' => $this->getExistingFiltersOverview(),
             'show_quantities' => Configuration::get('PS_LAYERED_SHOW_QTIES'),
             'cache_enabled' => Configuration::get('PS_LAYERED_CACHE_ENABLED'),
@@ -877,7 +873,7 @@ class Ps_Facetedsearch extends Module implements WidgetInterface
             'attribute_groups' => $attributeGroups,
             'features' => $features,
             'filters' => $filters,
-            'total_filters' => 7 + count($attributeGroups) + count($features),
+            'total_filters' => 6 + count($attributeGroups) + count($features),
             'default_filters' => $this->getDefaultFilters(),
             'categories_tree' => $treeCategoriesHelper->render(),
             'controller_options' => $controller_options,
@@ -1752,7 +1748,7 @@ VALUES(' . $last_id . ', ' . (int) $idShop . ')');
                 'cacheable' => false,
             ],
             'search' => [
-                'name' => $this->trans('Search', [], 'Modules.Facetedsearch.Admin'),
+                'name' => $this->trans('Search', [], 'Modules.Facetedsearch.Admin') . ' ' . $this->trans('(experimental)', [], 'Modules.Facetedsearch.Admin'),
                 'cacheable' => false,
             ],
         ]);

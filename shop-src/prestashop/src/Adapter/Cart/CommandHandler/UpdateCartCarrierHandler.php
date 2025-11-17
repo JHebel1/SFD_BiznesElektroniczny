@@ -29,7 +29,6 @@ namespace PrestaShop\PrestaShop\Adapter\Cart\CommandHandler;
 use Carrier;
 use PrestaShop\PrestaShop\Adapter\Cart\AbstractCartHandler;
 use PrestaShop\PrestaShop\Adapter\ContextStateManager;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Command\UpdateCartCarrierCommand;
 use PrestaShop\PrestaShop\Core\Domain\Cart\CommandHandler\UpdateCartCarrierHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartConstraintException;
@@ -38,7 +37,6 @@ use Validate;
 /**
  * @internal
  */
-#[AsCommandHandler]
 final class UpdateCartCarrierHandler extends AbstractCartHandler implements UpdateCartCarrierHandlerInterface
 {
     /**
@@ -68,6 +66,7 @@ final class UpdateCartCarrierHandler extends AbstractCartHandler implements Upda
             $cart->setDeliveryOption([
                 (int) $cart->id_address_delivery => $this->formatLegacyDeliveryOptionFromCarrierId($command->getNewCarrierId()),
             ]);
+
             $cart->update();
         } finally {
             $this->contextStateManager->restorePreviousContext();

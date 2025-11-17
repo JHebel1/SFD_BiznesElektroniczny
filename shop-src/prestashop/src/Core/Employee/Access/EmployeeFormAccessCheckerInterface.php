@@ -42,7 +42,7 @@ interface EmployeeFormAccessCheckerInterface
      *
      * @return bool
      */
-    public function isRestrictedAccess(int $employeeId): bool;
+    public function isRestrictedAccess($employeeId);
 
     /**
      * Check if context employee can access edit form for given employee.
@@ -51,5 +51,12 @@ interface EmployeeFormAccessCheckerInterface
      *
      * @return bool
      */
-    public function canAccessEditFormFor(int $employeeId): bool;
+    public function canAccessEditFormFor($employeeId);
+
+    /**
+     * Check if context employee can access addons connect form control.
+     *
+     * @return bool
+     */
+    public function canAccessAddonsConnect();
 }

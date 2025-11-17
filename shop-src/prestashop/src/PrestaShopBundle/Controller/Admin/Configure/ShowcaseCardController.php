@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -26,18 +27,20 @@
 
 namespace PrestaShopBundle\Controller\Admin\Configure;
 
-use Exception;
 use PrestaShop\PrestaShop\Core\Domain\ShowcaseCard\Command\CloseShowcaseCardCommand;
 use PrestaShop\PrestaShop\Core\Domain\ShowcaseCard\Exception\InvalidShowcaseCardNameException;
 use PrestaShop\PrestaShop\Core\Domain\ShowcaseCard\ValueObject\ShowcaseCard;
-use PrestaShopBundle\Controller\Admin\PrestaShopAdminController;
-use PrestaShopBundle\Security\Attribute\AdminSecurity;
-use PrestaShopBundle\Security\Attribute\DemoRestricted;
+use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
+use PrestaShopBundle\Security\Annotation\AdminSecurity;
+use PrestaShopBundle\Security\Annotation\DemoRestricted;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class ShowcaseCardController extends PrestaShopAdminController
+/**
+ * @todo Move this to API
+ */
+class ShowcaseCardController extends FrameworkBundleAdminController
 {
     /**
      * Saves the user preference of closing the showcase card.
@@ -48,11 +51,12 @@ class ShowcaseCardController extends PrestaShopAdminController
      *
      * @see ShowcaseCard
      *
+     * @AdminSecurity("is_granted(['create', 'update'], 'CONFIGURE')")
+     * @DemoRestricted(redirectRoute="admin_metas_index")
+     *
      * @return JsonResponse
      */
-    #[DemoRestricted(redirectRoute: 'admin_metas_index')]
-    #[AdminSecurity("is_granted('create', 'CONFIGURE') && is_granted('update', 'CONFIGURE')")]
-    public function closeShowcaseCardAction(Request $request): JsonResponse
+    public function closeShowcaseCardAction(Request $request)
     {
         // check prerequisites
         if (!$request->isMethod('post') || !$request->request->get('close')) {
@@ -66,8 +70,9 @@ class ShowcaseCardController extends PrestaShopAdminController
         }
 
         try {
-            $closeShowcaseCard = new CloseShowcaseCardCommand($this->getEmployeeContext()->getEmployee()->getId(), $request->request->get('name'));
-            $this->dispatchCommand($closeShowcaseCard);
+            $employeeId = $this->getContext()->employee->id;
+            $closeShowcaseCard = new CloseShowcaseCardCommand($employeeId, $request->request->get('name'));
+            $this->getCommandBus()->handle($closeShowcaseCard);
 
             return $this->json(
                 [
@@ -75,7 +80,7 @@ class ShowcaseCardController extends PrestaShopAdminController
                     'message' => '',
                 ]
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->json(
                 [
                     'success' => false,

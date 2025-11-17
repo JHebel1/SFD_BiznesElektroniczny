@@ -26,8 +26,7 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Language\CommandHandler;
 
-use PrestaShop\PrestaShop\Adapter\File\RobotsTextFileGenerator;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
+use Language;
 use PrestaShop\PrestaShop\Core\Domain\Language\Command\BulkToggleLanguagesStatusCommand;
 use PrestaShop\PrestaShop\Core\Domain\Language\CommandHandler\BulkToggleLanguagesStatusHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Language\Exception\LanguageException;
@@ -37,22 +36,8 @@ use PrestaShop\PrestaShop\Core\Domain\Language\Exception\LanguageException;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class BulkToggleLanguagesStatusHandler extends AbstractLanguageHandler implements BulkToggleLanguagesStatusHandlerInterface
 {
-    /**
-     * @var RobotsTextFileGenerator
-     */
-    private $robotsTextFileGenerator;
-
-    /**
-     * @param RobotsTextFileGenerator $robotsTextFileGenerator
-     */
-    public function __construct(RobotsTextFileGenerator $robotsTextFileGenerator)
-    {
-        $this->robotsTextFileGenerator = $robotsTextFileGenerator;
-    }
-
     /**
      * @param BulkToggleLanguagesStatusCommand $command
      */
@@ -69,6 +54,5 @@ final class BulkToggleLanguagesStatusHandler extends AbstractLanguageHandler imp
                 throw new LanguageException(sprintf('Failed to toggle language "%s" to status %s', $language->id, var_export($command->getStatus(), true)));
             }
         }
-        $this->robotsTextFileGenerator->generateFile();
     }
 }

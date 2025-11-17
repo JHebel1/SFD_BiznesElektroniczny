@@ -32,7 +32,7 @@ use PDF;
 use PrestaShop\PrestaShop\Core\Exception\CoreException;
 use PrestaShop\PrestaShop\Core\PDF\PDFGeneratorInterface;
 use RuntimeException;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 use Validate;
 
 /**
@@ -58,10 +58,10 @@ final class DeliverySlipPdfGenerator implements PDFGeneratorInterface
     /**
      * {@inheritdoc}
      */
-    public function generatePDF(array $orderId): string
+    public function generatePDF(array $orderId)
     {
         if (count($orderId) !== 1) {
-            throw new CoreException(sprintf('"%s" supports generating delivery slip for single order only.', self::class));
+            throw new CoreException(sprintf('"%s" supports generating delivery slip for single order only.', get_class($this)));
         }
 
         $orderId = reset($orderId);
@@ -74,7 +74,6 @@ final class DeliverySlipPdfGenerator implements PDFGeneratorInterface
         $order_invoice_collection = $order->getInvoicesCollection();
 
         $pdf = new PDF($order_invoice_collection, PDF::TEMPLATE_DELIVERY_SLIP, Context::getContext()->smarty);
-
-        return $pdf->render(true);
+        $pdf->render();
     }
 }

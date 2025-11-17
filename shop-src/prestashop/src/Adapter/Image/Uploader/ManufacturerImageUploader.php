@@ -26,11 +26,10 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Image\Uploader;
 
+use Configuration;
 use ImageManager;
 use ImageType;
-use PrestaShop\PrestaShop\Adapter\ServiceLocator;
 use PrestaShop\PrestaShop\Core\Image\Exception\ImageOptimizationException;
-use PrestaShop\PrestaShop\Core\Image\ImageFormatConfiguration;
 use PrestaShop\PrestaShop\Core\Image\Uploader\Exception\ImageUploadException;
 use PrestaShop\PrestaShop\Core\Image\Uploader\Exception\MemoryLimitException;
 use PrestaShop\PrestaShop\Core\Image\Uploader\ImageUploaderInterface;
@@ -78,23 +77,29 @@ final class ManufacturerImageUploader extends AbstractImageUploader implements I
     private function generateDifferentSizeImages($manufacturerId)
     {
         $resized = true;
+        $generateHighDpiImages = (bool) Configuration::get('PS_HIGHT_DPI');
 
         try {
             /* Generate images with different size */
-            if (count($_FILES)
-                && file_exists(_PS_MANU_IMG_DIR_ . $manufacturerId . '.jpg')
+            if (count($_FILES) &&
+                file_exists(_PS_MANU_IMG_DIR_ . $manufacturerId . '.jpg')
             ) {
                 $imageTypes = ImageType::getImagesTypes('manufacturers');
-                $configuredImageFormats = ServiceLocator::get(ImageFormatConfiguration::class)->getGenerationFormats();
 
                 foreach ($imageTypes as $imageType) {
-                    foreach ($configuredImageFormats as $imageFormat) {
+                    $resized &= ImageManager::resize(
+                        _PS_MANU_IMG_DIR_ . $manufacturerId . '.jpg',
+                        _PS_MANU_IMG_DIR_ . $manufacturerId . '-' . stripslashes($imageType['name']) . '.jpg',
+                        (int) $imageType['width'],
+                        (int) $imageType['height']
+                    );
+
+                    if ($generateHighDpiImages) {
                         $resized &= ImageManager::resize(
                             _PS_MANU_IMG_DIR_ . $manufacturerId . '.jpg',
-                            _PS_MANU_IMG_DIR_ . $manufacturerId . '-' . stripslashes($imageType['name']) . '.' . $imageFormat,
-                            (int) $imageType['width'],
-                            (int) $imageType['height'],
-                            $imageFormat
+                            _PS_MANU_IMG_DIR_ . $manufacturerId . '-' . stripslashes($imageType['name']) . '2x.jpg',
+                            (int) $imageType['width'] * 2,
+                            (int) $imageType['height'] * 2
                         );
                     }
                 }
@@ -105,7 +110,7 @@ final class ManufacturerImageUploader extends AbstractImageUploader implements I
                     unlink($currentLogo);
                 }
             }
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new ImageOptimizationException('Unable to resize one or more of your pictures.');
         }
 

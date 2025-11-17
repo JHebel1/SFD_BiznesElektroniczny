@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Form\ChoiceProvider;
 
-use PrestaShop\PrestaShop\Core\Form\FormChoiceFormatter;
 use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 
 /**
@@ -51,10 +50,12 @@ final class ManufacturerNameByIdChoiceProvider implements FormChoiceProviderInte
      */
     public function getChoices()
     {
-        return FormChoiceFormatter::formatFormChoices(
-            $this->manufacturers,
-            'id_manufacturer',
-            'name'
-        );
+        $choices = [];
+
+        foreach ($this->manufacturers as $manufacturer) {
+            $choices[$manufacturer['name']] = (int) $manufacturer['id_manufacturer'];
+        }
+
+        return $choices;
     }
 }

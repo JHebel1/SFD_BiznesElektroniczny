@@ -104,7 +104,6 @@ final class LanguageQueryBuilder extends AbstractDoctrineQueryBuilder
             'name',
             'iso_code',
             'language_code',
-            'locale',
             'date_format_lite',
             'date_format_full',
             'active',

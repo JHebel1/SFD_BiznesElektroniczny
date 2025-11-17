@@ -8,15 +8,15 @@
 
 namespace PrestaShop\Decimal\Operation;
 
-use PrestaShop\Decimal\DecimalNumber;
 use PrestaShop\Decimal\Exception\DivisionByZeroException;
+use PrestaShop\Decimal\DecimalNumber;
 
 /**
  * Computes the division between two decimal numbers.
  */
 class Division
 {
-    public const DEFAULT_PRECISION = 6;
+    const DEFAULT_PRECISION = 6;
 
     /**
      * Performs the division.
@@ -32,7 +32,6 @@ class Division
      * @param int $precision Maximum decimal precision
      *
      * @return DecimalNumber Result of the division
-     *
      * @throws DivisionByZeroException
      */
     public function compute(DecimalNumber $a, DecimalNumber $b, $precision = self::DEFAULT_PRECISION)
@@ -52,7 +51,6 @@ class Division
      * @param int $precision Maximum decimal precision
      *
      * @return DecimalNumber Result of the division
-     *
      * @throws DivisionByZeroException
      */
     public function computeUsingBcMath(DecimalNumber $a, DecimalNumber $b, $precision = self::DEFAULT_PRECISION)
@@ -72,7 +70,6 @@ class Division
      * @param int $precision Maximum decimal precision
      *
      * @return DecimalNumber Result of the division
-     *
      * @throws DivisionByZeroException
      */
     public function computeWithoutBcMath(DecimalNumber $a, DecimalNumber $b, $precision = self::DEFAULT_PRECISION)
@@ -115,7 +112,9 @@ class Division
             $b = $b->toMagnitude($maxPrecision);
         }
 
-        return $this->integerDivision($a, $b, $precision);
+        $result = $this->integerDivision($a, $b, max($precision, $aPrecision));
+
+        return $result;
     }
 
     /**
@@ -136,7 +135,7 @@ class Division
         $exponent = 0;
 
         $currentSequence = '';
-        for ($i = 0; $i < $dividendLength; ++$i) {
+        for ($i = 0; $i < $dividendLength; $i++) {
             // append digits until we get a number big enough to divide
             $currentSequence .= $dividend[$i];
 
@@ -149,7 +148,7 @@ class Division
                 $remainder = new DecimalNumber($currentSequence);
                 $multiple = 0;
                 do {
-                    ++$multiple;
+                    $multiple++;
                     $remainder = $remainder->minus($divisor);
                 } while ($remainder->isGreaterOrEqualThan($divisor));
 
@@ -164,8 +163,8 @@ class Division
                 // "borrow" up to $precision digits
                 --$precision;
                 $dividend .= '0';
-                ++$dividendLength;
-                ++$exponent;
+                $dividendLength++;
+                $exponent++;
             }
         }
 

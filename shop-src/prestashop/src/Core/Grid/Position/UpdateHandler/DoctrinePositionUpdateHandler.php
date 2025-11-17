@@ -28,7 +28,7 @@ namespace PrestaShop\PrestaShop\Core\Grid\Position\UpdateHandler;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ConnectionException;
-use Exception;
+use Doctrine\DBAL\Statement;
 use PrestaShop\PrestaShop\Core\Grid\Position\Exception\PositionUpdateException;
 use PrestaShop\PrestaShop\Core\Grid\Position\PositionDefinitionInterface;
 
@@ -73,11 +73,11 @@ final class DoctrinePositionUpdateHandler implements PositionUpdateHandlerInterf
 
         if (null !== $parentId && null !== $positionDefinition->getParentIdField()) {
             $qb
-                ->andWhere('t.`' . $positionDefinition->getParentIdField() . '` = :parentId')
+                ->andWhere('t.' . $positionDefinition->getParentIdField() . ' = :parentId')
                 ->setParameter('parentId', $parentId);
         }
 
-        $positions = $qb->executeQuery()->fetchAllAssociative();
+        $positions = $qb->execute()->fetchAll();
         $currentPositions = [];
         foreach ($positions as $position) {
             $positionId = $position[$positionDefinition->getIdField()];
@@ -90,7 +90,7 @@ final class DoctrinePositionUpdateHandler implements PositionUpdateHandlerInterf
     /**
      * {@inheritdoc}
      */
-    public function updatePositions(PositionDefinitionInterface $positionDefinition, array $newPositions, $parentId = null)
+    public function updatePositions(PositionDefinitionInterface $positionDefinition, array $newPositions)
     {
         try {
             $this->connection->beginTransaction();
@@ -104,21 +104,14 @@ final class DoctrinePositionUpdateHandler implements PositionUpdateHandlerInterf
                     ->setParameter('rowId', $rowId)
                     ->setParameter('position', $positionIndex);
 
-                if (null !== $parentId && null !== $positionDefinition->getParentIdField()) {
-                    $qb
-                        ->andWhere('`' . $positionDefinition->getParentIdField() . '` = :parentId')
-                        ->setParameter('parentId', $parentId);
-                }
-
-                try {
-                    $qb->executeStatement();
-                } catch (Exception) {
+                $statement = $qb->execute();
+                if ($statement instanceof Statement && $statement->errorCode()) {
                     throw new PositionUpdateException('Could not update #%i', 'Admin.Catalog.Notification', [$rowId]);
                 }
                 ++$positionIndex;
             }
             $this->connection->commit();
-        } catch (ConnectionException) {
+        } catch (ConnectionException $e) {
             $this->connection->rollBack();
 
             throw new PositionUpdateException('Could not update.', 'Admin.Catalog.Notification');

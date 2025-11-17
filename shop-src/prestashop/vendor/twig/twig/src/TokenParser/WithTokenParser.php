@@ -11,7 +11,6 @@
 
 namespace Twig\TokenParser;
 
-use Twig\Node\Node;
 use Twig\Node\WithNode;
 use Twig\Token;
 
@@ -20,11 +19,11 @@ use Twig\Token;
  *
  * @author Fabien Potencier <fabien@symfony.com>
  *
- * @internal
+ * @final
  */
-final class WithTokenParser extends AbstractTokenParser
+class WithTokenParser extends AbstractTokenParser
 {
-    public function parse(Token $token): Node
+    public function parse(Token $token)
     {
         $stream = $this->parser->getStream();
 
@@ -32,7 +31,7 @@ final class WithTokenParser extends AbstractTokenParser
         $only = false;
         if (!$stream->test(Token::BLOCK_END_TYPE)) {
             $variables = $this->parser->getExpressionParser()->parseExpression();
-            $only = (bool) $stream->nextIf(Token::NAME_TYPE, 'only');
+            $only = $stream->nextIf(Token::NAME_TYPE, 'only');
         }
 
         $stream->expect(Token::BLOCK_END_TYPE);
@@ -41,16 +40,18 @@ final class WithTokenParser extends AbstractTokenParser
 
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        return new WithNode($body, $variables, $only, $token->getLine());
+        return new WithNode($body, $variables, $only, $token->getLine(), $this->getTag());
     }
 
-    public function decideWithEnd(Token $token): bool
+    public function decideWithEnd(Token $token)
     {
         return $token->test('endwith');
     }
 
-    public function getTag(): string
+    public function getTag()
     {
         return 'with';
     }
 }
+
+class_alias('Twig\TokenParser\WithTokenParser', 'Twig_TokenParser_With');

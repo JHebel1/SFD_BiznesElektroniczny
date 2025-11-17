@@ -17,47 +17,68 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-declare(strict_types=1);
 
 namespace PrestaShop\Module\Mbo\Tab;
 
-use PrestaShop\Module\Mbo\Module\Module;
-use PrestaShop\Module\Mbo\Module\Repository;
+use PrestaShop\Module\Mbo\ModuleCollectionDataProvider;
+use PrestaShop\Module\Mbo\RecommendedModule\RecommendedModule;
+use PrestaShop\Module\Mbo\RecommendedModule\RecommendedModuleCollection;
 
 class TabCollectionFactory implements TabCollectionFactoryInterface
 {
-    /**
-     * @var Repository
-     */
-    protected $moduleRepository;
+    private $moduleCollectionDataProvider;
 
-    public function __construct(Repository $moduleRepository)
+    /**
+     * Constructor.
+     *
+     * @param ModuleCollectionDataProvider $moduleCollectionDataProvider
+     */
+    public function __construct(ModuleCollectionDataProvider $moduleCollectionDataProvider)
     {
-        $this->moduleRepository = $moduleRepository;
+        $this->moduleCollectionDataProvider = $moduleCollectionDataProvider;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function buildFromArray(array $data): TabCollectionInterface
+    public function buildFromArray(array $data)
     {
         $tabCollection = new TabCollection();
+
         if (empty($data)) {
             return $tabCollection;
         }
 
-        $modulesData = $this->getModules($data);
+        $modulesData = $this->moduleCollectionDataProvider->getData($this->getModuleNames($data));
 
         if (empty($modulesData)) {
             return $tabCollection;
         }
 
         foreach ($data as $tabClassName => $tabData) {
-            $tab = new Tab();
-            $tab->setLegacyClassName($tabClassName);
-            $tab->setDisplayMode($tabData['displayMode']);
+            $recommendedModuleCollection = new RecommendedModuleCollection();
 
-            $tabCollection->addTab($tab);
+            foreach ($tabData['recommendedModules'] as $position => $moduleName) {
+                if (isset($modulesData[$moduleName])) {
+                    $recommendedModule = new RecommendedModule();
+                    $recommendedModule->setModuleName($moduleName);
+                    $recommendedModule->setPosition((int) $position);
+                    $recommendedModule->setInstalled((bool) $modulesData[$moduleName]['database']['installed']);
+                    $recommendedModule->setModuleData($modulesData[$moduleName]);
+                    $recommendedModuleCollection->addRecommendedModule($recommendedModule);
+                }
+            }
+
+            if (!$recommendedModuleCollection->isEmpty()) {
+                $recommendedModuleCollection->sortByPosition();
+
+                $tab = new Tab();
+                $tab->setLegacyClassName($tabClassName);
+                $tab->setDisplayMode($tabData['displayMode']);
+                $tab->setRecommendedModules($recommendedModuleCollection);
+
+                $tabCollection->addTab($tab);
+            }
         }
 
         return $tabCollection;
@@ -66,18 +87,18 @@ class TabCollectionFactory implements TabCollectionFactoryInterface
     /**
      * @param array $data
      *
-     * @return array<string, Module>
+     * @return string[]
      */
-    protected function getModules(array $data): array
+    private function getModuleNames(array $data)
     {
         $moduleNames = [];
 
         foreach ($data as $tabData) {
             foreach ($tabData['recommendedModules'] as $moduleName) {
-                $moduleNames[$moduleName] = $this->moduleRepository->getModule($moduleName);
+                $moduleNames[] = $moduleName;
             }
         }
 
-        return $moduleNames;
+        return array_unique($moduleNames);
     }
 }

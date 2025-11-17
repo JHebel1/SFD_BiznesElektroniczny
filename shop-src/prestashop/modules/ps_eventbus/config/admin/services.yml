@@ -1,4 +1,0 @@
-services:
-  PrestaShop\Module\PsEventbus\Service\PresenterService:
-    class: PrestaShop\Module\PsEventbus\Service\PresenterService
-    public: true

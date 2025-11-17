@@ -35,23 +35,26 @@ use PrestaShop\PrestaShop\Core\Domain\Hook\ValueObject\HookId;
  */
 class GetHookStatus
 {
-    private HookId $id;
+    /**
+     * @var HookId
+     */
+    private $hookId;
 
     /**
      * GetHookStatus constructor.
      *
-     * @param int $id
+     * @param int $hookId
      */
-    public function __construct(int $id)
+    public function __construct(int $hookId)
     {
-        $this->id = new HookId($id);
+        $this->hookId = new HookId($hookId);
     }
 
     /**
      * @return HookId
      */
-    public function getId(): HookId
+    public function getHookId(): HookId
     {
-        return $this->id;
+        return $this->hookId;
     }
 }

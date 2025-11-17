@@ -16,21 +16,11 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  *}
-
-{**
- * WARNING
- *
- * This file allow only html
- *
- * It will be parsed by PrestaShop Core with PrestaShop\PrestaShop\Core\Payment\PaymentOptionFormDecorator
- *
- * Script tags will be removed and some HTML5 element can cause an Exception due to DOMDocument class
- *}
 <div>
 
 <form id="ps_checkout-card-fields-form" class="form-horizontal loading">
   <div id="ps_checkout-card-fields-form-loader">
-    <img src="{$modulePath}views/img/tail-spin.svg" alt="">
+    <img src="{$modulePath}views/img/tail-spin.svg" alt="spin">
   </div>
   <div>
     <label class="form-control-label" for="ps_checkout-card-fields-name">{l s='Cardholder Name (optional)' mod='ps_checkout'}</label>
@@ -55,7 +45,7 @@
         <div class="ps_checkout-info-wrapper">
           <div class="ps_checkout-info-button" onmouseenter="cvvEnter()" onmouseleave="cvvLeave()">i
             <div class="popup-content" id="cvv-popup">
-              <img src="{$modulePath}views/img/cvv.svg" alt="">
+              <img src="{$modulePath}views/img/cvv.svg" alt="cvv">
               {l s='The security code is a' mod='ps_checkout'} <b>{l s='3-digits' mod='ps_checkout'}</b> {l s='code on the back of your credit card. In some cases, it can be 4-digits or on the front of your card.' mod='ps_checkout'}
             </div>
           </div>

@@ -40,15 +40,15 @@ use PrestaShopBundle\Form\Admin\Type\ShopChoiceTreeType;
 use PrestaShopBundle\Form\Admin\Type\SwitchType;
 use PrestaShopBundle\Form\Admin\Type\TranslatableType;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
+use Symfony\Bundle\FrameworkBundle\Routing\Router;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Defines form for supplier create/edit actions (Sell > Catalog > Brands & Suppliers > Supplier)
@@ -71,7 +71,7 @@ class SupplierType extends TranslatorAwareType
     private $isMultistoreEnabled;
 
     /**
-     * @var UrlGeneratorInterface
+     * @var Router
      */
     private $router;
 
@@ -80,15 +80,15 @@ class SupplierType extends TranslatorAwareType
      * @param int $contextCountryId
      * @param TranslatorInterface $translator
      * @param bool $isMultistoreEnabled
-     * @param UrlGeneratorInterface $router
+     * @param Router $router
      * @param array $locales
      */
     public function __construct(
         ConfigurableFormChoiceProviderInterface $statesChoiceProvider,
-        int $contextCountryId,
+        $contextCountryId,
         TranslatorInterface $translator,
-        bool $isMultistoreEnabled,
-        UrlGeneratorInterface $router,
+        $isMultistoreEnabled,
+        Router $router,
         array $locales = []
     ) {
         parent::__construct($translator, $locales);
@@ -151,7 +151,6 @@ class SupplierType extends TranslatorAwareType
                 'required' => false,
                 'type' => FormattedTextareaType::class,
                 'options' => [
-                    'limit' => FormattedTextareaType::LIMIT_MEDIUMTEXT_UTF8_MB4,
                     'constraints' => [
                         new CleanHtml([
                             'message' => $this->trans(
@@ -230,7 +229,6 @@ class SupplierType extends TranslatorAwareType
                         ),
                     ]),
                 ],
-                'autocomplete' => true,
                 'attr' => [
                     'class' => 'js-supplier-country-select',
                     'data-states-url' => $this->router->generate('admin_country_states'),
@@ -245,7 +243,6 @@ class SupplierType extends TranslatorAwareType
                         'id_country' => $countryId,
                     ]),
                 ],
-                'autocomplete' => true,
             ])
             ->add('dni', TextType::class, [
                 'label' => $this->trans('DNI', 'Admin.Global'),
@@ -316,6 +313,31 @@ class SupplierType extends TranslatorAwareType
                     ],
                 ],
             ])
+            ->add('meta_keyword', TranslatableType::class, [
+                'label' => $this->trans('Meta keywords', 'Admin.Global'),
+                'help' => $keywordHint,
+                'type' => TextType::class,
+                'required' => false,
+                'options' => [
+                    'attr' => [
+                        'class' => 'js-taggable-field',
+                        'placeholder' => $this->trans('Add tag', 'Admin.Actions'),
+                    ],
+                    'constraints' => [
+                        new TypedRegex([
+                            'type' => TypedRegex::TYPE_GENERIC_NAME,
+                        ]),
+                        new Length([
+                            'max' => SupplierSettings::MAX_META_KEYWORD_LENGTH,
+                            'maxMessage' => $this->trans(
+                                'This field cannot be longer than %limit% characters',
+                                'Admin.Notifications.Error',
+                                ['%limit%' => SupplierSettings::MAX_META_KEYWORD_LENGTH]
+                            ),
+                        ]),
+                    ],
+                ],
+            ])
             ->add('is_enabled', SwitchType::class, [
                 'label' => $this->trans('Enabled', 'Admin.Global'),
                 'required' => false,
@@ -324,7 +346,7 @@ class SupplierType extends TranslatorAwareType
 
         if ($this->isMultistoreEnabled) {
             $builder->add('shop_association', ShopChoiceTreeType::class, [
-                'label' => $this->trans('Store association', 'Admin.Global'),
+                'label' => $this->trans('Shop association', 'Admin.Global'),
                 'required' => false,
                 'constraints' => [
                     new NotBlank([

@@ -1,2 +1,0 @@
-_admin_oauth2:
-  resource: "admin-api/oauth2.yml"

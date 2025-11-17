@@ -31,7 +31,7 @@ use PrestaShopBundle\Exception\FileUploadException;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * FileUploader is responsible for uploading import files to import directory.
@@ -86,7 +86,7 @@ final class FileUploader
                 $this->importDirectory,
                 $uploadedFileName
             );
-        } catch (FileException) {
+        } catch (FileException $e) {
             $error = $this->translator->trans('An error occurred while uploading / copying the file.', [], 'Admin.Advparameters.Notification');
 
             throw new FileUploadException($error);
@@ -131,7 +131,7 @@ final class FileUploader
         }
 
         if (!preg_match('#([^\.]*?)\.(csv|xls[xt]?|o[dt]s)$#is', $uploadedFile->getClientOriginalName())) {
-            $error = $this->translator->trans('The extension of your file should be ".csv".', [], 'Admin.Advparameters.Notification');
+            $error = $this->translator->trans('The extension of your file should be .csv.', [], 'Admin.Advparameters.Notification');
         }
 
         return $error;

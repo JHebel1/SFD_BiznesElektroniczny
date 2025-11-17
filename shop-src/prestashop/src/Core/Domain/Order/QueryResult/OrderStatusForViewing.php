@@ -70,8 +70,6 @@ class OrderStatusForViewing
      */
     private $orderHistoryId;
 
-    private ?string $apiClientId;
-
     /**
      * @param int $orderHistoryId
      * @param int $orderStatusId
@@ -90,8 +88,7 @@ class OrderStatusForViewing
         DateTimeImmutable $createdAt,
         bool $withEmail,
         ?string $employeeFirstName,
-        ?string $employeeLastName,
-        ?string $apiClientId,
+        ?string $employeeLastName
     ) {
         $this->orderStatusId = $orderStatusId;
         $this->name = $name;
@@ -101,7 +98,6 @@ class OrderStatusForViewing
         $this->employeeFirstName = $employeeFirstName;
         $this->employeeLastName = $employeeLastName;
         $this->orderHistoryId = $orderHistoryId;
-        $this->apiClientId = $apiClientId;
     }
 
     /**
@@ -166,10 +162,5 @@ class OrderStatusForViewing
     public function getEmployeeLastName(): ?string
     {
         return $this->employeeLastName;
-    }
-
-    public function getApiClientId(): ?string
-    {
-        return $this->apiClientId;
     }
 }

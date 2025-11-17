@@ -26,18 +26,14 @@
 
 namespace PrestaShopBundle\Twig;
 
-use Exception;
 use PrestaShop\PrestaShop\Adapter\Module\ModuleDataProvider;
+use PrestaShop\PrestaShop\Core\Addon\Module\ModuleRepository;
 use PrestaShop\PrestaShop\Core\Hook\HookDispatcherInterface;
-use PrestaShop\PrestaShop\Core\Module\ModuleRepository;
-use Twig\Extension\AbstractExtension;
-use Twig\TwigFilter;
-use Twig\TwigFunction;
 
 /**
  * This class is used by Twig_Environment and provide some methods callable from a twig template.
  */
-class HookExtension extends AbstractExtension
+class HookExtension extends \Twig_Extension
 {
     /**
      * @var HookDispatcherInterface
@@ -63,7 +59,7 @@ class HookExtension extends AbstractExtension
     public function __construct(
         HookDispatcherInterface $hookDispatcher,
         ModuleDataProvider $moduleDataProvider,
-        ?ModuleRepository $moduleRepository = null
+        ModuleRepository $moduleRepository = null
     ) {
         $this->hookDispatcher = $hookDispatcher;
         $this->moduleDataProvider = $moduleDataProvider;
@@ -78,9 +74,9 @@ class HookExtension extends AbstractExtension
     public function getFilters()
     {
         return [
-            new TwigFilter('renderhook', [$this, 'renderHook'], ['is_safe' => ['html']]),
-            new TwigFilter('renderhooksarray', [$this, 'renderHooksArray'], ['is_safe' => ['html']]),
-            new TwigFilter('hooksarraycontent', [$this, 'hooksArrayContent']),
+            new \Twig_SimpleFilter('renderhook', [$this, 'renderHook'], ['is_safe' => ['html']]),
+            new \Twig_SimpleFilter('renderhooksarray', [$this, 'renderHooksArray'], ['is_safe' => ['html']]),
+            new \Twig_SimpleFilter('hooksarraycontent', [$this, 'hooksArrayContent']),
         ];
     }
 
@@ -92,9 +88,10 @@ class HookExtension extends AbstractExtension
     public function getFunctions()
     {
         return [
-            new TwigFunction('renderhook', [$this, 'renderHook'], ['is_safe' => ['html']]),
-            new TwigFunction('renderhooksarray', [$this, 'renderHooksArray'], ['is_safe' => ['html']]),
-            new TwigFunction('hooksarraycontent', [$this, 'hooksArrayContent']),
+            new \Twig_SimpleFunction('renderhook', [$this, 'renderHook'], ['is_safe' => ['html']]),
+            new \Twig_SimpleFunction('renderhooksarray', [$this, 'renderHooksArray'], ['is_safe' => ['html']]),
+            new \Twig_SimpleFunction('hookcount', [$this, 'hookCount']),
+            new \Twig_SimpleFunction('hooksarraycontent', [$this, 'hooksArrayContent']),
         ];
     }
 
@@ -116,14 +113,14 @@ class HookExtension extends AbstractExtension
      * @param string $hookName the name of the hook to trigger
      * @param array $hookParameters the parameters to send to the Hook
      *
-     * @return array[string] All listener's responses, ordered by the listeners' priorities
+     * @throws \Exception if the hookName is missing
      *
-     * @throws Exception if the hookName is missing
+     * @return array[string] All listener's responses, ordered by the listeners' priorities
      */
     public function renderHooksArray($hookName, $hookParameters = [])
     {
         if ('' == $hookName) {
-            throw new Exception('Hook name missing');
+            throw new \Exception('Hook name missing');
         }
 
         // The call to the render of the hooks is encapsulated into a ob management to avoid any call of echo from the
@@ -135,7 +132,7 @@ class HookExtension extends AbstractExtension
 
         $render = [];
         foreach ($renderedHook->getContent() as $module => $hookRender) {
-            $moduleAttributes = $this->moduleRepository->getModule($module)->getAttributes();
+            $moduleAttributes = $this->moduleRepository->getModuleAttributes($module);
             $render[] = [
                 'id' => $module,
                 'name' => $this->moduleDataProvider->getModuleName($module),
@@ -155,14 +152,14 @@ class HookExtension extends AbstractExtension
      * @param string $hookName the name of the hook to trigger
      * @param array $hookParameters the parameters to send to the Hook
      *
-     * @return string all listener's responses, concatenated in a simple string, ordered by the listeners' priorities
+     * @throws \Exception if the hookName is missing
      *
-     * @throws Exception if the hookName is missing
+     * @return string all listener's responses, concatenated in a simple string, ordered by the listeners' priorities
      */
     public function renderHook($hookName, array $hookParameters = [])
     {
         if ($hookName == '') {
-            throw new Exception('Hook name missing');
+            throw new \Exception('Hook name missing');
         }
 
         return $this->hookDispatcher
@@ -190,5 +187,22 @@ class HookExtension extends AbstractExtension
         }
 
         return $content;
+    }
+
+    /**
+     * Count how many listeners will respond to the hook name.
+     * Does not trigger the hook, so maybe some listeners could not add a response to the result.
+     *
+     * @deprecated since 1.7.7.0
+     *
+     * @param string $hookName
+     *
+     * @return number the listeners count that will respond to the hook name
+     */
+    public function hookCount($hookName)
+    {
+        @trigger_error('The ' . __METHOD__ . ' method is deprecated since version 1.7.7.0.', E_USER_DEPRECATED);
+
+        return count($this->hookDispatcher->getListeners(strtolower($hookName)));
     }
 }

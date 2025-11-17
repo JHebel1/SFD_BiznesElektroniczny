@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -26,6 +27,8 @@
 
 /**
  * Determine the best existing template.
+ *
+ * @since 1.7.0.0
  */
 class TemplateFinderCore
 {
@@ -67,7 +70,7 @@ class TemplateFinderCore
 
     private function getTemplateHierarchy($template, $entity, $id)
     {
-        $entity = basename($entity ?? '');
+        $entity = basename($entity);
         $id = (int) $id;
 
         if (in_array($entity, $this->getProductListEntities())) {
@@ -99,12 +102,6 @@ class TemplateFinderCore
                 'cms/page-' . $id,
                 $template,
                 'cms/page',
-            ];
-        } elseif ('cms_category' === $entity) {
-            $templates = [
-                'cms/category-' . $id,
-                $template,
-                'cms/category',
             ];
         } else {
             $templates = [$template];
@@ -150,7 +147,7 @@ class TemplateFinderCore
     /**
      * Set productListSearch.
      *
-     * @param array $productListSearchEntities
+     * @param array $productListSearch
      *
      * @return TemplateFinderCore
      */

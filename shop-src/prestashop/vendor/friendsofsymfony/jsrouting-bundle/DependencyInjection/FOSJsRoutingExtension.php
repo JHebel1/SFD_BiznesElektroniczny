@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * This file is part of the FOSJsRoutingBundle package.
  *
@@ -13,19 +11,25 @@ declare(strict_types=1);
 
 namespace FOS\JsRoutingBundle\DependencyInjection;
 
-use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 /**
+ * FOSJsRoutingExtension
+ * Load configuration.
+ *
  * @author      William DURAND <william.durand1@gmail.com>
  */
 class FOSJsRoutingExtension extends Extension
 {
-    public function load(array $configs, ContainerBuilder $container): void
+    /**
+     * Load configuration.
+     */
+    public function load(array $configs, ContainerBuilder $container)
     {
         $processor = new Processor();
         $configuration = new Configuration();
@@ -51,13 +55,13 @@ class FOSJsRoutingExtension extends Extension
 
         $container->setParameter(
             'fos_js_routing.request_context_base_url',
-            $config['request_context_base_url'] ?: null
+            $config['request_context_base_url'] ? $config['request_context_base_url'] : null
         );
 
         if (isset($config['cache_control'])) {
             $config['cache_control']['enabled'] = true;
         } else {
-            $config['cache_control'] = ['enabled' => false];
+            $config['cache_control'] = array('enabled' => false);
         }
 
         $container->setParameter('fos_js_routing.cache_control', $config['cache_control']);

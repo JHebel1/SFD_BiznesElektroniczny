@@ -30,7 +30,6 @@ use Cart;
 use Currency;
 use Customer;
 use PrestaShop\PrestaShop\Adapter\Customer\CommandHandler\AbstractCustomerHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Query\GetCustomerCarts;
 use PrestaShop\PrestaShop\Core\Domain\Customer\QueryHandler\GetCustomerCartsHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Customer\QueryResult\CartSummary;
@@ -40,7 +39,6 @@ use PrestaShop\PrestaShop\Core\Localization\LocaleInterface;
 /**
  * Handles GetCustomerCartsQuery using legacy object models
  */
-#[AsQueryHandler]
 final class GetCustomerCartsHandler extends AbstractCustomerHandler implements GetCustomerCartsHandlerInterface
 {
     /**
@@ -80,7 +78,7 @@ final class GetCustomerCartsHandler extends AbstractCustomerHandler implements G
         $carts = Cart::getCustomerCarts($customerId, false);
         $summarizedCarts = [];
 
-        foreach ($carts as $customerCart) {
+        foreach ($carts as $key => $customerCart) {
             $cartId = (int) $customerCart['id_cart'];
             $currency = new Currency((int) $customerCart['id_currency']);
             $cart = new Cart($cartId);

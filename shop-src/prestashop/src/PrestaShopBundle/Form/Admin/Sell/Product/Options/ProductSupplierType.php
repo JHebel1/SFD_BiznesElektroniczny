@@ -28,62 +28,47 @@ declare(strict_types=1);
 
 namespace PrestaShopBundle\Form\Admin\Sell\Product\Options;
 
-use Currency;
-use PrestaShop\PrestaShop\Adapter\Currency\Repository\CurrencyRepository;
 use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\TypedRegex;
-use PrestaShop\PrestaShop\Core\Domain\Currency\ValueObject\CurrencyId;
 use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\Reference;
-use PrestaShopBundle\Form\Admin\Type\CurrencyChoiceType;
+use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
-use PrestaShopBundle\Form\FormCloner;
-use PrestaShopBundle\Form\FormHelper;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Form\FormEvent;
-use Symfony\Component\Form\FormEvents;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Constraints\PositiveOrZero;
 use Symfony\Component\Validator\Constraints\Type;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 class ProductSupplierType extends TranslatorAwareType
 {
     /**
+     * @var FormChoiceProviderInterface
+     */
+    private $currencyByIdChoiceProvider;
+
+    /**
      * @var string
      */
-    private $defaultCurrencyIsoCode;
-
-    /**
-     * @var CurrencyRepository
-     */
-    private $currencyRepository;
-
-    /**
-     * @var FormCloner
-     */
-    private $formCloner;
+    private $currencyIsoCode;
 
     /**
      * @param TranslatorInterface $translator
      * @param array $locales
-     * @param string $defaultCurrencyIsoCode
-     * @param CurrencyRepository $currencyRepository
-     * @param FormCloner $formCloner
+     * @param FormChoiceProviderInterface $currencyByIdChoiceProvider
+     * @param string $currencyIsoCode
      */
     public function __construct(
         TranslatorInterface $translator,
         array $locales,
-        string $defaultCurrencyIsoCode,
-        CurrencyRepository $currencyRepository,
-        FormCloner $formCloner
+        FormChoiceProviderInterface $currencyByIdChoiceProvider,
+        string $currencyIsoCode
     ) {
         parent::__construct($translator, $locales);
-        $this->defaultCurrencyIsoCode = $defaultCurrencyIsoCode;
-        $this->currencyRepository = $currencyRepository;
-        $this->formCloner = $formCloner;
+        $this->currencyByIdChoiceProvider = $currencyByIdChoiceProvider;
+        $this->currencyIsoCode = $currencyIsoCode;
     }
 
     /**
@@ -113,38 +98,22 @@ class ProductSupplierType extends TranslatorAwareType
             ])
             ->add('price_tax_excluded', MoneyType::class, [
                 'label' => $this->trans('Cost price (tax excl.)', 'Admin.Catalog.Feature'),
-                'currency' => $this->defaultCurrencyIsoCode,
-                'scale' => FormHelper::DEFAULT_PRICE_PRECISION,
-                'attr' => ['data-display-price-precision' => FormHelper::DEFAULT_PRICE_PRECISION],
+                'currency' => $this->currencyIsoCode,
+                'scale' => self::PRESTASHOP_DECIMALS,
+                'attr' => ['data-display-price-precision' => self::PRESTASHOP_DECIMALS],
                 'constraints' => [
                     new NotBlank(),
                     new Type(['type' => 'float']),
-                    new PositiveOrZero(),
                 ],
                 'default_empty_data' => 0.0,
             ])
-            ->add('currency_id', CurrencyChoiceType::class, [
+            ->add('currency_id', ChoiceType::class, [
                 'label' => $this->trans('Currency', 'Admin.Global'),
+                'required' => false,
                 // placeholder false is important to avoid empty option in select input despite required being false
                 'placeholder' => false,
+                'choices' => $this->currencyByIdChoiceProvider->getChoices(),
             ])
         ;
-
-        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
-            $productSupplierData = $event->getData();
-            if (empty($productSupplierData['currency_id'])) {
-                return;
-            }
-            $currencyId = $productSupplierData['currency_id'];
-
-            /** @var Currency $currency */
-            $currency = $this->currencyRepository->get(new CurrencyId($currencyId));
-            if ($currency->iso_code !== $this->defaultCurrencyIsoCode) {
-                $form = $event->getForm();
-                $form->add($this->formCloner->cloneForm($form->get('price_tax_excluded'), [
-                    'currency' => $currency->iso_code,
-                ]));
-            }
-        });
     }
 }

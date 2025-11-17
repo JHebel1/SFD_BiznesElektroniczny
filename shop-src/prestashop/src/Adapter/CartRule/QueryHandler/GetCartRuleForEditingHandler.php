@@ -30,46 +30,42 @@ namespace PrestaShop\PrestaShop\Adapter\CartRule\QueryHandler;
 
 use CartRule;
 use DateTime;
-use PrestaShop\Decimal\DecimalNumber;
-use PrestaShop\PrestaShop\Adapter\CartRule\LegacyDiscountApplicationType;
-use PrestaShop\PrestaShop\Adapter\CartRule\Repository\CartRuleRepository;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
+use PrestaShop\Decimal\Number;
+use PrestaShop\PrestaShop\Adapter\CartRule\AbstractCartRuleHandler;
+use PrestaShop\PrestaShop\Core\Domain\CartRule\Exception\CartRuleException;
+use PrestaShop\PrestaShop\Core\Domain\CartRule\Exception\CartRuleNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\CartRule\Query\GetCartRuleForEditing;
 use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryHandler\GetCartRuleForEditingHandlerInterface;
-use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\CartRuleActionForEditing;
-use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\CartRuleConditionsForEditing;
-use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\CartRuleForEditing;
-use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\CartRuleInformationForEditing;
-use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\CartRuleMinimumForEditing;
-use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\CartRuleReductionForEditing;
-use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\CartRuleRestrictionsForEditing;
-use PrestaShop\PrestaShop\Core\Domain\CartRule\ValueObject\CartRuleId;
-use PrestaShop\PrestaShop\Core\Domain\CartRule\ValueObject\DiscountApplicationType;
-use PrestaShop\PrestaShop\Core\Domain\CartRule\ValueObject\Restriction\RestrictionRuleGroup;
+use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\EditableCartRule;
+use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\EditableCartRuleActions;
+use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\EditableCartRuleConditions;
+use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\EditableCartRuleInformation;
+use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\EditableCartRuleMinimum;
+use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\EditableCartRuleReduction;
+use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\EditableCartRuleRestrictions;
+use PrestaShop\PrestaShop\Core\Domain\Currency\ValueObject\CurrencyId;
 use PrestaShop\PrestaShop\Core\Domain\Customer\ValueObject\CustomerId;
-use PrestaShop\PrestaShop\Core\Domain\Customer\ValueObject\NoCustomerId;
+use PrestaShop\PrestaShop\Core\Domain\Product\Combination\ValueObject\CombinationId;
+use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\ProductId;
 use PrestaShop\PrestaShop\Core\Util\DateTime\DateTime as DateTimeUtils;
 
 /**
- * Handles command which gets cart rule for editing using legacy object model
+ * Handles command which gets catalog price rule for editing using legacy object model
  */
-#[AsQueryHandler]
-class GetCartRuleForEditingHandler implements GetCartRuleForEditingHandlerInterface
+final class GetCartRuleForEditingHandler extends AbstractCartRuleHandler implements GetCartRuleForEditingHandlerInterface
 {
-    public function __construct(
-        protected readonly CartRuleRepository $cartRuleRepository
-    ) {
-    }
-
     /**
      * @param GetCartRuleForEditing $query
      *
-     * @return CartRuleForEditing
+     * @return EditableCartRule
+     *
+     * @throws CartRuleException
+     * @throws CartRuleNotFoundException
      */
-    public function handle(GetCartRuleForEditing $query): CartRuleForEditing
+    public function handle(GetCartRuleForEditing $query): EditableCartRule
     {
-        $cartRuleId = $query->cartRuleId;
-        $cartRule = $this->cartRuleRepository->get($cartRuleId);
+        $cartRuleId = $query->getCartRuleId();
+        $cartRule = $this->getCartRule($cartRuleId);
 
         $cartRuleInformation = $this->getCartRuleInformation($cartRule);
         $cartRuleConditions = $this->getCartRuleConditions($cartRule);
@@ -77,19 +73,19 @@ class GetCartRuleForEditingHandler implements GetCartRuleForEditingHandlerInterf
         $dateAdd = $cartRule->date_add;
         $dateUpd = $cartRule->date_upd;
 
-        return new CartRuleForEditing(
+        return new EditableCartRule(
             $cartRuleId,
             $cartRuleInformation,
             $cartRuleConditions,
             $cartRuleActions,
-            !DateTimeUtils::isNull($dateAdd) ? new DateTime($dateAdd) : null,
-            !DateTimeUtils::isNull($dateUpd) ? new DateTime($dateUpd) : null
+            $dateAdd !== DateTimeUtils::NULL_DATETIME ? new DateTime($dateAdd) : null,
+            $dateUpd !== DateTimeUtils::NULL_DATETIME ? new DateTime($dateUpd) : null
         );
     }
 
-    private function getCartRuleInformation(CartRule $cartRule): CartRuleInformationForEditing
+    private function getCartRuleInformation(CartRule $cartRule): EditableCartRuleInformation
     {
-        return new CartRuleInformationForEditing(
+        return new EditableCartRuleInformation(
             $cartRule->name,
             $cartRule->description,
             $cartRule->code,
@@ -100,57 +96,33 @@ class GetCartRuleForEditingHandler implements GetCartRuleForEditingHandlerInterf
         );
     }
 
-    private function getCartRuleConditions(CartRule $cartRule): CartRuleConditionsForEditing
+    private function getCartRuleConditions(CartRule $cartRule): EditableCartRuleConditions
     {
-        $customerId = (int) $cartRule->id_customer !== NoCustomerId::NO_CUSTOMER_ID_VALUE ? new CustomerId((int) $cartRule->id_customer) : new NoCustomerId();
+        $customerId = new CustomerId((int) $cartRule->id_customer);
         $dateFrom = $cartRule->date_from;
         $dateTo = $cartRule->date_to;
+        $minimumAmountCurrencyId = $cartRule->minimum_amount_currency ? new CurrencyId((int) $cartRule->minimum_amount_currency) : null;
 
-        $cartRuleMinimum = null;
-        if (!empty($cartRule->minimum_amount)) {
-            $minimumAmount = new DecimalNumber($cartRule->minimum_amount);
-            if (!$minimumAmount->equalsZero()) {
-                $cartRuleMinimum = new CartRuleMinimumForEditing(
-                    $minimumAmount,
-                    (bool) $cartRule->minimum_amount_tax,
-                    (int) $cartRule->minimum_amount_currency,
-                    (bool) $cartRule->minimum_amount_shipping
-                );
-            }
-        }
-
-        $cartRuleId = new CartRuleId((int) $cartRule->id);
-
-        $restrictedCartRules = [];
-        if ($cartRule->cart_rule_restriction) {
-            $restrictedCartRules = $this->cartRuleRepository->getRestrictedCartRuleIds($cartRuleId);
-        }
-
-        $restrictedCarrierIds = [];
-        if ($cartRule->carrier_restriction) {
-            $restrictedCarrierIds = $this->cartRuleRepository->getRestrictedCarrierIds($cartRuleId);
-        }
-        $restrictedCountryIds = [];
-        if ($cartRule->country_restriction) {
-            $restrictedCountryIds = $this->cartRuleRepository->getRestrictedCountryIds($cartRuleId);
-        }
-        $restrictedGroupIds = [];
-        if ($cartRule->group_restriction) {
-            $restrictedGroupIds = $this->cartRuleRepository->getRestrictedGroupIds($cartRuleId);
-        }
-
-        $cartRuleRestrictions = new CartRuleRestrictionsForEditing(
-            $restrictedCartRules,
-            $this->getRestrictionRuleGroups($cartRule),
-            $restrictedCarrierIds,
-            $restrictedCountryIds,
-            $restrictedGroupIds
+        $cartRuleMinimum = new EditableCartRuleMinimum(
+            new Number($cartRule->minimum_amount),
+            (bool) $cartRule->minimum_amount_tax,
+            $minimumAmountCurrencyId,
+            (bool) $cartRule->minimum_amount_shipping
         );
 
-        return new CartRuleConditionsForEditing(
+        $cartRuleRestrictions = new EditableCartRuleRestrictions(
+            (bool) $cartRule->country_restriction,
+            (bool) $cartRule->carrier_restriction,
+            (bool) $cartRule->group_restriction,
+            (bool) $cartRule->cart_rule_restriction,
+            (bool) $cartRule->product_restriction,
+            (bool) $cartRule->shop_restriction
+        );
+
+        return new EditableCartRuleConditions(
             $customerId,
-            !DateTimeUtils::isNull($dateFrom) ? new DateTime($dateFrom) : null,
-            !DateTimeUtils::isNull($dateTo) ? new DateTime($dateTo) : null,
+            $dateFrom !== DateTimeUtils::NULL_DATETIME ? new DateTime($dateFrom) : null,
+            $dateTo !== DateTimeUtils::NULL_DATETIME ? new DateTime($dateTo) : null,
             (int) $cartRule->quantity,
             (int) $cartRule->quantity_per_user,
             $cartRuleMinimum,
@@ -158,59 +130,27 @@ class GetCartRuleForEditingHandler implements GetCartRuleForEditingHandlerInterf
         );
     }
 
-    /**
-     * @param CartRule $cartRule
-     *
-     * @return RestrictionRuleGroup[]
-     */
-    private function getRestrictionRuleGroups(CartRule $cartRule): array
+    private function getCartRuleActions(CartRule $cartRule): EditableCartRuleActions
     {
-        if (!$cartRule->product_restriction) {
-            return [];
-        }
+        $reductionCurrencyId = $cartRule->reduction_currency ? new CurrencyId((int) $cartRule->reduction_currency) : null;
+        $reductionProductId = $cartRule->reduction_product ? new ProductId((int) $cartRule->reduction_product) : null;
+        $giftProductProductId = $cartRule->reduction_product ? new ProductId((int) $cartRule->gift_product) : null;
+        $giftProductProductAttributeId = $cartRule->gift_product_attribute ? new CombinationId((int) $cartRule->gift_product_attribute) : null;
 
-        return $this->cartRuleRepository->getProductRestrictions(new CartRuleId((int) $cartRule->id));
-    }
-
-    private function getCartRuleActions(CartRule $cartRule): CartRuleActionForEditing
-    {
-        $discountApplicationType = $this->getDiscountApplicationType($cartRule);
-
-        $discountProductId = null;
-        if ($discountApplicationType === DiscountApplicationType::SPECIFIC_PRODUCT) {
-            $discountProductId = (int) $cartRule->reduction_product;
-        }
-
-        $reduction = new CartRuleReductionForEditing(
-            new DecimalNumber($cartRule->reduction_percent),
-            new DecimalNumber($cartRule->reduction_amount),
+        $reduction = new EditableCartRuleReduction(
+            new Number($cartRule->reduction_percent),
+            new Number($cartRule->reduction_amount),
             (bool) $cartRule->reduction_tax,
-            (int) $cartRule->reduction_currency ?: null,
-            $discountProductId,
-            !$cartRule->reduction_exclude_special
+            $reductionCurrencyId,
+            $reductionProductId,
+            (bool) $cartRule->reduction_exclude_special
         );
 
-        return new CartRuleActionForEditing(
+        return new EditableCartRuleActions(
             (bool) $cartRule->free_shipping,
             $reduction,
-            $this->getDiscountApplicationType($cartRule),
-            (int) $cartRule->gift_product ?: null,
-            (int) $cartRule->gift_product_attribute ?: null
+            $giftProductProductId,
+            $giftProductProductAttributeId
         );
-    }
-
-    private function getDiscountApplicationType(CartRule $cartRule): string
-    {
-        $discountApplicationMap = [
-            LegacyDiscountApplicationType::CHEAPEST_PRODUCT => DiscountApplicationType::CHEAPEST_PRODUCT,
-            LegacyDiscountApplicationType::ORDER_WITHOUT_SHIPPING => DiscountApplicationType::ORDER_WITHOUT_SHIPPING,
-            LegacyDiscountApplicationType::SELECTED_PRODUCTS => DiscountApplicationType::SELECTED_PRODUCTS,
-        ];
-
-        if (array_key_exists((int) $cartRule->reduction_product, $discountApplicationMap)) {
-            return $discountApplicationMap[$cartRule->reduction_product];
-        } else {
-            return DiscountApplicationType::SPECIFIC_PRODUCT;
-        }
     }
 }

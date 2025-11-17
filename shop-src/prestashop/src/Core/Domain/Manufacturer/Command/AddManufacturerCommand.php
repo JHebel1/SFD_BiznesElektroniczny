@@ -57,6 +57,11 @@ class AddManufacturerCommand
     private $localizedMetaDescriptions;
 
     /**
+     * @var string[]
+     */
+    private $localizedMetaKeywords;
+
+    /**
      * @var bool
      */
     private $enabled;
@@ -73,6 +78,7 @@ class AddManufacturerCommand
      * @param string[] $localizedDescriptions
      * @param string[] $localizedMetaTitles
      * @param string[] $localizedMetaDescriptions
+     * @param string[] $localizedMetaKeywords
      * @param array $shopAssociation
      */
     public function __construct(
@@ -82,6 +88,7 @@ class AddManufacturerCommand
         array $localizedDescriptions,
         array $localizedMetaTitles,
         array $localizedMetaDescriptions,
+        array $localizedMetaKeywords,
         array $shopAssociation
     ) {
         $this->name = $name;
@@ -90,6 +97,7 @@ class AddManufacturerCommand
         $this->localizedDescriptions = $localizedDescriptions;
         $this->localizedMetaTitles = $localizedMetaTitles;
         $this->localizedMetaDescriptions = $localizedMetaDescriptions;
+        $this->localizedMetaKeywords = $localizedMetaKeywords;
         $this->shopAssociation = $shopAssociation;
     }
 
@@ -131,6 +139,14 @@ class AddManufacturerCommand
     public function getLocalizedMetaDescriptions()
     {
         return $this->localizedMetaDescriptions;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getLocalizedMetaKeywords()
+    {
+        return $this->localizedMetaKeywords;
     }
 
     /**

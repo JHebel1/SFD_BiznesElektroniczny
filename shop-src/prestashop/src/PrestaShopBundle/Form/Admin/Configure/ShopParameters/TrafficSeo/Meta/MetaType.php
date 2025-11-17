@@ -28,7 +28,6 @@ namespace PrestaShopBundle\Form\Admin\Configure\ShopParameters\TrafficSeo\Meta;
 
 use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\DefaultLanguage;
 use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\IsUrlRewrite;
-use PrestaShopBundle\Form\Admin\Type\TextWithRecommendedLengthType;
 use PrestaShopBundle\Form\Admin\Type\TranslatableType;
 use PrestaShopBundle\Translation\TranslatorAwareTrait;
 use Symfony\Component\Form\AbstractType;
@@ -36,10 +35,8 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
-use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Class MetaType is responsible for providing form fields for Shop parameters -> Traffic & Seo ->
@@ -48,11 +45,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class MetaType extends AbstractType
 {
     use TranslatorAwareTrait;
-
-    public const TITLE_MAX_CHARS = 128;
-    public const META_DESCRIPTION_MAX_CHARS = 255;
-    public const RECOMMENDED_TITLE_LENGTH = 70;
-    public const RECOMMENDED_DESCRIPTION_LENGTH = 160;
 
     /**
      * @var array
@@ -70,12 +62,10 @@ class MetaType extends AbstractType
      */
     public function __construct(
         array $defaultPageChoices,
-        array $modulePageChoices,
-        TranslatorInterface $translator
+        array $modulePageChoices
     ) {
         $this->defaultPageChoices = $defaultPageChoices;
         $this->modulePageChoices = $modulePageChoices;
-        $this->translator = $translator;
     }
 
     /**
@@ -112,26 +102,13 @@ class MetaType extends AbstractType
             ])
             ->add('page_title', TranslatableType::class, [
                 'required' => false,
-                'type' => TextWithRecommendedLengthType::class,
                 'options' => [
-                    'recommended_length' => self::RECOMMENDED_TITLE_LENGTH,
-                    'attr' => [
-                        'maxlength' => self::TITLE_MAX_CHARS,
-                    ],
                     'constraints' => [
                         new Regex([
-                            'pattern' => '/^[^<>{}]*$/u',
+                            'pattern' => '/^[^<>={}]*$/u',
                             'message' => $this->trans(
                                 '%s is invalid.',
                                 [],
-                                'Admin.Notifications.Error'
-                            ),
-                        ]),
-                        new Length([
-                            'max' => self::TITLE_MAX_CHARS,
-                            'maxMessage' => $this->trans(
-                                'This field cannot be longer than %limit% characters',
-                                ['%limit%' => self::TITLE_MAX_CHARS],
                                 'Admin.Notifications.Error'
                             ),
                         ]),
@@ -141,29 +118,36 @@ class MetaType extends AbstractType
             ])
             ->add('meta_description', TranslatableType::class, [
                 'required' => false,
-                'type' => TextWithRecommendedLengthType::class,
                 'options' => [
-                    'recommended_length' => self::RECOMMENDED_DESCRIPTION_LENGTH,
-                    'attr' => [
-                        'maxlength' => self::META_DESCRIPTION_MAX_CHARS,
-                    ],
                     'constraints' => [
                         new Regex([
-                            'pattern' => '/^[^<>{}]*$/u',
+                            'pattern' => '/^[^<>={}]*$/u',
                             'message' => $this->trans(
                                 '%s is invalid.',
                                 [],
                                 'Admin.Notifications.Error'
                             ),
                         ]),
-                        new Length([
-                            'max' => self::META_DESCRIPTION_MAX_CHARS,
-                            'maxMessage' => $this->trans(
-                                'This field cannot be longer than %limit% characters',
-                                ['%limit%' => self::META_DESCRIPTION_MAX_CHARS],
+                    ],
+                    'required' => false,
+                ],
+            ])
+            ->add('meta_keywords', TranslatableType::class, [
+                'required' => false,
+                'options' => [
+                    'constraints' => [
+                        new Regex([
+                            'pattern' => '/^[^<>={}]*$/u',
+                            'message' => $this->trans(
+                                '%s is invalid.',
+                                [],
                                 'Admin.Notifications.Error'
                             ),
                         ]),
+                    ],
+                    'attr' => [
+                        'class' => 'js-taggable-field',
+                        'placeholder' => $this->trans('Add tag', [], 'Admin.Actions'),
                     ],
                     'required' => false,
                 ],

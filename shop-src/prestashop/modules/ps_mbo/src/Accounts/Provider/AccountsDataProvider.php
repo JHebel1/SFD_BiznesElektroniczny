@@ -17,95 +17,66 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-declare(strict_types=1);
 
 namespace PrestaShop\Module\Mbo\Accounts\Provider;
 
-use PrestaShop\PsAccountsInstaller\Installer\Exception\InstallerException;
+use Db;
+use Exception;
+use PrestaShop\Module\PsAccounts\Repository\UserTokenRepository;
+use PrestaShop\PrestaShop\Adapter\CoreException;
+use PrestaShop\PrestaShop\Adapter\ServiceLocator;
+use PrestaShop\PrestaShop\Core\Module\Exception\ModuleErrorException;
+use PrestaShop\PsAccountsInstaller\Installer\Exception\ModuleNotInstalledException;
+use PrestaShop\PsAccountsInstaller\Installer\Exception\ModuleVersionException;
 use PrestaShop\PsAccountsInstaller\Installer\Facade\PsAccounts;
 use PrestaShop\PsAccountsInstaller\Installer\Installer;
 
 class AccountsDataProvider
 {
-    private $psAccountsService;
+    /**
+     * @var string
+     */
     private $psAccountsVersion;
-    private $moduleName;
 
-    public function __construct(string $psAccountsVersion)
-    {
+    public function __construct(
+        string $psAccountsVersion
+    ) {
         $this->psAccountsVersion = $psAccountsVersion;
-        $this->moduleName = Installer::PS_ACCOUNTS_MODULE_NAME;
-        try {
-            $this->psAccountsService = $this->getService(PsAccounts::PS_ACCOUNTS_SERVICE);
-        } catch (InstallerException $e) {
-            $this->psAccountsService = null;
-        }
     }
 
     /**
-     * Get PsAccounts User Token
-     *
      * @return string
+     *
+     * @throws CoreException
      */
-    public function getAccountsToken(): string
+    public function getAccountsToken()
     {
-        if (!$this->isAccountLinked()) {
+        if (!$this->isAccountLinked() || null === $psAccountsModule = ServiceLocator::get('ps_accounts')) {
             return '';
         }
 
-        if ($this->psAccountsService && method_exists($this->psAccountsService, 'getUserToken')) {
-            $token = $this->psAccountsService->getUserToken();
-
-            return null === $token ? '' : (string) $token;
-        }
-
+        /**
+         * @var UserTokenRepository $accountsUserTokenRepository
+         */
+        $accountsUserTokenRepository = $psAccountsModule->getService(UserTokenRepository::class);
         try {
-            // @phpstan-ignore class.notFound
-            $accountsUserTokenRepository = $this->getService(\PrestaShop\Module\PsAccounts\Repository\UserTokenRepository::class);
             $token = $accountsUserTokenRepository->getOrRefreshToken();
-
-            return null === $token ? '' : (string) $token;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return '';
         }
+
+        return null === $token ? '' : (string) $token;
     }
 
-    /**
-     * @return string|null
-     */
-    public function getAccountsShopId(): ?string
+    public function getAccountsShopToken(): ?string
     {
-        $shopUuid = null;
-        if ($this->psAccountsService && method_exists($this->psAccountsService, 'getShopUuid')) {
-            $shopUuid = $this->psAccountsService->getShopUuid();
+        try {
+            $shopToken = $this->getAccountsService()->getOrRefreshToken();
+        } catch (\Exception $e) {
+            $shopToken = null;
         }
 
-        return $shopUuid ?: null;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getAccountsUserId(): ?string
-    {
-        $userUuid = null;
-        if ($this->psAccountsService && method_exists($this->psAccountsService, 'getUserUuid')) {
-            $userUuid = $this->psAccountsService->getUserUuid();
-        }
-
-        return $userUuid ?: null;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getAccountsUserEmail(): ?string
-    {
-        if (!$this->psAccountsService) {
-            return null;
-        }
-
-        return $this->psAccountsService->getEmail();
+        return $shopToken ?: null;
     }
 
     /**
@@ -115,82 +86,145 @@ class AccountsDataProvider
      */
     public function getShopTokenV7(): string
     {
-        if (!$this->psAccountsService) {
-            return '';
-        }
-
-        $shopToken = null;
-        if (method_exists($this->psAccountsService, 'getShopToken')) {
-            try {
-                $shopToken = $this->psAccountsService->getShopToken();
-            } catch (\Exception $e) {
+        try {
+            $accountsService = $this->getAccountsService();
+            if (method_exists($accountsService, 'getShopToken')) {
+                $shopToken = $accountsService->getShopToken();
+            } else {
+                $shopToken = null;
             }
+        } catch (\Exception $e) {
+            $shopToken = null;
         }
 
         return $shopToken ?: '';
     }
 
     /**
-     * Get ps_accounts shop token firebase
-     *
-     * @return string
+     * @return string|null
      */
-    public function getAccountsShopToken(): string
+    public function getAccountsShopId()
     {
-        if (!$this->psAccountsService) {
-            return '';
+        if (!$this->isAccountLinked()) {
+            return null;
         }
 
-        $shopToken = null;
         try {
-            $shopToken = $this->psAccountsService->getOrRefreshToken();
-        } catch (\Exception $e) {
+            $shopUuid = $this->getAccountsService()->getShopUuid();
+        } catch (Exception $e) {
+            $shopUuid = null;
         }
 
-        return $shopToken ?: '';
+        return $shopUuid ?: null;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getAccountsUserId()
+    {
+        try {
+            $userUuid = $this->getAccountsService()->getUserUuid();
+        } catch (Exception $e) {
+            $userUuid = null;
+        }
+
+        return $userUuid ?: null;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getAccountsUserEmail()
+    {
+        try {
+            $email = $this->getAccountsService()->getEmail();
+        } catch (Exception $e) {
+            $email = null;
+        }
+
+        return $email;
     }
 
     /**
      * @return bool
      */
-    private function isAccountLinked(): bool
+    private function isAccountLinked()
     {
-        if (!$this->psAccountsService) {
+        try {
+            return $this->getAccountsService()->isAccountLinked();
+        } catch (Exception $e) {
             return false;
         }
-
-        return $this->psAccountsService->isAccountLinked();
     }
 
     /**
-     * @param string $serviceName
+     * @return mixed
      *
-     * @return mixed|null
+     * @throws ModuleNotInstalledException
+     * @throws ModuleVersionException
      */
-    private function getService(string $serviceName)
+    public function getAccountsService()
     {
-        $service = null;
-        $module = null;
+        if ($this->isPsAccountsInstalled()) {
+            if ($this->checkPsAccountsVersion()) {
+                $psAccounts = \Module::getInstanceByName(Installer::PS_ACCOUNTS_MODULE_NAME);
+                if (!$psAccounts instanceof \Module) {
+                    throw new ModuleErrorException('Module ' . Installer::PS_ACCOUNTS_MODULE_NAME . ' not found');
+                }
 
-        if (\Module::isInstalled($this->moduleName) && $this->checkPsAccountsVersion()) {
-            $module = \Module::getInstanceByName($this->moduleName);
+                return $psAccounts->getService(PsAccounts::PS_ACCOUNTS_SERVICE);
+            }
+            throw new ModuleVersionException('Module version expected : ' . $this->psAccountsVersion);
         }
-
-        if ($module && method_exists($module, 'getService')) {
-            $service = $module->getService($serviceName);
-        }
-
-        return $service;
+        throw new ModuleNotInstalledException('Module not installed : ' . Installer::PS_ACCOUNTS_MODULE_NAME);
     }
 
-    private function checkPsAccountsVersion(): bool
+    /**
+     * @return bool
+     */
+    private function isPsAccountsInstalled()
     {
-        $module = \Module::getInstanceByName($this->moduleName);
+        $moduleName = Installer::PS_ACCOUNTS_MODULE_NAME;
 
-        return version_compare(
-            $module->version,
-            $this->psAccountsVersion,
-            '>='
+        if (false === $this->isShopVersion17()) {
+            return \Module::isInstalled($moduleName);
+        }
+
+        $sqlQuery = sprintf(
+            'SELECT `id_module` FROM `%smodule` WHERE `name` = "%s" AND `active` = 1',
+            _DB_PREFIX_,
+            pSQL($moduleName)
         );
+
+        return (int) Db::getInstance()->getValue($sqlQuery) > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    private function checkPsAccountsVersion()
+    {
+        $moduleName = Installer::PS_ACCOUNTS_MODULE_NAME;
+
+        $module = \Module::getInstanceByName($moduleName);
+
+        if ($module instanceof \Ps_accounts) {
+            return (bool) version_compare(
+                (string) $module->version,
+                $this->psAccountsVersion,
+                '>='
+            );
+        }
+
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isShopVersion17()
+    {
+        return version_compare(_PS_VERSION_, '1.7.0.0', '>=');
     }
 }

@@ -28,7 +28,6 @@ namespace PrestaShop\PrestaShop\Core\Form\ChoiceProvider;
 
 use PrestaShop\PrestaShop\Adapter\OrderMessage\OrderMessageProvider;
 use PrestaShop\PrestaShop\Core\Form\ConfigurableFormChoiceProviderInterface;
-use PrestaShop\PrestaShop\Core\Form\FormChoiceFormatter;
 
 /**
  * Selects order messages itself.
@@ -50,10 +49,12 @@ final class CustomerServiceOrderMessagesChoiceProvider implements ConfigurableFo
      */
     public function getChoices(array $options): array
     {
-        return FormChoiceFormatter::formatFormChoices(
-            $this->orderMessageProvider->getMessages($options['lang_id']),
-            'message',
-            'id_order_message'
-        );
+        $result = [];
+
+        foreach ($this->orderMessageProvider->getMessages($options['lang_id']) as $orderMessage) {
+            $result[$orderMessage['id_order_message']] = $orderMessage['message'];
+        }
+
+        return $result;
     }
 }

@@ -29,7 +29,6 @@ declare(strict_types=1);
 namespace PrestaShop\PrestaShop\Adapter\Zone\CommandHandler;
 
 use PrestaShop\PrestaShop\Adapter\Domain\AbstractObjectModelHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Zone\Command\AddZoneCommand;
 use PrestaShop\PrestaShop\Core\Domain\Zone\CommandHandler\AddZoneHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Zone\Exception\MissingZoneRequiredFieldsException;
@@ -41,7 +40,6 @@ use Zone;
 /**
  * Handles command that adds new zone.
  */
-#[AsCommandHandler]
 final class AddZoneHandler extends AbstractObjectModelHandler implements AddZoneHandlerInterface
 {
     /**
@@ -66,7 +64,7 @@ final class AddZoneHandler extends AbstractObjectModelHandler implements AddZone
             }
 
             $this->associateWithShops($zone, $command->getShopAssociation());
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new ZoneException(sprintf('Failed to add new zone "%s"', $command->getName()));
         }
 

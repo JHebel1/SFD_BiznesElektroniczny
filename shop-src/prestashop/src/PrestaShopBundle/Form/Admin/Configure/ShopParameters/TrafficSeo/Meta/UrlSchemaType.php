@@ -27,14 +27,11 @@
 namespace PrestaShopBundle\Form\Admin\Configure\ShopParameters\TrafficSeo\Meta;
 
 use PrestaShop\PrestaShop\Adapter\Routes\DefaultRouteProvider;
-use PrestaShopBundle\Form\Admin\Type\MultistoreConfigurationType;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
-use PrestaShopBundle\Form\Extension\MultistoreConfigurationTypeExtension;
-use PrestaShopException;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class UrlSchemaType is responsible for providing form fields for
@@ -68,7 +65,6 @@ class UrlSchemaType extends TranslatorAwareType
                     'Admin.Shopparameters.Feature'
                 ),
                 'help' => $this->getKeywords('product_rule'),
-                'multistore_configuration_key' => 'PS_ROUTE_product_rule',
             ])
             ->add('category_rule', TextType::class, [
                 'label' => $this->trans(
@@ -76,7 +72,6 @@ class UrlSchemaType extends TranslatorAwareType
                     'Admin.Shopparameters.Feature'
                 ),
                 'help' => $this->getKeywords('category_rule'),
-                'multistore_configuration_key' => 'PS_ROUTE_category_rule',
             ])
             ->add('supplier_rule', TextType::class, [
                 'label' => $this->trans(
@@ -84,7 +79,6 @@ class UrlSchemaType extends TranslatorAwareType
                     'Admin.Shopparameters.Feature'
                 ),
                 'help' => $this->getKeywords('supplier_rule'),
-                'multistore_configuration_key' => 'PS_ROUTE_supplier_rule',
             ])
             ->add('manufacturer_rule', TextType::class, [
                 'label' => $this->trans(
@@ -92,7 +86,6 @@ class UrlSchemaType extends TranslatorAwareType
                     'Admin.Shopparameters.Feature'
                 ),
                 'help' => $this->getKeywords('manufacturer_rule'),
-                'multistore_configuration_key' => 'PS_ROUTE_manufacturer_rule',
             ])
             ->add('cms_rule', TextType::class, [
                 'label' => $this->trans(
@@ -100,7 +93,6 @@ class UrlSchemaType extends TranslatorAwareType
                     'Admin.Shopparameters.Feature'
                 ),
                 'help' => $this->getKeywords('cms_rule'),
-                'multistore_configuration_key' => 'PS_ROUTE_cms_rule',
             ])
             ->add('cms_category_rule', TextType::class, [
                 'label' => $this->trans(
@@ -108,7 +100,6 @@ class UrlSchemaType extends TranslatorAwareType
                     'Admin.Shopparameters.Feature'
                 ),
                 'help' => $this->getKeywords('cms_category_rule'),
-                'multistore_configuration_key' => 'PS_ROUTE_cms_category_rule',
             ])
             ->add('module', TextType::class, [
                 'label' => $this->trans(
@@ -116,7 +107,6 @@ class UrlSchemaType extends TranslatorAwareType
                     'Admin.Shopparameters.Feature'
                 ),
                 'help' => $this->getKeywords('module'),
-                'multistore_configuration_key' => 'PS_ROUTE_module',
             ]);
     }
 
@@ -135,7 +125,7 @@ class UrlSchemaType extends TranslatorAwareType
      *
      * @return string
      *
-     * @throws PrestaShopException
+     * @throws \PrestaShopException
      */
     private function getKeywords($idRoute)
     {
@@ -152,21 +142,11 @@ class UrlSchemaType extends TranslatorAwareType
         }
 
         return $this->trans(
-            'Keywords: %keywords%',
-            'Admin.Shopparameters.Feature',
-            [
-                '%keywords%' => implode(', ', $formattedKeyWords),
-            ]
+                'Keywords: %keywords%',
+                'Admin.Shopparameters.Feature',
+                [
+                    '%keywords%' => implode(', ', $formattedKeyWords),
+                ]
         );
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @see MultistoreConfigurationTypeExtension
-     */
-    public function getParent(): string
-    {
-        return MultistoreConfigurationType::class;
     }
 }

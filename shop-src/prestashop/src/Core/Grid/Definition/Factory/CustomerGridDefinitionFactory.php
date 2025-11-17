@@ -39,17 +39,15 @@ use PrestaShop\PrestaShop\Core\Grid\Column\ColumnCollection;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ActionColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\BadgeColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\BulkActionColumn;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DateTimeColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ToggleColumn;
+use PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn;
 use PrestaShop\PrestaShop\Core\Grid\Filter\Filter;
 use PrestaShop\PrestaShop\Core\Grid\Filter\FilterCollection;
 use PrestaShop\PrestaShop\Core\Hook\HookDispatcherInterface;
-use PrestaShopBundle\Form\Admin\Sell\Customer\GenderType;
-use PrestaShopBundle\Form\Admin\Sell\Customer\GroupType;
 use PrestaShopBundle\Form\Admin\Type\DateRangeType;
 use PrestaShopBundle\Form\Admin\Type\SearchAndResetType;
 use PrestaShopBundle\Form\Admin\Type\YesAndNoChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 
@@ -71,34 +69,26 @@ final class CustomerGridDefinitionFactory extends AbstractGridDefinitionFactory
     private $isMultistoreFeatureEnabled;
 
     /**
-     * @var bool
+     * @var array
      */
-    private $isGroupsFeatureEnabled;
-
-    /**
-     * @var string
-     */
-    private $contextDateFormat;
+    private $genderChoices;
 
     /**
      * @param HookDispatcherInterface $hookDispatcher
      * @param bool $isB2bFeatureEnabled
      * @param bool $isMultistoreFeatureEnabled
-     * @param string $contextDateFormat
-     * @param bool $isGroupsFeatureEnabled
+     * @param array $genderChoices
      */
     public function __construct(
         HookDispatcherInterface $hookDispatcher,
         $isB2bFeatureEnabled,
         $isMultistoreFeatureEnabled,
-        string $contextDateFormat,
-        bool $isGroupsFeatureEnabled = true
+        array $genderChoices
     ) {
         parent::__construct($hookDispatcher);
         $this->isB2bFeatureEnabled = $isB2bFeatureEnabled;
         $this->isMultistoreFeatureEnabled = $isMultistoreFeatureEnabled;
-        $this->contextDateFormat = $contextDateFormat;
-        $this->isGroupsFeatureEnabled = $isGroupsFeatureEnabled;
+        $this->genderChoices = $genderChoices;
     }
 
     /**
@@ -114,7 +104,7 @@ final class CustomerGridDefinitionFactory extends AbstractGridDefinitionFactory
      */
     protected function getName()
     {
-        return $this->trans('Customers', [], 'Admin.Orderscustomers.Feature');
+        return $this->trans('Manage your Customers', [], 'Admin.Orderscustomers.Feature');
     }
 
     /**
@@ -203,56 +193,53 @@ final class CustomerGridDefinitionFactory extends AbstractGridDefinitionFactory
                     ])
             )
             ->add(
-                (new DateTimeColumn('date_add'))
+                (new DataColumn('date_add'))
                     ->setName($this->trans('Registration', [], 'Admin.Orderscustomers.Feature'))
                     ->setOptions([
-                        'format' => $this->contextDateFormat,
                         'field' => 'date_add',
                     ])
             )
             ->add(
-                (new DateTimeColumn('connect'))
+                (new DataColumn('connect'))
                     ->setName($this->trans('Last visit', [], 'Admin.Orderscustomers.Feature'))
                     ->setOptions([
-                        'format' => $this->contextDateFormat,
                         'field' => 'connect',
-                        'empty_data' => '--',
                     ])
             )
             ->add((new ActionColumn('actions'))
-                ->setName($this->trans('Actions', [], 'Admin.Global'))
-                ->setOptions([
-                    'actions' => (new RowActionCollection())
-                        ->add(
-                            (new LinkRowAction('edit'))
-                                ->setName($this->trans('Edit', [], 'Admin.Actions'))
-                                ->setIcon('edit')
-                                ->setOptions([
-                                    'route' => 'admin_customers_edit',
-                                    'route_param_name' => 'customerId',
-                                    'route_param_field' => 'id_customer',
-                                ])
-                        )
-                        ->add(
-                            (new LinkRowAction('view'))
-                                ->setName($this->trans('View', [], 'Admin.Actions'))
-                                ->setIcon('zoom_in')
-                                ->setOptions([
-                                    'route' => 'admin_customers_view',
-                                    'route_param_name' => 'customerId',
-                                    'route_param_field' => 'id_customer',
-                                    'clickable_row' => true,
-                                ])
-                        )
-                        ->add((new DeleteCustomerRowAction('delete'))
-                            ->setName($this->trans('Delete', [], 'Admin.Actions'))
-                            ->setIcon('delete')
+            ->setName($this->trans('Actions', [], 'Admin.Global'))
+            ->setOptions([
+                'actions' => (new RowActionCollection())
+                    ->add(
+                        (new LinkRowAction('edit'))
+                            ->setName($this->trans('Edit', [], 'Admin.Actions'))
+                            ->setIcon('edit')
                             ->setOptions([
-                                'customer_id_field' => 'id_customer',
-                                'customer_delete_route' => 'admin_customers_delete',
+                                'route' => 'admin_customers_edit',
+                                'route_param_name' => 'customerId',
+                                'route_param_field' => 'id_customer',
                             ])
-                        ),
-                ])
+                    )
+                    ->add(
+                        (new LinkRowAction('view'))
+                            ->setName($this->trans('View', [], 'Admin.Actions'))
+                            ->setIcon('zoom_in')
+                            ->setOptions([
+                                'route' => 'admin_customers_view',
+                                'route_param_name' => 'customerId',
+                                'route_param_field' => 'id_customer',
+                                'clickable_row' => true,
+                            ])
+                    )
+                    ->add((new DeleteCustomerRowAction('delete'))
+                    ->setName($this->trans('Delete', [], 'Admin.Actions'))
+                    ->setIcon('delete')
+                    ->setOptions([
+                        'customer_id_field' => 'id_customer',
+                        'customer_delete_route' => 'admin_customers_delete',
+                    ])
+                    ),
+            ])
             );
 
         if ($this->isB2bFeatureEnabled) {
@@ -270,21 +257,10 @@ final class CustomerGridDefinitionFactory extends AbstractGridDefinitionFactory
             $columns->addBefore(
                 'actions',
                 (new DataColumn('shop_name'))
-                    ->setName($this->trans('Store', [], 'Admin.Global'))
+                    ->setName($this->trans('Shop', [], 'Admin.Global'))
                     ->setOptions([
                         'field' => 'shop_name',
                         'sortable' => false,
-                    ])
-            );
-        }
-
-        if ($this->isGroupsFeatureEnabled) {
-            $columns->addAfter(
-                'email',
-                (new DataColumn('default_group'))
-                    ->setName($this->trans('Group', [], 'Admin.Global'))
-                    ->setOptions([
-                        'field' => 'default_group',
                     ])
             );
         }
@@ -309,9 +285,13 @@ final class CustomerGridDefinitionFactory extends AbstractGridDefinitionFactory
                     ->setAssociatedColumn('id_customer')
             )
             ->add(
-                (new Filter('social_title', GenderType::class))
+                (new Filter('social_title', ChoiceType::class))
                     ->setTypeOptions([
+                        'choices' => $this->genderChoices,
+                        'expanded' => false,
+                        'multiple' => false,
                         'required' => false,
+                        'choice_translation_domain' => false,
                     ])
                     ->setAssociatedColumn('social_title')
             )
@@ -389,16 +369,6 @@ final class CustomerGridDefinitionFactory extends AbstractGridDefinitionFactory
             );
         }
 
-        if ($this->isGroupsFeatureEnabled) {
-            $filters->add(
-                (new Filter('default_group', GroupType::class))
-                    ->setTypeOptions([
-                        'required' => false,
-                    ])
-                    ->setAssociatedColumn('default_group')
-            );
-        }
-
         return $filters;
     }
 
@@ -465,10 +435,10 @@ final class CustomerGridDefinitionFactory extends AbstractGridDefinitionFactory
                     ])
             )
             ->add((new DeleteCustomersBulkAction('delete_selection'))
-                ->setName($this->trans('Delete selected', [], 'Admin.Actions'))
-                ->setOptions([
-                    'customers_bulk_delete_route' => 'admin_customers_delete_bulk',
-                ])
+            ->setName($this->trans('Delete selected', [], 'Admin.Actions'))
+            ->setOptions([
+                'customers_bulk_delete_route' => 'admin_customers_delete_bulk',
+            ])
             );
     }
 }

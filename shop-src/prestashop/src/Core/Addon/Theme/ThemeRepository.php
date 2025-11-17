@@ -51,11 +51,11 @@ class ThemeRepository implements AddonRepositoryInterface
      */
     private $shop;
     /**
-     * @var array|null
+     * @var array
      */
     public $themes;
 
-    public function __construct(ConfigurationInterface $configuration, Filesystem $filesystem, ?Shop $shop = null)
+    public function __construct(ConfigurationInterface $configuration, Filesystem $filesystem, Shop $shop = null)
     {
         $this->appConfiguration = $configuration;
         $this->filesystem = $filesystem;
@@ -65,7 +65,7 @@ class ThemeRepository implements AddonRepositoryInterface
     /**
      * @param string $name
      *
-     * @return Theme
+     * @return \PrestaShop\PrestaShop\Core\Addon\AddonInterface|Theme
      *
      * @throws PrestaShopException
      */
@@ -126,14 +126,16 @@ class ThemeRepository implements AddonRepositoryInterface
     {
         $filter->setType(AddonListFilterType::THEME);
 
-        if (empty($filter->status)) {
+        if (!isset($filter->status)) {
             $filter->setStatus(AddonListFilterStatus::ALL);
         }
 
         $themes = $this->getThemesOnDisk();
 
-        foreach ($filter->exclude as $name) {
-            unset($themes[$name]);
+        if (count($filter->exclude) > 0) {
+            foreach ($filter->exclude as $name) {
+                unset($themes[$name]);
+            }
         }
 
         return $themes;

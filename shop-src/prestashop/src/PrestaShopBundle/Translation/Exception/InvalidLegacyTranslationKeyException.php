@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -26,12 +27,10 @@
 
 namespace PrestaShopBundle\Translation\Exception;
 
-use Exception;
-
 /**
  * Thrown when an invalid key is found in a legacy translation file
  */
-class InvalidLegacyTranslationKeyException extends Exception
+class InvalidLegacyTranslationKeyException extends \Exception
 {
     /**
      * @var string The invalid key

@@ -4,39 +4,57 @@ services:
 
   prestashop.adapter.cms_page.command_handler.bulk_disable_cms_page:
     class: PrestaShop\PrestaShop\Adapter\CMS\Page\CommandHandler\BulkDisableCmsPageHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\CmsPage\Command\BulkDisableCmsPageCommand
 
   prestashop.adapter.cms_page.command_handler.bulk_enable_cms_page:
     class: PrestaShop\PrestaShop\Adapter\CMS\Page\CommandHandler\BulkEnableCmsPageHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\CmsPage\Command\BulkEnableCmsPageCommand
 
   prestashop.adapter.cms_page.command_handler.toggle_cms_page_status:
     class: PrestaShop\PrestaShop\Adapter\CMS\Page\CommandHandler\ToggleCmsPageStatusHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\CmsPage\Command\ToggleCmsPageStatusCommand
 
   prestashop.adapter.cms_page.query_handler.get_cms_category_id_for_redirection:
     class: PrestaShop\PrestaShop\Adapter\CMS\Page\QueryHandler\GetCmsCategoryIdForRedirectionHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\CmsPage\Query\GetCmsCategoryIdForRedirection
 
   prestashop.adapter.cms_page.command_handler.delete_cms_page:
     class: PrestaShop\PrestaShop\Adapter\CMS\Page\CommandHandler\DeleteCmsPageHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\CmsPage\Command\DeleteCmsPageCommand
 
   prestashop.adapter.cms_page.command_handler.bulk_delete_cms_page:
     class: PrestaShop\PrestaShop\Adapter\CMS\Page\CommandHandler\BulkDeleteCmsPageHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\CmsPage\Command\BulkDeleteCmsPageCommand
 
   prestashop.adapter.cms_page.command_handler.add_cms_page_handler:
     class: PrestaShop\PrestaShop\Adapter\CMS\Page\CommandHandler\AddCmsPageHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\CmsPage\Command\AddCmsPageCommand
 
   prestashop.adapter.cms_page.command_handler.edit_cms_page_handler:
     class: PrestaShop\PrestaShop\Adapter\CMS\Page\CommandHandler\EditCmsPageHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\CmsPage\Command\EditCmsPageCommand
 
   prestashop.adapter.cms_page.query_handler.get_cms_page_for_editing_handler:
     class: PrestaShop\PrestaShop\Adapter\CMS\Page\QueryHandler\GetCmsPageForEditingHandler
-    autoconfigure: true
     arguments:
       - "@=service('prestashop.adapter.legacy.context').getContext().link"
       - "@=service('prestashop.adapter.legacy.context').getContext().language.id"
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\CmsPage\Query\GetCmsPageForEditing

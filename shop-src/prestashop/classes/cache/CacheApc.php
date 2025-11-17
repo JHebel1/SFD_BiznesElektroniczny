@@ -26,6 +26,8 @@
 
 /**
  * This class requires the PECL APC extension or PECL APCu extension to be installed.
+ *
+ * @since 1.5.0
  */
 class CacheApcCore extends Cache
 {
@@ -60,7 +62,7 @@ class CacheApcCore extends Cache
         } else {
             $pattern = str_replace('\\*', '.*', preg_quote($key));
 
-            $cache_info = (($this->apcu) ? apcu_cache_info() : apc_cache_info(''));
+            $cache_info = (($this->apcu) ? apcu_cache_info('') : apc_cache_info(''));
             foreach ($cache_info['cache_list'] as $entry) {
                 if (isset($entry['key'])) {
                     $key = $entry['key'];

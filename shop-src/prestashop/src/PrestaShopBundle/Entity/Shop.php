@@ -26,7 +26,6 @@
 
 namespace PrestaShopBundle\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -34,163 +33,260 @@ use Doctrine\ORM\Mapping as ORM;
  * Shop.
  *
  * @ORM\Table()
- *
  * @ORM\Entity(repositoryClass="PrestaShopBundle\Entity\Repository\ShopRepository")
  */
 class Shop
 {
     /**
+     * @var int
+     *
      * @ORM\Id
-     *
      * @ORM\Column(name="id_shop", type="integer")
-     *
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private int $id;
+    private $id;
 
     /**
      * @ORM\ManyToOne(targetEntity="PrestaShopBundle\Entity\ShopGroup", inversedBy="shops")
-     *
      * @ORM\JoinColumn(name="id_shop_group", referencedColumnName="id_shop_group", nullable=false)
      */
-    private ShopGroup $shopGroup;
+    private $shopGroup;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="name", type="string", length=64)
      */
-    private string $name;
+    private $name;
 
     /**
+     * @var string
+     *
      *  @ORM\Column(name="color", type="string", length=50)
      */
-    private string $color;
+    private $color;
 
     /**
+     * @var int
+     *
      * @ORM\Column(name="id_category", type="integer")
      */
-    private int $idCategory;
+    private $idCategory;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="theme_name", type="string", length=255)
      */
-    private string $themeName;
+    private $themeName;
 
     /**
+     * @var bool
+     *
      * @ORM\Column(name="active", type="boolean")
      */
-    private bool $active;
+    private $active;
 
     /**
+     * @var bool
+     *
      * @ORM\Column(name="deleted", type="boolean")
      */
-    private bool $deleted;
+    private $deleted;
 
     /**
-     * One group shop has many shops. This is the inverse side.
+     * @var Collection
      *
+     * One group shop has many shops. This is the inverse side.
      * @ORM\OneToMany(targetEntity="PrestaShopBundle\Entity\ShopUrl", mappedBy="shop")
      */
-    private Collection $shopUrls;
+    private $shopUrls;
 
-    public function __construct()
-    {
-        $this->shopUrls = new ArrayCollection();
-    }
-
-    public function getId(): int
+    /**
+     * Get id.
+     *
+     * @return int
+     */
+    public function getId()
     {
         return $this->id;
     }
 
-    public function setName(string $name): static
+    /**
+     * Set name.
+     *
+     * @param string $name
+     *
+     * @return Shop
+     */
+    public function setName($name)
     {
         $this->name = $name;
 
         return $this;
     }
 
-    public function getName(): string
+    /**
+     * Get name.
+     *
+     * @return string
+     */
+    public function getName()
     {
         return $this->name;
     }
 
-    public function setColor(string $color): static
+    /**
+     * @param string $color
+     *
+     * @return Shop
+     */
+    public function setColor(string $color): Shop
     {
         $this->color = $color;
 
         return $this;
     }
 
-    public function getColor(): string
+    /**
+     * @return string
+     */
+    public function getColor(): ?string
     {
         return $this->color;
     }
 
-    public function setIdCategory(int $idCategory): static
+    /**
+     * Set idCategory.
+     *
+     * @param int $idCategory
+     *
+     * @return Shop
+     */
+    public function setIdCategory($idCategory)
     {
         $this->idCategory = $idCategory;
 
         return $this;
     }
 
-    public function getIdCategory(): int
+    /**
+     * Get idCategory.
+     *
+     * @return int
+     */
+    public function getIdCategory()
     {
         return $this->idCategory;
     }
 
-    public function setThemeName(string $themeName): static
+    /**
+     * Set themeName.
+     *
+     * @param string $themeName
+     *
+     * @return Shop
+     */
+    public function setThemeName($themeName)
     {
         $this->themeName = $themeName;
 
         return $this;
     }
 
-    public function getThemeName(): string
+    /**
+     * Get themeName.
+     *
+     * @return string
+     */
+    public function getThemeName()
     {
         return $this->themeName;
     }
 
-    public function setActive(bool $active): static
+    /**
+     * Set active.
+     *
+     * @param bool $active
+     *
+     * @return Shop
+     */
+    public function setActive($active)
     {
         $this->active = $active;
 
         return $this;
     }
 
-    public function getActive(): bool
+    /**
+     * Get active.
+     *
+     * @return bool
+     */
+    public function getActive()
     {
         return $this->active;
     }
 
-    public function setDeleted(bool $deleted): static
+    /**
+     * Set deleted.
+     *
+     * @param bool $deleted
+     *
+     * @return Shop
+     */
+    public function setDeleted($deleted)
     {
         $this->deleted = $deleted;
 
         return $this;
     }
 
-    public function getDeleted(): bool
+    /**
+     * Get deleted.
+     *
+     * @return bool
+     */
+    public function getDeleted()
     {
         return $this->deleted;
     }
 
-    public function setShopGroup(ShopGroup $shopGroup): static
+    /**
+     * Set shopGroup.
+     *
+     * @param \PrestaShopBundle\Entity\ShopGroup $shopGroup
+     *
+     * @return Shop
+     */
+    public function setShopGroup(ShopGroup $shopGroup)
     {
         $this->shopGroup = $shopGroup;
 
         return $this;
     }
 
-    public function getShopGroup(): ShopGroup
+    /**
+     * Get shopGroup.
+     *
+     * @return \PrestaShopBundle\Entity\ShopGroup
+     */
+    public function getShopGroup()
     {
         return $this->shopGroup;
     }
 
+    /**
+     * @return Collection
+     */
     public function getShopUrls(): Collection
     {
         return $this->shopUrls;
     }
 
+    /**
+     * @return bool
+     */
     public function hasMainUrl(): bool
     {
         foreach ($this->shopUrls as $shopUrl) {

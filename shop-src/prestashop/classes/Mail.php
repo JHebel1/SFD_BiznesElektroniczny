@@ -24,15 +24,6 @@
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
 
-use Symfony\Component\Mailer\Exception\ExceptionInterface;
-use Symfony\Component\Mailer\Mailer;
-use Symfony\Component\Mailer\Transport\SendmailTransport;
-use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
-use Symfony\Component\Mime\Address;
-use Symfony\Component\Mime\Crypto\DkimSigner;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\Mime\Header\IdentificationHeader;
-
 /**
  * Class MailCore.
  */
@@ -101,20 +92,19 @@ class MailCore extends ObjectModel
     /**
      * Mail content type.
      */
-    public const TYPE_HTML = 1;
-    public const TYPE_TEXT = 2;
-    public const TYPE_BOTH = 3;
-    public const TYPE_BOTH_AUTOMATIC_TEXT = 4;
+    const TYPE_HTML = 1;
+    const TYPE_TEXT = 2;
+    const TYPE_BOTH = 3;
 
     /**
      * Send mail under SMTP server.
      */
-    public const METHOD_SMTP = 2;
+    const METHOD_SMTP = 2;
 
     /**
      * Disable mail, will return immediately after calling send method.
      */
-    public const METHOD_DISABLE = 3;
+    const METHOD_DISABLE = 3;
 
     /**
      * Send Email.
@@ -133,9 +123,9 @@ class MailCore extends ObjectModel
      * @param string $templatePath Template path
      * @param bool $die Die after error
      * @param int $idShop Shop ID
-     * @param string|array<string>|null $bcc Bcc recipient address. You can use an array of array to send to multiple recipients
-     * @param string|null $replyTo Reply-To recipient address
-     * @param string|null $replyToName Reply-To recipient name
+     * @param string $bcc Bcc recipient address. You can use an array of array to send to multiple recipients
+     * @param string $replyTo Reply-To recipient address
+     * @param string $replyToName Reply-To recipient name
      *
      * @return bool|int Whether sending was successful. If not at all, false, otherwise amount of recipients succeeded.
      */
@@ -155,14 +145,12 @@ class MailCore extends ObjectModel
         $idShop = null,
         $bcc = null,
         $replyTo = null,
-        $replyToName = ''
+        $replyToName = null
     ) {
-        // If no ID shop was provided, we use the one from the context
         if (!$idShop) {
             $idShop = Context::getContext()->shop->id;
         }
 
-        // An array [module_name => module_output] will be returned
         $hookBeforeEmailResult = Hook::exec(
             'actionEmailSendBefore',
             [
@@ -181,13 +169,11 @@ class MailCore extends ObjectModel
                 'idShop' => &$idShop,
                 'bcc' => &$bcc,
                 'replyTo' => &$replyTo,
-                'replyToName' => &$replyToName,
             ],
             null,
             true
         );
 
-        // Allow modules to block the email sending
         if ($hookBeforeEmailResult === null) {
             $keepGoing = false;
         } else {
@@ -199,23 +185,15 @@ class MailCore extends ObjectModel
                 true
             );
         }
+
         if (!$keepGoing) {
             return true;
         }
 
-        // Initialize shop and die if something wrong was passed either in the method call
-        // or a module broke it
         if (is_numeric($idShop) && $idShop) {
             $shop = new Shop((int) $idShop);
         }
 
-        if (!isset($shop)) {
-            self::dieOrLog($die, 'Error: parameter "idShop" is corrupted');
-
-            return false;
-        }
-
-        // Get all required configuration for sending the email
         $configuration = Configuration::getMultiple(
             [
                 'PS_SHOP_EMAIL',
@@ -227,17 +205,13 @@ class MailCore extends ObjectModel
                 'PS_MAIL_SMTP_ENCRYPTION',
                 'PS_MAIL_SMTP_PORT',
                 'PS_MAIL_TYPE',
-                'PS_MAIL_DKIM_ENABLE',
-                'PS_MAIL_DKIM_DOMAIN',
-                'PS_MAIL_DKIM_SELECTOR',
-                'PS_MAIL_DKIM_KEY',
             ],
             null,
             null,
             $idShop
         );
 
-        // If emails are completely disabled, we return true immediately
+        // Returns immediately if emails are deactivated
         if ($configuration['PS_MAIL_METHOD'] == self::METHOD_DISABLE) {
             return true;
         }
@@ -251,6 +225,16 @@ class MailCore extends ObjectModel
             ]
         );
 
+        if (!isset($configuration['PS_MAIL_SMTP_ENCRYPTION']) ||
+            Tools::strtolower($configuration['PS_MAIL_SMTP_ENCRYPTION']) === 'off'
+        ) {
+            $configuration['PS_MAIL_SMTP_ENCRYPTION'] = false;
+        }
+
+        if (!isset($configuration['PS_MAIL_SMTP_PORT'])) {
+            $configuration['PS_MAIL_SMTP_PORT'] = 'default';
+        }
+
         /*
          * Sending an e-mail can be of vital importance for the merchant, when his password
          * is lost for example, so we must not die but do our best to send the e-mail.
@@ -259,7 +243,6 @@ class MailCore extends ObjectModel
             $from = $configuration['PS_SHOP_EMAIL'];
         }
 
-        // Validate it again, PS_SHOP_EMAIL could be wrong or empty
         if (!Validate::isEmail($from)) {
             $from = null;
         }
@@ -269,7 +252,6 @@ class MailCore extends ObjectModel
             $fromName = $configuration['PS_SHOP_NAME'];
         }
 
-        // Validate it again, PS_SHOP_NAME could be wrong or empty
         if (!Validate::isMailName($fromName)) {
             $fromName = null;
         }
@@ -284,43 +266,37 @@ class MailCore extends ObjectModel
             return false;
         }
 
-        // If bcc is not null, make sure it's a valid e-mail
+        // if bcc is not null, make sure it's a vaild e-mail
         if (null !== $bcc && !is_array($bcc) && !Validate::isEmail($bcc)) {
             self::dieOrLog($die, 'Error: parameter "bcc" is corrupted');
             $bcc = null;
         }
 
-        // Make sure that templateVars is an array, it could be malfuctioned by modules from hooks
         if (!is_array($templateVars)) {
             $templateVars = [];
         }
 
-        // Check if customer toName is valid, but do not fail because of it
+        // Do not crash for this error, that may be a complicated customer name
         if (is_string($toName) && !empty($toName) && !Validate::isMailName($toName)) {
             $toName = null;
         }
 
-        // Check if proper template name (for example 'order_conf') is provided
         if (!Validate::isTplName($template)) {
             self::dieOrLog($die, 'Error: invalid e-mail template');
 
             return false;
         }
 
-        // Check if proper email subject is provided
         if (!Validate::isMailSubject($subject)) {
             self::dieOrLog($die, 'Error: invalid e-mail subject');
 
             return false;
         }
 
-        $email = new Email();
+        /* Construct multiple recipients list if needed */
+        $message = new Swift_Message();
 
-        /*
-         * Receivers of this email can be either an array or a string.
-         * This validates them, formats them and assigns them to the email object.
-         */
-        if (is_array($to)) {
+        if (is_array($to) && isset($to)) {
             foreach ($to as $key => $addr) {
                 $addr = trim($addr);
                 if (!Validate::isEmail($addr)) {
@@ -338,20 +314,16 @@ class MailCore extends ObjectModel
                 $addrName = ($addrName == null || $addrName == $addr || !Validate::isGenericName($addrName)) ?
                           '' :
                           self::mimeEncode($addrName);
-                $email->addTo(new Address(self::toPunycode($addr), $addrName));
+                $message->addTo(self::toPunycode($addr), $addrName);
             }
             $toPlugin = $to[0];
         } else {
             /* Simple recipient, one address */
             $toPlugin = $to;
             $toName = (($toName == null || $toName == $to) ? '' : self::mimeEncode($toName));
-            $email->addTo(new Address(self::toPunycode($to), $toName));
+            $message->addTo(self::toPunycode($to), $toName);
         }
 
-        /*
-         * Background copy receivers of this email can be either an array or a string.
-         * This validates them, formats them and assigns them to the email object.
-         */
         if (isset($bcc) && is_array($bcc)) {
             foreach ($bcc as $addr) {
                 $addr = trim($addr);
@@ -361,96 +333,77 @@ class MailCore extends ObjectModel
                     return false;
                 }
 
-                $email->addBcc(new Address(self::toPunycode($addr)));
+                $message->addBcc(self::toPunycode($addr));
             }
         } elseif (isset($bcc)) {
-            $email->addBcc(new Address(self::toPunycode($bcc)));
+            $message->addBcc(self::toPunycode($bcc));
         }
 
-        // Initialization of the mail transport
         try {
-            // Connect with the appropriate configuration, either SMTP or sendmail
+            /* Connect with the appropriate configuration */
             if ($configuration['PS_MAIL_METHOD'] == self::METHOD_SMTP) {
-                // Setup TLS configuration
-                if (!isset($configuration['PS_MAIL_SMTP_ENCRYPTION']) || Tools::strtolower($configuration['PS_MAIL_SMTP_ENCRYPTION']) === 'off') {
-                    $isTls = false;
-                } else {
-                    $isTls = true;
-                }
-
-                // Setup port configration
-                if (!isset($configuration['PS_MAIL_SMTP_PORT'])) {
-                    $configuration['PS_MAIL_SMTP_PORT'] = 'default';
-                }
-
                 if (empty($configuration['PS_MAIL_SERVER']) || empty($configuration['PS_MAIL_SMTP_PORT'])) {
                     self::dieOrLog($die, 'Error: invalid SMTP server or SMTP port');
 
                     return false;
                 }
 
-                // Initialize the transport
-                $transport = (new EsmtpTransport(
+                $connection = (new Swift_SmtpTransport(
                     $configuration['PS_MAIL_SERVER'],
                     $configuration['PS_MAIL_SMTP_PORT'],
-                    $isTls
+                    $configuration['PS_MAIL_SMTP_ENCRYPTION']
                 ))
                     ->setUsername($configuration['PS_MAIL_USER'])
-                    ->setPassword($configuration['PS_MAIL_PASSWD'])
-                ;
+                    ->setPassword($configuration['PS_MAIL_PASSWD']);
             } else {
-                $transport = new SendmailTransport();
+                /**
+                 * mail() support was removed from SwiftMailer for security reasons
+                 * previously => $connection = \Swift_MailTransport::newInstance();
+                 * Use Swift_SendmailTransport instead
+                 *
+                 * @see https://github.com/swiftmailer/swiftmailer/issues/866
+                 */
+                $connection = new Swift_SendmailTransport();
             }
 
-            // And initialize the mailer with the transport selected
-            $mailer = new Mailer($transport);
+            if (!$connection) {
+                return false;
+            }
 
-            /*
-             * Now, we will load and verify the templates used to send this message
-             * First, we build list of language ISO codes to try to use.
-             * We will search for them in following order:
-             * 1. Language of the message
-             * 2. Default language of the shop
-             * 3. English language
-             */
-            $isoArray = [];
+            $swift = new Swift_Mailer($connection);
+            /* Get templates content */
             $iso = Language::getIsoById((int) $idLang);
+            $isoDefault = Language::getIsoById((int) Configuration::get('PS_LANG_DEFAULT'));
+            $isoArray = [];
             if ($iso) {
                 $isoArray[] = $iso;
             }
-            $isoDefault = Language::getIsoById((int) Configuration::get('PS_LANG_DEFAULT'));
+
             if ($isoDefault && $iso !== $isoDefault) {
                 $isoArray[] = $isoDefault;
             }
+
             if (!in_array('en', $isoArray)) {
                 $isoArray[] = 'en';
             }
 
-            /*
-             * Second, we detect if the template is a module template and get it's name.
-             * This is used later to help locate the correct path inside the module.
-             */
             $moduleName = false;
-            if (preg_match('#' . $shop->physical_uri . 'modules/#', str_replace(DIRECTORY_SEPARATOR, '/', $templatePath))
-                && preg_match('#modules/([a-z0-9_-]+)/#ui', str_replace(DIRECTORY_SEPARATOR, '/', $templatePath), $res)
+
+            // get templatePath
+            if (preg_match('#' . $shop->physical_uri . 'modules/#', str_replace(DIRECTORY_SEPARATOR, '/', $templatePath)) &&
+                preg_match('#modules/([a-z0-9_-]+)/#ui', str_replace(DIRECTORY_SEPARATOR, '/', $templatePath), $res)
             ) {
                 $moduleName = $res[1];
             }
 
-            /*
-             * Now, we will try to find the email template from best option
-             * to worst option. Until we find a tempalate that exists or we run
-             * out of options.
-             */
-            $isoTemplate = '';
             foreach ($isoArray as $isoCode) {
                 $isoTemplate = $isoCode . '/' . $template;
                 $templatePath = self::getTemplateBasePath($isoTemplate, $moduleName, $shop->theme);
 
-                if (!file_exists($templatePath . $isoTemplate . '.txt')
-                    && (
-                        $configuration['PS_MAIL_TYPE'] == Mail::TYPE_BOTH
-                        || $configuration['PS_MAIL_TYPE'] == Mail::TYPE_TEXT
+                if (!file_exists($templatePath . $isoTemplate . '.txt') &&
+                    (
+                        $configuration['PS_MAIL_TYPE'] == Mail::TYPE_BOTH ||
+                        $configuration['PS_MAIL_TYPE'] == Mail::TYPE_TEXT
                     )
                 ) {
                     PrestaShopLogger::addLog(
@@ -460,11 +413,10 @@ class MailCore extends ObjectModel
                             'Admin.Advparameters.Notification'
                         )
                     );
-                } elseif (!file_exists($templatePath . $isoTemplate . '.html')
-                          && (
-                              $configuration['PS_MAIL_TYPE'] == Mail::TYPE_BOTH
-                              || $configuration['PS_MAIL_TYPE'] == Mail::TYPE_BOTH_AUTOMATIC_TEXT
-                              || $configuration['PS_MAIL_TYPE'] == Mail::TYPE_HTML
+                } elseif (!file_exists($templatePath . $isoTemplate . '.html') &&
+                          (
+                              $configuration['PS_MAIL_TYPE'] == Mail::TYPE_BOTH ||
+                              $configuration['PS_MAIL_TYPE'] == Mail::TYPE_HTML
                           )
                 ) {
                     PrestaShopLogger::addLog(
@@ -481,23 +433,14 @@ class MailCore extends ObjectModel
                 }
             }
 
-            // If we found a compatible set of templates, yaaay. If not, we have to die.
             if (empty($templatePathExists)) {
                 self::dieOrLog($die, 'Error - The following e-mail template is missing: %s', [$template]);
 
                 return false;
             }
 
-            /*
-             * Now, we use the created paths to templates, load up
-             * the content and fill it with variables.
-             *
-             * Modules can alter the template before and after content is added.
-             */
             $templateHtml = '';
             $templateTxt = '';
-
-            // An array [module_name => module_output] will be returned (no effect)
             Hook::exec(
                 'actionEmailAddBeforeContent',
                 [
@@ -509,17 +452,14 @@ class MailCore extends ObjectModel
                 null,
                 true
             );
-
             $templateHtml .= Tools::file_get_contents($templatePath . $isoTemplate . '.html');
             $templateTxt .= strip_tags(
                 html_entity_decode(
                     Tools::file_get_contents($templatePath . $isoTemplate . '.txt'),
-                    ENT_COMPAT,
+                    null,
                     'utf-8'
                 )
             );
-
-            // An array [module_name => module_output] will be returned (no effect)
             Hook::exec(
                 'actionEmailAddAfterContent',
                 [
@@ -532,32 +472,25 @@ class MailCore extends ObjectModel
                 true
             );
 
-            // Prepend shop name to subject if configured and add it to the message
-            if (Configuration::get('PS_MAIL_SUBJECT_PREFIX')) {
-                $subject = '[' . strip_tags($configuration['PS_SHOP_NAME']) . '] ' . $subject;
-            }
-            $email->subject($subject);
+            /* Create mail and attach differents parts */
+            $subject = '[' . strip_tags($configuration['PS_SHOP_NAME']) . '] ' . $subject;
+            $message->setSubject($subject);
 
-            // Set Message-ID - getmypid() is blocked on some hosting
-            $email
-                ->getHeaders()
-                ->add(new IdentificationHeader('Message-ID', Mail::generateId()))
-            ;
+            $message->setCharset('utf-8');
 
-            // Assign reply-to address, if set and valid
+            /* Set Message-ID - getmypid() is blocked on some hosting */
+            $message->setId(Mail::generateId());
+
             if (!($replyTo && Validate::isEmail($replyTo))) {
                 $replyTo = $from;
             }
-            if (!empty($replyTo) && $replyTo != $toPlugin) {
-                $email->replyTo(new Address($replyTo, (string) $replyToName));
+
+            if (isset($replyTo) && $replyTo) {
+                $message->setReplyTo($replyTo, ($replyToName !== '' ? $replyToName : null));
             }
 
-            /*
-             * Now we add common template variables. First, the logo. If we have a specific logo for emails,
-             * we will use it, otherwise we will use the default logo.
-             */
-            if (false !== Configuration::get('PS_LOGO_MAIL', null, null, $idShop)
-                && file_exists(_PS_IMG_DIR_ . Configuration::get('PS_LOGO_MAIL', null, null, $idShop))
+            if (false !== Configuration::get('PS_LOGO_MAIL') &&
+                file_exists(_PS_IMG_DIR_ . Configuration::get('PS_LOGO_MAIL', null, null, $idShop))
             ) {
                 $logo = _PS_IMG_DIR_ . Configuration::get('PS_LOGO_MAIL', null, null, $idShop);
             } else {
@@ -568,28 +501,59 @@ class MailCore extends ObjectModel
                 }
             }
             ShopUrl::cacheMainDomainForShop((int) $idShop);
-            if (isset($logo) && $configuration['PS_MAIL_TYPE'] != Mail::TYPE_TEXT) {
-                $templateVars['{shop_logo}'] = 'cid:shop_logo';
-                $email->embedFromPath($logo, 'shop_logo');
+            /* don't attach the logo as */
+            if (isset($logo)) {
+                $templateVars['{shop_logo}'] = $message->embed(\Swift_Image::fromPath($logo));
             }
 
-            // Now, we add common links that are available in every template
-            if (!(Context::getContext()->link instanceof Link)) {
+            if ((Context::getContext()->link instanceof Link) === false) {
                 Context::getContext()->link = new Link();
             }
-            $templateVars['{shop_name}'] = Tools::safeOutput($configuration['PS_SHOP_NAME']);
-            $templateVars['{shop_url}'] = Context::getContext()->link->getPageLink('index', null, $idLang, null, false, $idShop);
-            $templateVars['{my_account_url}'] = Context::getContext()->link->getPageLink('my-account', null, $idLang, null, false, $idShop);
-            $templateVars['{guest_tracking_url}'] = Context::getContext()->link->getPageLink('guest-tracking', null, $idLang, null, false, $idShop);
-            $templateVars['{history_url}'] = Context::getContext()->link->getPageLink('history', null, $idLang, null, false, $idShop);
-            $templateVars['{order_slip_url}'] = Context::getContext()->link->getPageLink('order-slip', null, $idLang, null, false, $idShop);
-            $templateVars['{color}'] = Tools::safeOutput(Configuration::get('PS_MAIL_COLOR', null, null, $idShop));
 
-            // Hook to allow modules to add extra template variables
+            $templateVars['{shop_name}'] = Tools::safeOutput($configuration['PS_SHOP_NAME']);
+            $templateVars['{shop_url}'] = Context::getContext()->link->getPageLink(
+                'index',
+                true,
+                $idLang,
+                null,
+                false,
+                $idShop
+            );
+            $templateVars['{my_account_url}'] = Context::getContext()->link->getPageLink(
+                'my-account',
+                true,
+                $idLang,
+                null,
+                false,
+                $idShop
+            );
+            $templateVars['{guest_tracking_url}'] = Context::getContext()->link->getPageLink(
+                'guest-tracking',
+                true,
+                $idLang,
+                null,
+                false,
+                $idShop
+            );
+            $templateVars['{history_url}'] = Context::getContext()->link->getPageLink(
+                'history',
+                true,
+                $idLang,
+                null,
+                false,
+                $idShop
+            );
+            $templateVars['{order_slip_url}'] = Context::getContext()->link->getPageLink(
+                'order-slip',
+                true,
+                $idLang,
+                null,
+                false,
+                $idShop
+            );
+            $templateVars['{color}'] = Tools::safeOutput(Configuration::get('PS_MAIL_COLOR', null, null, $idShop));
             // Get extra template_vars
             $extraTemplateVars = [];
-
-            // An array [module_name => module_output] will be returned (no effect)
             Hook::exec(
                 'actionGetExtraMailTemplateVars',
                 [
@@ -602,38 +566,19 @@ class MailCore extends ObjectModel
                 true
             );
             $templateVars = array_merge($templateVars, $extraTemplateVars);
-
-            // Assign the content itself to the email message
-            switch ($configuration['PS_MAIL_TYPE']) {
-                case Mail::TYPE_HTML:
-                    $templateHtml = strtr($templateHtml, $templateVars);
-                    $email->html($templateHtml);
-                    break;
-
-                case Mail::TYPE_TEXT:
-                    $templateTxt = strtr($templateTxt, $templateVars);
-                    $email->text($templateTxt);
-                    break;
-
-                case Mail::TYPE_BOTH:
-                    $templateHtml = strtr($templateHtml, $templateVars);
-                    $email->html($templateHtml);
-
-                    $templateTxt = strtr($templateTxt, $templateVars);
-                    $email->text($templateTxt);
-                    break;
-
-                case Mail::TYPE_BOTH_AUTOMATIC_TEXT:
-                    $templateHtml = strtr($templateHtml, $templateVars);
-                    $email->html($templateHtml);
-
-                    $templateTxt = (new PrestaShop\PrestaShop\Core\MailTemplate\Transformation\HTMLToTextTransformation())->apply($templateHtml, []);
-                    $email->text($templateTxt);
-                    break;
+            $swift->registerPlugin(new Swift_Plugins_DecoratorPlugin([self::toPunycode($toPlugin) => $templateVars]));
+            if ($configuration['PS_MAIL_TYPE'] == Mail::TYPE_BOTH ||
+                $configuration['PS_MAIL_TYPE'] == Mail::TYPE_TEXT
+            ) {
+                $message->addPart($templateTxt, 'text/plain', 'utf-8');
+            }
+            if ($configuration['PS_MAIL_TYPE'] == Mail::TYPE_BOTH ||
+                $configuration['PS_MAIL_TYPE'] == Mail::TYPE_HTML
+            ) {
+                $message->addPart($templateHtml, 'text/html', 'utf-8');
             }
 
-            // Attach files to the email
-            if (!empty($fileAttachment)) {
+            if ($fileAttachment && !empty($fileAttachment)) {
                 // Multiple attachments?
                 if (!is_array(current($fileAttachment))) {
                     $fileAttachment = [$fileAttachment];
@@ -641,49 +586,35 @@ class MailCore extends ObjectModel
 
                 foreach ($fileAttachment as $attachment) {
                     if (isset($attachment['content'], $attachment['name'], $attachment['mime'])) {
-                        $email->attach($attachment['content'], $attachment['name'], $attachment['mime']);
+                        $message->attach(
+                            (new Swift_Attachment())->setFilename(
+                                $attachment['name']
+                            )->setContentType($attachment['mime'])
+                                ->setBody($attachment['content'])
+                        );
                     }
                 }
             }
+            /* Send mail */
+            $message->setFrom([$from => $fromName]);
 
-            // Assign the from name and adress to the email
-            $email->from(new Address($from, (string) $fromName));
-
-            // Hook to alter Symfony Mailer before sending mail
+            // Hook to alter Swift Message before sending mail
             Hook::exec('actionMailAlterMessageBeforeSend', [
-                'message' => &$email,
+                'message' => &$message,
             ]);
 
-            // Create new message and DKIM sign it, if enabled and all data for signature are provided
-            if ((bool) $configuration['PS_MAIL_DKIM_ENABLE'] === true
-                && !empty($configuration['PS_MAIL_DKIM_DOMAIN'])
-                && !empty($configuration['PS_MAIL_DKIM_SELECTOR'])
-                && !empty($configuration['PS_MAIL_DKIM_KEY'])
-            ) {
-                $signer = new DkimSigner(
-                    $configuration['PS_MAIL_DKIM_KEY'],
-                    $configuration['PS_MAIL_DKIM_DOMAIN'],
-                    $configuration['PS_MAIL_DKIM_SELECTOR']
-                );
+            $send = $swift->send($message);
 
-                $signedEmail = $signer->sign($email);
-            }
-
-            // And the final sending of the email
-            $mailer->send($signedEmail ?? $email);
             ShopUrl::resetMainDomainCache();
 
-            // Log the entry to the mail table
-            if (Configuration::get('PS_LOG_EMAILS')) {
+            if ($send && Configuration::get('PS_LOG_EMAILS')) {
                 $mail = new Mail();
                 $mail->template = Tools::substr($template, 0, 62);
-                $mail->subject = Tools::substr($email->getSubject(), 0, 255);
+                $mail->subject = Tools::substr($message->getSubject(), 0, 255);
                 $mail->id_lang = (int) $idLang;
-
-                $recipientsTo = self::convertAdressesToArray($email->getTo());
-                $recipientsCc = self::convertAdressesToArray($email->getCc());
-                $recipientsBcc = self::convertAdressesToArray($email->getBcc());
-
+                $recipientsTo = $message->getTo();
+                $recipientsCc = $message->getCc();
+                $recipientsBcc = $message->getBcc();
                 if (!is_array($recipientsTo)) {
                     $recipientsTo = [];
                 }
@@ -693,20 +624,21 @@ class MailCore extends ObjectModel
                 if (!is_array($recipientsBcc)) {
                     $recipientsBcc = [];
                 }
-                foreach (array_merge($recipientsTo, $recipientsCc, $recipientsBcc) as $emailAlias => $recipient_name) {
+                foreach (array_merge($recipientsTo, $recipientsCc, $recipientsBcc) as $email => $recipient_name) {
+                    /* @var Swift_Address $recipient */
                     $mail->id = null;
-                    $mail->recipient = Tools::substr($emailAlias, 0, 255);
+                    $mail->recipient = Tools::substr($email, 0, 255);
                     $mail->add();
                 }
             }
 
-            return true;
-        } catch (ExceptionInterface $e) {
+            return $send;
+        } catch (Swift_SwiftException $e) {
             PrestaShopLogger::addLog(
-                'Mailer Error: ' . $e->getMessage(),
+                'Swift Error: ' . $e->getMessage(),
                 3,
                 null,
-                'MailerMessage'
+                'Swift_Message'
             );
 
             return false;
@@ -738,7 +670,7 @@ class MailCore extends ObjectModel
     }
 
     /**
-     * @param int $idMail Mail ID
+     * @param $idMail Mail ID
      *
      * @return bool Whether removal succeeded
      */
@@ -783,60 +715,46 @@ class MailCore extends ObjectModel
         $smtpLogin,
         $smtpPassword,
         $smtpPort,
-        $smtpEncryption,
-        bool $dkimEnable = false,
-        string $dkimKey = '',
-        string $dkimDomain = '',
-        string $dkimSelector = ''
+        $smtpEncryption
     ) {
         $result = false;
 
         try {
             if ($smtpChecked) {
                 if (Tools::strtolower($smtpEncryption) === 'off') {
-                    $isTls = false;
-                } else {
-                    $isTls = true;
+                    $smtpEncryption = false;
                 }
-                $transport = (new EsmtpTransport(
+                $connection = (new Swift_SmtpTransport(
                     $smtpServer,
                     $smtpPort,
-                    $isTls
+                    $smtpEncryption
                 ))
                     ->setUsername($smtpLogin)
-                    ->setPassword($smtpPassword)
-                ;
+                    ->setPassword($smtpPassword);
             } else {
-                $transport = new SendmailTransport();
+                /**
+                 * mail() support was removed from SwiftMailer for security reasons
+                 * previously => $connection = \Swift_MailTransport::newInstance();
+                 * Use Swift_SendmailTransport instead
+                 *
+                 * @see https://github.com/swiftmailer/swiftmailer/issues/866
+                 */
+                $connection = new Swift_SendmailTransport();
             }
 
-            $mailer = new Mailer($transport);
+            $swift = new Swift_Mailer($connection);
+            $message = new Swift_Message();
 
-            $email = (new Email())
-                ->from($from)
-                ->to($to)
-                ->subject($subject)
-                ->text($content)
-            ;
+            $message
+                ->setFrom($from)
+                ->setTo($to)
+                ->setSubject($subject)
+                ->setBody($content);
 
-            /* Create new message and DKIM sign it, if enabled and all data for signature are provided */
-            if ($dkimEnable === true
-                && !empty($dkimKey)
-                && !empty($dkimDomain)
-                && !empty($dkimSelector)
-            ) {
-                $signer = new DkimSigner(
-                    $dkimKey,
-                    $dkimDomain,
-                    $dkimSelector
-                );
-
-                $signedEmail = $signer->sign($email);
+            if ($swift->send($message)) {
+                $result = true;
             }
-
-            $mailer->send($signedEmail ?? $email);
-            $result = true;
-        } catch (ExceptionInterface $e) {
+        } catch (\Swift_SwiftException $e) {
             $result = $e->getMessage();
         }
 
@@ -852,7 +770,7 @@ class MailCore extends ObjectModel
      *
      * @return mixed
      */
-    public static function l($string, $idLang = null, ?Context $context = null)
+    public static function l($string, $idLang = null, Context $context = null)
     {
         global $_LANGMAIL;
 
@@ -887,17 +805,19 @@ class MailCore extends ObjectModel
         return str_replace(
             '"',
             '&quot;',
-            (array_key_exists($key, $_LANGMAIL) && !empty($_LANGMAIL[$key])) ? $_LANGMAIL[$key] : $string
+            Tools::stripslashes(
+                (array_key_exists($key, $_LANGMAIL) && !empty($_LANGMAIL[$key])) ? $_LANGMAIL[$key] : $string
+            )
         );
     }
 
-    /* Generate a Message-ID */
+    /* Rewrite of Swift_Message::generateId() without getmypid() */
     protected static function generateId($idstring = null)
     {
         $midparams = [
-            'utctime' => date('YmdHis'),
+            'utctime' => gmstrftime('%Y%m%d%H%M%S'),
             'randint' => mt_rand(),
-            'customstr' => ($idstring !== null && preg_match('/^(?<!\\.)[a-z0-9\\.]+(?!\\.)$/iD', $idstring) ? $idstring : 'mailer'),
+            'customstr' => (preg_match('/^(?<!\\.)[a-z0-9\\.]+(?!\\.)$/iD', $idstring) ? $idstring : 'swift'),
             'hostname' => !empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : php_uname('n'),
         ];
 
@@ -915,7 +835,7 @@ class MailCore extends ObjectModel
     {
         $length = Tools::strlen($data);
         for ($i = 0; $i < $length; ++$i) {
-            if (ord($data[$i]) > 128) {
+            if (ord(($data[$i])) > 128) {
                 return true;
             }
         }
@@ -1027,21 +947,5 @@ class MailCore extends ObjectModel
             ),
             $die
         );
-    }
-
-    /**
-     * @param Address[] $addresses
-     *
-     * @return array<string, string|null>
-     */
-    private static function convertAdressesToArray(array $addresses): array
-    {
-        $recipientsTo = [];
-
-        foreach ($addresses as $address) {
-            $recipientsTo[$address->getAddress()] = $address->getName();
-        }
-
-        return $recipientsTo;
     }
 }

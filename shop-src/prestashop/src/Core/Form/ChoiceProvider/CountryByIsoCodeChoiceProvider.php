@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Core\Form\ChoiceProvider;
 
 use PrestaShop\PrestaShop\Adapter\Country\CountryDataProvider;
-use PrestaShop\PrestaShop\Core\Form\FormChoiceFormatter;
 use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 
 /**
@@ -64,10 +63,13 @@ final class CountryByIsoCodeChoiceProvider implements FormChoiceProviderInterfac
      */
     public function getChoices()
     {
-        return FormChoiceFormatter::formatFormChoices(
-            $this->countryDataProvider->getCountries($this->langId),
-            'iso_code',
-            'name'
-        );
+        $choices = [];
+        $countries = $this->countryDataProvider->getCountries($this->langId);
+
+        foreach ($countries as $country) {
+            $choices[$country['name']] = $country['iso_code'];
+        }
+
+        return $choices;
     }
 }

@@ -97,7 +97,7 @@ final class AttributeQueryBuilder extends AbstractDoctrineQueryBuilder
     public function getSearchQueryBuilder(SearchCriteriaInterface $searchCriteria)
     {
         $qb = $this->getQueryBuilder($searchCriteria->getFilters())
-            ->select('DISTINCT a.id_attribute, a.color, a.id_attribute_group, al.name, a.position');
+            ->select('DISTINCT a.id_attribute, a.color, a.id_attribute_group, al.name AS value, a.position');
 
         $this->searchCriteriaApplicator
             ->applyPagination($searchCriteria, $qb)
@@ -173,7 +173,7 @@ final class AttributeQueryBuilder extends AbstractDoctrineQueryBuilder
     {
         $allowedFiltersMap = [
             'id_attribute' => 'a.id_attribute',
-            'name' => 'al.name',
+            'value' => 'al.name',
             'position' => 'a.position',
             'color' => 'a.color',
         ];
@@ -183,7 +183,7 @@ final class AttributeQueryBuilder extends AbstractDoctrineQueryBuilder
                 continue;
             }
 
-            if ('name' === $filterName || 'color' === $filterName) {
+            if ('value' === $filterName || 'color' === $filterName) {
                 $qb->andWhere($allowedFiltersMap[$filterName] . ' LIKE :' . $filterName)
                     ->setParameter($filterName, '%' . $value . '%');
                 continue;

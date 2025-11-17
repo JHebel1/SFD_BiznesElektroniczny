@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Cart\QueryHandler;
 
 use Customer;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartConstraintException;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartException;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartNotFoundException;
@@ -40,7 +39,6 @@ use PrestaShopException;
 /**
  * Gets last empty cart for customer using legacy object model
  */
-#[AsQueryHandler]
 final class GetLastEmptyCustomerCartHandler implements GetLastEmptyCustomerCartHandlerInterface
 {
     /**
@@ -61,7 +59,7 @@ final class GetLastEmptyCustomerCartHandler implements GetLastEmptyCustomerCartH
             $customer = new Customer($customerId);
 
             if ($customer->id !== $customerId) {
-                throw new CustomerNotFoundException(sprintf('Customer with id "%d" was not found.', $customerId));
+                throw new CustomerNotFoundException($query->getCustomerId(), sprintf('Customer with id "%s" was not found.', $customerId));
             }
 
             $cartId = $customer->getLastEmptyCart(false);
@@ -69,7 +67,7 @@ final class GetLastEmptyCustomerCartHandler implements GetLastEmptyCustomerCartH
             if (false === $cartId) {
                 throw new CartNotFoundException(sprintf('Empty cart not found for customer with id "%s"', $customerId));
             }
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new CartException(sprintf('An error occurred while trying to find empty cart for customer with id "%s"', $customerId));
         }
 

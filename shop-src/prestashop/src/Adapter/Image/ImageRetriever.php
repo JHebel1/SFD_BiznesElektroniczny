@@ -33,14 +33,9 @@ use ImageManager;
 use ImageType;
 use Language;
 use Link;
-use Manufacturer;
-use PrestaShop\PrestaShop\Adapter\ServiceLocator;
-use PrestaShop\PrestaShop\Core\Image\ImageFormatConfiguration;
 use PrestaShopDatabaseException;
-use PrestaShopException;
 use Product;
 use Store;
-use Supplier;
 
 /**
  * This class is mainly responsible of Product images.
@@ -71,21 +66,18 @@ class ImageRetriever
             $language->id
         );
 
-        // Get all product images that are related to this object
         $images = $productInstance->getImages($language->id);
+
         if (empty($images)) {
             return [];
         }
 
-        // Load all pairs of images assigned to combinations
         $combinationImages = $productInstance->getCombinationImages($language->id);
         if (!$combinationImages) {
             $combinationImages = [];
         }
-
-        // And resolve them by id_image
-        // We can't assign them directly because the $images array keys are not id_image
         $imageToCombinations = [];
+
         foreach ($combinationImages as $imgs) {
             foreach ($imgs as $img) {
                 $imageToCombinations[$img['id_image']][] = $img['id_product_attribute'];
@@ -96,27 +88,18 @@ class ImageRetriever
             $productInstance,
             $imageToCombinations
         ) {
-            // Now let's fetch extra information about thumbnail sizes etc. and add this information.
-            $finalImage = array_merge(
-                $image,
-                $this->getImage($productInstance, $image['id_image'])
-            );
+            $image = array_merge($this->getImage(
+                $productInstance,
+                $image['id_image']
+            ), $image);
 
-            // The only special thing we can't just merge is the legend.
-            // If there is a legend on the image object, we will use it.
-            // If not, we keep the one we got from getImage method (product name).
-            if (!empty($image['legend'])) {
-                $finalImage['legend'] = $image['legend'];
-            }
-
-            // Assign a list of variants related to the given image
             if (isset($imageToCombinations[$image['id_image']])) {
-                $finalImage['associatedVariants'] = $imageToCombinations[$image['id_image']];
+                $image['associatedVariants'] = $imageToCombinations[$image['id_image']];
             } else {
-                $finalImage['associatedVariants'] = [];
+                $image['associatedVariants'] = [];
             }
 
-            return $finalImage;
+            return $image;
         }, $images);
 
         return $images;
@@ -145,8 +128,8 @@ class ImageRetriever
     }
 
     /**
-     * @param Product|Store|Category|Manufacturer|Supplier $object
-     * @param int|string $id_image Identifier of the image
+     * @param Product|Store|Category $object
+     * @param int $id_image
      *
      * @return array|null
      *
@@ -158,115 +141,87 @@ class ImageRetriever
             return null;
         }
 
-        // Resolve functions we will use to get image links from Link class
-        if ($object::class === 'Product') {
+        if (get_class($object) === 'Product') {
             $type = 'products';
             $getImageURL = 'getImageLink';
-            // Product images are the only exception in path structure, they are placed in folder
-            // tree according to their ID.
+            $root = _PS_PROD_IMG_DIR_;
             $imageFolderPath = implode(DIRECTORY_SEPARATOR, [
-                rtrim(_PS_PRODUCT_IMG_DIR_, DIRECTORY_SEPARATOR),
+                rtrim($root, DIRECTORY_SEPARATOR),
                 rtrim(Image::getImgFolderStatic($id_image), DIRECTORY_SEPARATOR),
             ]);
-        } elseif ($object::class === 'Store') {
+        } elseif (get_class($object) === 'Store') {
             $type = 'stores';
             $getImageURL = 'getStoreImageLink';
-            $imageFolderPath = rtrim(_PS_STORE_IMG_DIR_, DIRECTORY_SEPARATOR);
-        } elseif ($object::class === 'Manufacturer') {
-            $type = 'manufacturers';
-            $getImageURL = 'getManufacturerImageLink';
-            $imageFolderPath = rtrim(_PS_MANU_IMG_DIR_, DIRECTORY_SEPARATOR);
-        } elseif ($object::class === 'Supplier') {
-            $type = 'suppliers';
-            $getImageURL = 'getSupplierImageLink';
-            $imageFolderPath = rtrim(_PS_SUPP_IMG_DIR_, DIRECTORY_SEPARATOR);
+            $root = _PS_STORE_IMG_DIR_;
+            $imageFolderPath = rtrim($root, DIRECTORY_SEPARATOR);
         } else {
             $type = 'categories';
             $getImageURL = 'getCatImageLink';
-            $imageFolderPath = rtrim(_PS_CAT_IMG_DIR_, DIRECTORY_SEPARATOR);
+            $root = _PS_CAT_IMG_DIR_;
+            $imageFolderPath = rtrim($root, DIRECTORY_SEPARATOR);
         }
-
-        // Get path of original uploaded image we will use to get thumbnails (original image extension is always .jpg)
-        $originalImagePath = implode(DIRECTORY_SEPARATOR, [
-            $imageFolderPath,
-            $id_image . '.jpg',
-        ]);
 
         $urls = [];
-
-        /*
-         * Let's resolve which formats we will use for image generation.
-         *
-         * In case of .jpg images, the actual format inside is decided by ImageManager.
-         */
-        $configuredImageFormats = ServiceLocator::get(ImageFormatConfiguration::class)->getGenerationFormats();
-
-        // Primary (fake) image name is object rewrite, fallbacks are name and ID
-        if (!empty($object->link_rewrite)) {
-            $rewrite = $object->link_rewrite;
-        } elseif (!empty($object->name)) {
-            $rewrite = $object->name;
-        } else {
-            $rewrite = $id_image;
-        }
-
-        // Check and generate each thumbnail size
         $image_types = ImageType::getImagesTypes($type, true);
+
+        $extPath = $imageFolderPath . DIRECTORY_SEPARATOR . 'fileType';
+        $ext = @file_get_contents($extPath) ?: 'jpg';
+
+        $mainImagePath = implode(DIRECTORY_SEPARATOR, [
+            $imageFolderPath,
+            $id_image . '.' . $ext,
+        ]);
+        $generateHighDpiImages = (bool) Configuration::get('PS_HIGHT_DPI');
+
         foreach ($image_types as $image_type) {
-            $sources = [];
-            $formattedName = ImageType::getFormattedName('small');
-
-            if ($type === 'categories' && $formattedName === $image_type['name']) {
-                $originalFileName = $id_image . '_thumb.jpg';
-            } else {
-                $originalFileName = $id_image . '.jpg';
-            }
-
-            // Get path of original uploaded image we will use to get thumbnails (original image extension is always .jpg)
-            $originalImagePath = implode(DIRECTORY_SEPARATOR, [
+            $resizedImagePath = implode(DIRECTORY_SEPARATOR, [
                 $imageFolderPath,
-                $originalFileName,
+                $id_image . '-' . $image_type['name'] . '.' . $ext,
             ]);
 
-            foreach ($configuredImageFormats as $imageFormat) {
-                // Generate the thumbnail
-                $this->checkOrGenerateImageType($originalImagePath, $imageFolderPath, $id_image, $image_type, $imageFormat);
+            if (!file_exists($resizedImagePath)) {
+                ImageManager::resize(
+                    $mainImagePath,
+                    $resizedImagePath,
+                    (int) $image_type['width'],
+                    (int) $image_type['height']
+                );
+            }
 
-                // Get the URL of the thumb and add it to sources
-                // Manufacturer and supplier use only IDs
-                if ($object::class === 'Manufacturer' || $object::class === 'Supplier') {
-                    $sources[$imageFormat] = $this->link->$getImageURL($id_image, $image_type['name'], $imageFormat);
-                // Products, categories and stores pass both rewrite and ID
-                } else {
-                    $sources[$imageFormat] = $this->link->$getImageURL($rewrite, $id_image, $image_type['name'], $imageFormat);
+            if ($generateHighDpiImages) {
+                $resizedImagePathHighDpi = implode(DIRECTORY_SEPARATOR, [
+                    $imageFolderPath,
+                    $id_image . '-' . $image_type['name'] . '2x.' . $ext,
+                ]);
+                if (!file_exists($resizedImagePathHighDpi)) {
+                    ImageManager::resize(
+                        $mainImagePath,
+                        $resizedImagePathHighDpi,
+                        (int) $image_type['width'] * 2,
+                        (int) $image_type['height'] * 2
+                    );
                 }
             }
 
-            // Let's resolve the base image URL we will use
-            if (isset($sources['jpg'])) {
-                $baseUrl = $sources['jpg'];
-            } elseif (isset($sources['png'])) {
-                $baseUrl = $sources['png'];
-            } else {
-                $baseUrl = reset($sources);
-            }
+            $url = $this->link->$getImageURL(
+                isset($object->link_rewrite) ? $object->link_rewrite : $object->name,
+                $id_image,
+                $image_type['name']
+            );
 
-            // And add this size to our list
             $urls[$image_type['name']] = [
-                'url' => $baseUrl,
+                'url' => $url,
                 'width' => (int) $image_type['width'],
                 'height' => (int) $image_type['height'],
-                'sources' => $sources,
             ];
         }
 
-        // Sort thumbnails by size
         uasort($urls, function (array $a, array $b) {
             return $a['width'] * $a['height'] > $b['width'] * $b['height'] ? 1 : -1;
         });
 
-        // Resolve some basic sizes - the smallest, middle and largest
         $keys = array_keys($urls);
+
         $small = $urls[$keys[0]];
         $large = end($urls);
         $medium = $urls[$keys[ceil((count($keys) - 1) / 2)]];
@@ -276,38 +231,9 @@ class ImageRetriever
             'small' => $small,
             'medium' => $medium,
             'large' => $large,
-            'legend' => !empty($object->meta_title) ? $object->meta_title : $object->name,
+            'legend' => isset($object->meta_title) ? $object->meta_title : $object->name,
             'id_image' => $id_image,
         ];
-    }
-
-    /**
-     * @param string $originalImagePath
-     * @param string $imageFolderPath
-     * @param int|string $idImage
-     * @param array $imageTypeData
-     * @param string $imageFormat
-     *
-     * @return void
-     */
-    private function checkOrGenerateImageType(string $originalImagePath, string $imageFolderPath, int|string $idImage, array $imageTypeData, string $imageFormat)
-    {
-        $fileName = sprintf('%s-%s.%s', $idImage, $imageTypeData['name'], $imageFormat);
-        $resizedImagePath = implode(DIRECTORY_SEPARATOR, [
-            $imageFolderPath,
-            $fileName,
-        ]);
-
-        // Check if the thumbnail exists and generate it if needed
-        if (!file_exists($resizedImagePath)) {
-            ImageManager::resize(
-                $originalImagePath,
-                $resizedImagePath,
-                (int) $imageTypeData['width'],
-                (int) $imageTypeData['height'],
-                $imageFormat
-            );
-        }
     }
 
     /**
@@ -349,79 +275,25 @@ class ImageRetriever
      * @return array
      *
      * @throws PrestaShopDatabaseException
-     * @throws PrestaShopException if the image type is not found
      */
     public function getNoPictureImage(Language $language)
     {
         $urls = [];
+        $type = 'products';
+        $image_types = ImageType::getImagesTypes($type, true);
 
-        // Set images to regenerate with all theirs specific directories
-        $objectsToRegenerate = [
-            ['type' => 'categories', 'dir' => _PS_CAT_IMG_DIR_],
-            ['type' => 'manufacturers', 'dir' => _PS_MANU_IMG_DIR_],
-            ['type' => 'suppliers', 'dir' => _PS_SUPP_IMG_DIR_],
-            ['type' => 'products', 'dir' => _PS_PRODUCT_IMG_DIR_],
-            ['type' => 'stores', 'dir' => _PS_STORE_IMG_DIR_],
-        ];
+        foreach ($image_types as $image_type) {
+            $url = $this->link->getImageLink(
+                '',
+                $language->iso_code . '-default',
+                $image_type['name']
+            );
 
-        foreach ($objectsToRegenerate as $object) {
-            // Get all image types present on shops for this object
-            $imageTypes = ImageType::getImagesTypes($object['type'], true);
-
-            // We get the "no image available" in the folder of the object
-            $originalImagePath = implode(DIRECTORY_SEPARATOR, [
-                rtrim($object['dir'], DIRECTORY_SEPARATOR),
-                $language->getIsoCode() . '.jpg',
-            ]);
-
-            if (!file_exists($originalImagePath)) {
-                // If it doesn't exist, we use an image for default language
-                $originalImagePath = implode(DIRECTORY_SEPARATOR, [
-                    rtrim($object['dir'], DIRECTORY_SEPARATOR),
-                    Language::getIsoById((int) Configuration::get('PS_LANG_DEFAULT')) . '.jpg',
-                ]);
-
-                if (!file_exists($originalImagePath)) {
-                    // If it doesn't exist, we use a fallback one in the root of img directory
-                    $originalImagePath = implode(DIRECTORY_SEPARATOR, [
-                        rtrim(_PS_IMG_DIR_, DIRECTORY_SEPARATOR),
-                        'noimageavailable.jpg',
-                    ]);
-                }
-            }
-
-            // Get all image sizes for product objects
-            foreach ($imageTypes as $imageType) {
-                // Get path of the final thumbnail
-                $resizedImagePath = implode(DIRECTORY_SEPARATOR, [
-                    rtrim($object['dir'], DIRECTORY_SEPARATOR),
-                    $language->getIsoCode() . '-default-' . $imageType['name'] . '.jpg',
-                ]);
-
-                // Check if the thumbnail exists and generate it if needed
-                if (!file_exists($resizedImagePath)) {
-                    ImageManager::resize(
-                        $originalImagePath,
-                        $resizedImagePath,
-                        (int) $imageType['width'],
-                        (int) $imageType['height']
-                    );
-                }
-
-                // Build image URL for that thumbnail
-                $imageUrl = $this->link->getImageLink(
-                    '',
-                    $language->iso_code . '-default',
-                    $imageType['name']
-                );
-
-                // And add it to the list
-                $urls[$imageType['name']] = [
-                    'url' => $imageUrl,
-                    'width' => (int) $imageType['width'],
-                    'height' => (int) $imageType['height'],
-                ];
-            }
+            $urls[$image_type['name']] = [
+                'url' => $url,
+                'width' => (int) $image_type['width'],
+                'height' => (int) $image_type['height'],
+            ];
         }
 
         uasort($urls, function (array $a, array $b) {

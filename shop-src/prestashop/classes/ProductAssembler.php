@@ -26,13 +26,7 @@
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchContext;
 
 /**
- * This class is responsible for enriching product data by all required fields
- * in a performant way, before it goes into ProductLazyArray or ProductListingLazyArray.
- *
- * If you want to enrich a whole list of products, use assembleProducts method to get the data in one query.
- *
- * Currently, the data is passing through Product::getProductProperties also, but this step should be removed
- * and all data from getProductProperties loaded on demand in the lazy arrays.
+ * Class ProductAssemblerCore.
  */
 class ProductAssemblerCore
 {
@@ -42,7 +36,7 @@ class ProductAssemblerCore
     /**
      * ProductAssemblerCore constructor.
      *
-     * @param Context $context
+     * @param \Context $context
      */
     public function __construct(Context $context)
     {
@@ -61,78 +55,18 @@ class ProductAssemblerCore
      */
     private function addMissingProductFields(array $rawProduct): array
     {
-        // If there is no ID product provided, return the original data
-        if (empty($rawProduct['id_product'])) {
-            return $rawProduct;
-        }
-
-        $sql = $this->getSqlQueryProductFields([(int) $rawProduct['id_product']]);
-        $rows = Db::getInstance()->executeS($sql);
-        if (empty($rows)) {
-            return $rawProduct;
-        }
-
-        return array_merge($rows[0], $rawProduct);
-    }
-
-    /**
-     * Add missing product fields to multiple products.
-     *
-     * @param array $rawProducts
-     *
-     * @return array
-     *
-     * @throws PrestaShopDatabaseException
-     */
-    private function addMissingProductFieldsForMultipleProducts(array $rawProducts): array
-    {
-        // Get product IDs we want to retrieve from database
-        $productIds = array_column($rawProducts, 'id_product');
-
-        // If there were no product IDs provided or somebody passed an empty array,
-        // return the original data
-        if (empty($productIds)) {
-            return $rawProducts;
-        }
-
-        // Retrieve data and reassign them to new array by their key
-        $productData = [];
-        $sql = $this->getSqlQueryProductFields($productIds);
-        $rows = Db::getInstance()->executeS($sql);
-        foreach ($rows as $row) {
-            $productData[(int) $row['id_product']] = $row;
-        }
-
-        // Use this data to enrich the products and return it
-        foreach ($rawProducts as &$rawProduct) {
-            if (isset($productData[$rawProduct['id_product']])) {
-                $rawProduct = array_merge($productData[$rawProduct['id_product']], $rawProduct);
-            }
-        }
-
-        return $rawProducts;
-    }
-
-    /**
-     * Return the SQL query to get all product fields.
-     *
-     * @param array $productIds
-     *
-     * @return string
-     */
-    private function getSqlQueryProductFields(array $productIds): string
-    {
-        // Get basic configuration
         $idShop = $this->searchContext->getIdShop();
         $idShopGroup = $this->searchContext->getIdShopGroup();
         $isStockSharingBetweenShopGroupEnabled = $this->searchContext->isStockSharingBetweenShopGroupEnabled();
         $idLang = $this->searchContext->getIdLang();
+        $idProduct = (int) $rawProduct['id_product'];
         $prefix = _DB_PREFIX_;
 
         $nbDaysNewProduct = (int) Configuration::get('PS_NB_DAYS_NEW_PRODUCT');
         if (!Validate::isUnsignedInt($nbDaysNewProduct)) {
             $nbDaysNewProduct = 20;
         }
+
         $now = date('Y-m-d') . ' 00:00:00';
 
         $sql = "SELECT
@@ -158,25 +92,27 @@ class ProductAssemblerCore
         if ($isStockSharingBetweenShopGroupEnabled) {
             $sql .= "  ON sa.id_product = p.id_product
 			        AND sa.id_shop = 0
-                    AND sa.id_product_attribute = 0
 			        AND sa.id_shop_group = $idShopGroup ";
         } else {
             $sql .= "  ON sa.id_product = p.id_product
-                    AND sa.id_product_attribute = 0
 			        AND sa.id_shop = $idShop ";
         }
         $sql .= "LEFT JOIN {$prefix}product_shop ps
 			        ON ps.id_product = p.id_product
 			        AND ps.id_shop = $idShop
-                WHERE p.id_product IN (" . implode(',', $productIds) . ')';
+			    WHERE p.id_product = $idProduct
+			    LIMIT 1";
 
-        return $sql;
+        $rows = Db::getInstance()->executeS($sql);
+        if ($rows === false) {
+            return $rawProduct;
+        }
+
+        return array_merge($rows[0], $rawProduct);
     }
 
     /**
-     * Get basic product data for single product.
-     * The only required property is id_product.
-     * If some data were already provided in $rawProduct, it won't be overwritten.
+     * Assemble Product.
      *
      * @param array $rawProduct
      *
@@ -193,31 +129,5 @@ class ProductAssemblerCore
             $enrichedProduct,
             $this->context
         );
-    }
-
-    /**
-     * Get basic product data for multiple products.
-     * The only required property for each product is id_product.
-     * If some data were already provided in $rawProducts, it won't be overwritten.
-     *
-     * @param array $rawProducts Array with multiple products
-     *
-     * @return mixed
-     *
-     * @throws PrestaShopDatabaseException
-     */
-    public function assembleProducts(array $rawProducts)
-    {
-        $enrichedProducts = $this->addMissingProductFieldsForMultipleProducts($rawProducts);
-
-        foreach ($enrichedProducts as &$product) {
-            $product = Product::getProductProperties(
-                $this->searchContext->getIdLang(),
-                $product,
-                $this->context
-            );
-        }
-
-        return $enrichedProducts;
     }
 }

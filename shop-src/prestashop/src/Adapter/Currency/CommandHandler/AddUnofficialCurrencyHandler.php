@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Currency\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Currency\CurrencyDataProviderInterface;
 use PrestaShop\PrestaShop\Core\Domain\Currency\Command\AddUnofficialCurrencyCommand;
 use PrestaShop\PrestaShop\Core\Domain\Currency\CommandHandler\AddUnofficialCurrencyHandlerInterface;
@@ -38,7 +37,6 @@ use PrestaShop\PrestaShop\Core\Domain\Currency\ValueObject\CurrencyId;
 use PrestaShop\PrestaShop\Core\Domain\Language\Exception\LanguageNotFoundException;
 use PrestaShop\PrestaShop\Core\Language\LanguageInterface;
 use PrestaShop\PrestaShop\Core\Localization\CLDR\LocaleRepository;
-use PrestaShop\PrestaShop\Core\Localization\Currency\PatternTransformer;
 use PrestaShop\PrestaShop\Core\Localization\Exception\LocalizationException;
 use PrestaShopException;
 
@@ -47,7 +45,6 @@ use PrestaShopException;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class AddUnofficialCurrencyHandler extends AbstractCurrencyHandler implements AddUnofficialCurrencyHandlerInterface
 {
     /**
@@ -65,10 +62,9 @@ final class AddUnofficialCurrencyHandler extends AbstractCurrencyHandler impleme
         LocaleRepository $localeRepoCLDR,
         array $languages,
         CurrencyCommandValidator $validator,
-        CurrencyDataProviderInterface $currencyDataProvider,
-        PatternTransformer $patternTransformer
+        CurrencyDataProviderInterface $currencyDataProvider
     ) {
-        parent::__construct($localeRepoCLDR, $languages, $validator, $patternTransformer);
+        parent::__construct($localeRepoCLDR, $languages, $validator);
         $this->currencyDataProvider = $currencyDataProvider;
     }
 

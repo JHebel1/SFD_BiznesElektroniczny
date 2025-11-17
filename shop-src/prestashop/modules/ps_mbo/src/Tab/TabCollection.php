@@ -17,21 +17,22 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-declare(strict_types=1);
 
 namespace PrestaShop\Module\Mbo\Tab;
+
+use ArrayIterator;
 
 class TabCollection implements TabCollectionInterface
 {
     /**
      * @var TabInterface[]
      */
-    protected $tabs = [];
+    private $tabs = [];
 
     /**
      * {@inheritdoc}
      */
-    public function addTab(TabInterface $tab): TabCollectionInterface
+    public function addTab(TabInterface $tab)
     {
         $this->tabs[] = $tab;
 
@@ -41,7 +42,7 @@ class TabCollection implements TabCollectionInterface
     /**
      * {@inheritdoc}
      */
-    public function getTab($tabClassName): TabInterface
+    public function getTab($tabClassName)
     {
         foreach ($this->tabs as $tab) {
             if ($tabClassName === $tab->getLegacyClassName()) {
@@ -55,7 +56,7 @@ class TabCollection implements TabCollectionInterface
     /**
      * {@inheritdoc}
      */
-    public function offsetExists($offset): bool
+    public function offsetExists($offset)
     {
         return array_key_exists($offset, $this->tabs);
     }
@@ -63,7 +64,7 @@ class TabCollection implements TabCollectionInterface
     /**
      * {@inheritdoc}
      */
-    public function offsetSet($offset, $value): void
+    public function offsetSet($offset, $value)
     {
         $this->tabs[$offset] = $value;
     }
@@ -71,7 +72,7 @@ class TabCollection implements TabCollectionInterface
     /**
      * {@inheritdoc}
      */
-    public function offsetGet($offset): TabInterface
+    public function offsetGet($offset)
     {
         return $this->tabs[$offset];
     }
@@ -79,7 +80,7 @@ class TabCollection implements TabCollectionInterface
     /**
      * {@inheritdoc}
      */
-    public function offsetUnset($offset): void
+    public function offsetUnset($offset)
     {
         unset($this->tabs[$offset]);
     }
@@ -87,15 +88,15 @@ class TabCollection implements TabCollectionInterface
     /**
      * {@inheritdoc}
      */
-    public function getIterator(): \ArrayIterator
+    public function getIterator()
     {
-        return new \ArrayIterator($this->tabs);
+        return new ArrayIterator($this->tabs);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function count(): int
+    public function count()
     {
         return count($this->tabs);
     }
@@ -103,7 +104,7 @@ class TabCollection implements TabCollectionInterface
     /**
      * {@inheritdoc}
      */
-    public function isEmpty(): bool
+    public function isEmpty()
     {
         return empty($this->tabs);
     }

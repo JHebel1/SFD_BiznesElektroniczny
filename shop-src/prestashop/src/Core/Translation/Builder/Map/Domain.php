@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -23,12 +24,11 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
-
 declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Core\Translation\Builder\Map;
 
-use PrestaShop\PrestaShop\Core\Util\Inflector;
+use Doctrine\Common\Inflector\Inflector;
 
 /**
  * This class is a representation of a Domain catalogue.
@@ -208,7 +208,7 @@ class Domain
     public static function splitDomain(string $domain): array
     {
         // the third component of the domain may have underscores, so we need to limit pieces to 3
-        return explode('_', Inflector::getInflector()->tableize($domain), 3);
+        return explode('_', Inflector::tableize($domain), 3);
     }
 
     /**

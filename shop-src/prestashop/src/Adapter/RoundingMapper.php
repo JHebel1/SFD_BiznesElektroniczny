@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter;
 
-use InvalidArgumentException;
 use PrestaShop\Decimal\Operation\Rounding;
 
 /**
@@ -55,7 +54,7 @@ final class RoundingMapper
             PS_ROUND_HALF_ODD => Rounding::ROUND_HALF_EVEN, // Rounding::ROUND_HALF_ODD does not exist (never used)
         ];
         if (!array_key_exists((int) $legacyRoundingMode, $roundModes)) {
-            throw new InvalidArgumentException('Unknown legacy rounding mode : ' . (int) $legacyRoundingMode);
+            throw new \InvalidArgumentException('Unknown legacy rounding mode : ' . (int) $legacyRoundingMode);
         }
 
         return $roundModes[$legacyRoundingMode];

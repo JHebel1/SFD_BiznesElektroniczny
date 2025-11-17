@@ -27,7 +27,7 @@
 namespace PrestaShop\PrestaShop\Adapter\Category\CommandHandler;
 
 use Category;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
+use PrestaShop\PrestaShop\Adapter\Domain\AbstractObjectModelHandler;
 use PrestaShop\PrestaShop\Core\Domain\Category\Command\EditCategoryCommand;
 use PrestaShop\PrestaShop\Core\Domain\Category\CommandHandler\EditCategoryHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Category\Exception\CannotEditCategoryException;
@@ -39,8 +39,7 @@ use PrestaShop\PrestaShop\Core\Domain\Category\Exception\CategoryNotFoundExcepti
  *
  * @internal
  */
-#[AsCommandHandler]
-final class EditCategoryHandler extends AbstractEditCategoryHandler implements EditCategoryHandlerInterface
+final class EditCategoryHandler extends AbstractObjectModelHandler implements EditCategoryHandlerInterface
 {
     /**
      * {@inheritdoc}
@@ -61,12 +60,6 @@ final class EditCategoryHandler extends AbstractEditCategoryHandler implements E
         }
 
         $this->updateCategoryFromCommandData($category, $command);
-
-        $this->categoryImageUploader->uploadImages(
-            $command->getCategoryId(),
-            $command->getCoverImage(),
-            $command->getThumbnailImage()
-        );
     }
 
     /**
@@ -99,10 +92,6 @@ final class EditCategoryHandler extends AbstractEditCategoryHandler implements E
             $category->description = $command->getLocalizedDescriptions();
         }
 
-        if (null !== $command->getLocalizedAdditionalDescriptions()) {
-            $category->additional_description = $command->getLocalizedAdditionalDescriptions();
-        }
-
         if (null !== $command->getLocalizedMetaTitles()) {
             $category->meta_title = $command->getLocalizedMetaTitles();
         }
@@ -111,20 +100,20 @@ final class EditCategoryHandler extends AbstractEditCategoryHandler implements E
             $category->meta_description = $command->getLocalizedMetaDescriptions();
         }
 
+        if (null !== $command->getLocalizedMetaKeywords()) {
+            $category->meta_keywords = $command->getLocalizedMetaKeywords();
+        }
+
         if (null !== $command->getAssociatedGroupIds()) {
             $category->groupBox = $command->getAssociatedGroupIds();
         }
 
         if (false === $category->validateFields(false)) {
-            throw new CannotEditCategoryException('Invalid data for updating category.');
+            throw new CannotEditCategoryException('Invalid data when updating category');
         }
 
         if (false === $category->validateFieldsLang(false)) {
-            throw new CannotEditCategoryException('Invalid language data for updating category.');
-        }
-
-        if (null !== $command->getRedirectOption()) {
-            $this->fillWithRedirectOption($category, $command->getRedirectOption());
+            throw new CannotEditCategoryException('Invalid data when updating category');
         }
 
         if (false === $category->update()) {

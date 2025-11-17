@@ -24,8 +24,6 @@
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
 
-use PrestaShopBundle\Form\Admin\Type\FormattedTextareaType;
-
 /**
  * Class PrestaShopLoggerCore.
  */
@@ -34,11 +32,10 @@ class PrestaShopLoggerCore extends ObjectModel
     /**
      * List of log level types.
      */
-    public const LOG_SEVERITY_LEVEL_DEBUG = 0;
-    public const LOG_SEVERITY_LEVEL_INFORMATIVE = 1;
-    public const LOG_SEVERITY_LEVEL_WARNING = 2;
-    public const LOG_SEVERITY_LEVEL_ERROR = 3;
-    public const LOG_SEVERITY_LEVEL_MAJOR = 4;
+    const LOG_SEVERITY_LEVEL_INFORMATIVE = 1;
+    const LOG_SEVERITY_LEVEL_WARNING = 2;
+    const LOG_SEVERITY_LEVEL_ERROR = 3;
+    const LOG_SEVERITY_LEVEL_MAJOR = 4;
 
     /** @var int Log id */
     public $id_log;
@@ -79,11 +76,6 @@ class PrestaShopLoggerCore extends ObjectModel
     /** @var bool In all shops */
     public $in_all_shops;
 
-    /** @var string|null */
-    public $hash;
-
-    protected static int $minLevelInDb;
-
     /**
      * @see ObjectModel::$definition
      */
@@ -93,14 +85,14 @@ class PrestaShopLoggerCore extends ObjectModel
         'fields' => [
             'severity' => ['type' => self::TYPE_INT, 'validate' => 'isInt', 'required' => true],
             'error_code' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'],
-            'message' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => true, 'size' => FormattedTextareaType::LIMIT_MEDIUMTEXT_UTF8_MB4],
+            'message' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'required' => true],
             'object_id' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'],
             'id_shop' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'allow_null' => true],
             'id_shop_group' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'allow_null' => true],
             'id_lang' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'allow_null' => true],
             'in_all_shops' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],
             'id_employee' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'],
-            'object_type' => ['type' => self::TYPE_STRING, 'validate' => 'isValidObjectClassName', 'size' => 32],
+            'object_type' => ['type' => self::TYPE_STRING, 'validate' => 'isName'],
             'date_add' => ['type' => self::TYPE_DATE, 'validate' => 'isDate'],
             'date_upd' => ['type' => self::TYPE_DATE, 'validate' => 'isDate'],
         ],
@@ -111,6 +103,7 @@ class PrestaShopLoggerCore extends ObjectModel
     /**
      * Send e-mail to the shop owner only if the minimal severity level has been reached.
      *
+     * @param Logger
      * @param PrestaShopLogger $log
      */
     public static function sendByMail($log)
@@ -148,15 +141,10 @@ class PrestaShopLoggerCore extends ObjectModel
      */
     public static function addLog($message, $severity = 1, $errorCode = null, $objectType = null, $objectId = null, $allowDuplicate = false, $idEmployee = null)
     {
-        // Not all logs are relevant in DB so we filter them based on the configuration PS_MIN_LOGGER_LEVEL_IN_DB
-        if ($severity < self::getMinimumLevelInDB()) {
-            return false;
-        }
-
         $log = new PrestaShopLogger();
         $log->severity = (int) $severity;
         $log->error_code = (int) $errorCode;
-        $log->message = $message;
+        $log->message = pSQL($message);
         $log->date_add = date('Y-m-d H:i:s');
         $log->date_upd = date('Y-m-d H:i:s');
 
@@ -170,23 +158,21 @@ class PrestaShopLoggerCore extends ObjectModel
             $log->id_employee = (int) $idEmployee;
         }
 
-        if (!empty($objectType)) {
-            $log->object_type = $objectType;
-            if (!empty($objectId)) {
-                $log->object_id = (int) $objectId;
-            }
+        if (!empty($objectType) && !empty($objectId)) {
+            $log->object_type = pSQL($objectType);
+            $log->object_id = (int) $objectId;
         }
 
-        $log->id_lang = $context->language ? (int) $context->language->id : null;
+        $log->id_lang = (int) $context->language->id ?? null;
         $log->in_all_shops = Shop::getContext() == Shop::CONTEXT_ALL;
-        $log->id_shop = Shop::getContext() == Shop::CONTEXT_SHOP ? (int) $context->shop->getContextualShopId() : null;
-        $log->id_shop_group = Shop::getContext() == Shop::CONTEXT_GROUP ? (int) $context->shop->getContextShopGroupID() : null;
+        $log->id_shop = (Shop::getContext() == Shop::CONTEXT_SHOP) ? (int) $context->shop->getContextualShopId() : null;
+        $log->id_shop_group = (Shop::getContext() == Shop::CONTEXT_GROUP) ? (int) $context->shop->getContextShopGroupID() : null;
 
-        if ($objectType != 'MailerMessage') {
+        if ($objectType != 'Swift_Message') {
             PrestaShopLogger::sendByMail($log);
         }
 
-        if ($allowDuplicate || !$log->isPresent()) {
+        if ($allowDuplicate || !$log->_isPresent()) {
             $res = $log->add();
             if ($res) {
                 self::$is_present[$log->getHash()] = isset(self::$is_present[$log->getHash()]) ? self::$is_present[$log->getHash()] + 1 : 1;
@@ -226,9 +212,19 @@ class PrestaShopLoggerCore extends ObjectModel
     }
 
     /**
+     * @deprecated 1.7.0
+     */
+    protected function _isPresent()
+    {
+        return $this->isPresent();
+    }
+
+    /**
      * check if this log message already exists in database.
      *
-     * @return bool true if exists
+     * @return true if exists
+     *
+     * @since 1.7.0
      */
     protected function isPresent()
     {
@@ -250,18 +246,5 @@ class PrestaShopLoggerCore extends ObjectModel
         }
 
         return self::$is_present[$this->getHash()];
-    }
-
-    protected static function getMinimumLevelInDB(): int
-    {
-        if (!isset(self::$minLevelInDb)) {
-            try {
-                self::$minLevelInDb = (int) Configuration::get('PS_MIN_LOGGER_LEVEL_IN_DB', null, null, null, self::LOG_SEVERITY_LEVEL_INFORMATIVE);
-            } catch (Throwable) {
-                self::$minLevelInDb = self::LOG_SEVERITY_LEVEL_INFORMATIVE;
-            }
-        }
-
-        return self::$minLevelInDb;
     }
 }

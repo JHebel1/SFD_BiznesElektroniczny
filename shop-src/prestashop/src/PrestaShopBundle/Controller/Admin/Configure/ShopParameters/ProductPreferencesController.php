@@ -27,40 +27,37 @@
 namespace PrestaShopBundle\Controller\Admin\Configure\ShopParameters;
 
 use PrestaShop\PrestaShop\Core\Form\FormHandlerInterface;
-use PrestaShopBundle\Controller\Admin\PrestaShopAdminController;
-use PrestaShopBundle\Security\Attribute\AdminSecurity;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
+use PrestaShopBundle\Security\Annotation\AdminSecurity;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Responsible for "Configure > Shop Parameters > Product Settings" page.
+ * Responsible of "Configure > Shop Parameters > Product Settings" page.
  */
-class ProductPreferencesController extends PrestaShopAdminController
+class ProductPreferencesController extends FrameworkBundleAdminController
 {
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))")]
-    public function indexAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.admin.product_preferences.general.form_handler')]
-        FormHandlerInterface $generalFormHandler,
-        #[Autowire(service: 'prestashop.admin.product_preferences.page.form_handler')]
-        FormHandlerInterface $pageFormHandler,
-        #[Autowire(service: 'prestashop.admin.product_preferences.pagination.form_handler')]
-        FormHandlerInterface $paginationFormHandler,
-        #[Autowire(service: 'prestashop.admin.product_preferences.stock.form_handler')]
-        FormHandlerInterface $stockFormHandler,
-    ): Response {
+    /**
+     * @param Request $request
+     *
+     * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))")
+     *
+     * @return Response
+     */
+    public function indexAction(Request $request)
+    {
         $legacyController = $request->attributes->get('_legacy_controller');
 
-        $generalForm = $generalFormHandler->getForm();
-        $pageForm = $pageFormHandler->getForm();
-        $paginationForm = $paginationFormHandler->getForm();
-        $stockForm = $stockFormHandler->getForm();
+        $generalForm = $this->getGeneralFormHandler()->getForm();
+        $pageForm = $this->getPageFormHandler()->getForm();
+        $paginationForm = $this->getPaginationFormHandler()->getForm();
+        $stockForm = $this->getStockFormHandler()->getForm();
 
         return $this->render('@PrestaShop/Admin/Configure/ShopParameters/product_preferences.html.twig', [
             'layoutHeaderToolbarBtn' => [],
-            'layoutTitle' => $this->trans('Product settings', [], 'Admin.Navigation.Menu'),
+            'layoutTitle' => $this->trans('Product Settings', 'Admin.Navigation.Menu'),
+            'requireAddonsSearch' => true,
             'requireBulkAction' => false,
             'showContentHeader' => true,
             'enableSidebar' => true,
@@ -73,66 +70,99 @@ class ProductPreferencesController extends PrestaShopAdminController
         ]);
     }
 
-    #[AdminSecurity("is_granted('update', request.get('_legacy_controller')) && is_granted('create', request.get('_legacy_controller')) && is_granted('delete', request.get('_legacy_controller'))", message: 'You do not have permission to update this.', redirectRoute: 'admin_product_preferences')]
-    public function processGeneralFormAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.admin.product_preferences.general.form_handler')]
-        FormHandlerInterface $generalFormHandler,
-    ): RedirectResponse {
+    /**
+     * @AdminSecurity("is_granted(['update', 'create', 'delete'], request.get('_legacy_controller'))",
+     *     message="You do not have permission to update this.",
+     *     redirectRoute="admin_product_preferences"
+     * )
+     *
+     * @param Request $request
+     *
+     * @return RedirectResponse
+     */
+    public function processGeneralFormAction(Request $request)
+    {
         return $this->processForm(
             $request,
-            $generalFormHandler,
+            $this->getGeneralFormHandler(),
             'General'
         );
     }
 
-    #[AdminSecurity("is_granted('update', request.get('_legacy_controller')) && is_granted('create', request.get('_legacy_controller')) && is_granted('delete', request.get('_legacy_controller'))", message: 'You do not have permission to update this.', redirectRoute: 'admin_product_preferences')]
-    public function processPageFormAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.admin.product_preferences.page.form_handler')]
-        FormHandlerInterface $pageFormHandler,
-    ): RedirectResponse {
+    /**
+     * @AdminSecurity("is_granted(['update', 'create', 'delete'], request.get('_legacy_controller'))",
+     *     message="You do not have permission to update this.",
+     *     redirectRoute="admin_product_preferences"
+     * )
+     *
+     * @param Request $request
+     *
+     * @return RedirectResponse
+     */
+    public function processPageFormAction(Request $request)
+    {
         return $this->processForm(
             $request,
-            $pageFormHandler,
+            $this->getPageFormHandler(),
             'Page'
         );
     }
 
-    #[AdminSecurity("is_granted('update', request.get('_legacy_controller')) && is_granted('create', request.get('_legacy_controller')) && is_granted('delete', request.get('_legacy_controller'))", message: 'You do not have permission to update this.', redirectRoute: 'admin_product_preferences')]
-    public function processPaginationFormAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.admin.product_preferences.pagination.form_handler')]
-        FormHandlerInterface $paginationFormHandler,
-    ): RedirectResponse {
+    /**
+     * @AdminSecurity("is_granted(['update', 'create', 'delete'], request.get('_legacy_controller'))",
+     *     message="You do not have permission to update this.",
+     *     redirectRoute="admin_product_preferences"
+     * )
+     *
+     * @param Request $request
+     *
+     * @return RedirectResponse
+     */
+    public function processPaginationFormAction(Request $request)
+    {
         return $this->processForm(
             $request,
-            $paginationFormHandler,
+            $this->getPaginationFormHandler(),
             'Pagination'
         );
     }
 
-    #[AdminSecurity("is_granted('update', request.get('_legacy_controller')) && is_granted('create', request.get('_legacy_controller')) && is_granted('delete', request.get('_legacy_controller'))", message: 'You do not have permission to update this.', redirectRoute: 'admin_product_preferences')]
-    public function processStockFormAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.admin.product_preferences.stock.form_handler')]
-        FormHandlerInterface $stockFormHandler,
-    ): RedirectResponse {
+    /**
+     * @AdminSecurity("is_granted(['update', 'create', 'delete'], request.get('_legacy_controller'))",
+     *     message="You do not have permission to update this.",
+     *     redirectRoute="admin_product_preferences"
+     * )
+     *
+     * @param Request $request
+     *
+     * @return RedirectResponse
+     */
+    public function processStockFormAction(Request $request)
+    {
         return $this->processForm(
             $request,
-            $stockFormHandler,
+            $this->getStockFormHandler(),
             'Stock'
         );
     }
 
-    protected function processForm(Request $request, FormHandlerInterface $formHandler, string $hookName): RedirectResponse
+    /**
+     * Process the Product Preferences configuration form.
+     *
+     * @param Request $request
+     * @param FormHandlerInterface $formHandler
+     * @param string $hookName
+     *
+     * @return RedirectResponse
+     */
+    protected function processForm(Request $request, FormHandlerInterface $formHandler, string $hookName)
     {
-        $this->dispatchHookWithParameters(
+        $this->dispatchHook(
             'actionAdminShopParametersProductPreferencesControllerPostProcess' . $hookName . 'Before',
             ['controller' => $this]
         );
 
-        $this->dispatchHookWithParameters('actionAdminShopParametersProductPreferencesControllerPostProcessBefore', ['controller' => $this]);
+        $this->dispatchHook('actionAdminShopParametersProductPreferencesControllerPostProcessBefore', ['controller' => $this]);
 
         $form = $formHandler->getForm();
         $form->handleRequest($request);
@@ -142,12 +172,44 @@ class ProductPreferencesController extends PrestaShopAdminController
             $saveErrors = $formHandler->save($data);
 
             if (0 === count($saveErrors)) {
-                $this->addFlash('success', $this->trans('Update successful', [], 'Admin.Notifications.Success'));
+                $this->addFlash('success', $this->trans('Update successful', 'Admin.Notifications.Success'));
             } else {
-                $this->addFlashErrors($saveErrors);
+                $this->flashErrors($saveErrors);
             }
         }
 
         return $this->redirectToRoute('admin_product_preferences');
+    }
+
+    /**
+     * @return FormHandlerInterface
+     */
+    protected function getGeneralFormHandler(): FormHandlerInterface
+    {
+        return $this->get('prestashop.admin.product_preferences.general.form_handler');
+    }
+
+    /**
+     * @return FormHandlerInterface
+     */
+    protected function getPaginationFormHandler(): FormHandlerInterface
+    {
+        return $this->get('prestashop.admin.product_preferences.pagination.form_handler');
+    }
+
+    /**
+     * @return FormHandlerInterface
+     */
+    protected function getPageFormHandler(): FormHandlerInterface
+    {
+        return $this->get('prestashop.admin.product_preferences.page.form_handler');
+    }
+
+    /**
+     * @return FormHandlerInterface
+     */
+    protected function getStockFormHandler(): FormHandlerInterface
+    {
+        return $this->get('prestashop.admin.product_preferences.stock.form_handler');
     }
 }

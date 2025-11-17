@@ -33,7 +33,7 @@ use PrestaShop\PrestaShop\Core\Grid\Action\Row\Type\LinkRowAction;
 use PrestaShop\PrestaShop\Core\Grid\Action\ViewOptionsCollection;
 use PrestaShop\PrestaShop\Core\Grid\Column\ColumnCollection;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ActionColumn;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn;
+use PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn;
 use PrestaShop\PrestaShop\Core\Hook\HookDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -105,7 +105,6 @@ final class CustomerAddressGridDefinitionFactory extends AbstractGridDefinitionF
                     ->setName($this->trans('Address', [], 'Admin.Global'))
                     ->setOptions([
                         'field' => 'full_address',
-                        'sortable' => false,
                     ])
             )
             ->add(
@@ -120,37 +119,36 @@ final class CustomerAddressGridDefinitionFactory extends AbstractGridDefinitionF
                     ->setName($this->trans('Phone number(s)', [], 'Admin.Orderscustomers.Feature'))
                     ->setOptions([
                         'field' => 'phone_number',
-                        'sortable' => false,
                     ])
             )
             ->add((new ActionColumn('actions'))
-                ->setName($this->trans('Actions', [], 'Admin.Global'))
-                ->setOptions([
-                    'actions' => (new RowActionCollection())
-                        ->add(
-                            (new LinkRowAction('edit'))
-                                ->setName($this->trans('Edit', [], 'Admin.Actions'))
-                                ->setIcon('edit')
-                                ->setOptions([
-                                    'route' => 'admin_addresses_edit',
-                                    'route_param_name' => 'addressId',
-                                    'route_param_field' => 'id_address',
-                                    'extra_route_params' => [
-                                        'back' => $this->backUrl,
-                                    ],
-                                    'clickable_row' => true,
-                                ])
+            ->setName($this->trans('Actions', [], 'Admin.Global'))
+            ->setOptions([
+                'actions' => (new RowActionCollection())
+                    ->add(
+                        (new LinkRowAction('edit'))
+                            ->setName($this->trans('Edit', [], 'Admin.Actions'))
+                            ->setIcon('edit')
+                            ->setOptions([
+                                'route' => 'admin_addresses_edit',
+                                'route_param_name' => 'addressId',
+                                'route_param_field' => 'id_address',
+                                'extra_route_params' => [
+                                    'back' => $this->backUrl,
+                                ],
+                                'clickable_row' => true,
+                            ])
+                    )
+                    ->add(
+                        $this->buildDeleteAction(
+                            'admin_addresses_delete',
+                            'addressId',
+                            'id_address',
+                            'POST',
+                            ['back' => $this->backUrl]
                         )
-                        ->add(
-                            $this->buildDeleteAction(
-                                'admin_addresses_delete',
-                                'addressId',
-                                'id_address',
-                                'POST',
-                                ['back' => $this->backUrl]
-                            )
-                        ),
-                ])
+                    ),
+            ])
             );
     }
 

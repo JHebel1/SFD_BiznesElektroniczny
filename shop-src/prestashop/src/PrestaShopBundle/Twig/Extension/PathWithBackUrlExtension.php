@@ -27,8 +27,8 @@
 namespace PrestaShopBundle\Twig\Extension;
 
 use PrestaShop\PrestaShop\Core\Util\Url\BackUrlProvider;
+use Symfony\Bridge\Twig\Extension\RoutingExtension;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -37,17 +37,40 @@ use Twig\TwigFunction;
  */
 class PathWithBackUrlExtension extends AbstractExtension
 {
+    /**
+     * @var RoutingExtension
+     */
+    private $routingExtension;
+
+    /**
+     * @var BackUrlProvider
+     */
+    private $backUrlProvider;
+
+    /**
+     * @var RequestStack
+     */
+    private $requestStack;
+
+    /**
+     * @param RoutingExtension $routingExtension
+     * @param BackUrlProvider $backUrlProvider
+     * @param RequestStack|null $requestStack
+     */
     public function __construct(
-        private readonly UrlGeneratorInterface $urlGenerator,
-        private readonly BackUrlProvider $backUrlProvider,
-        private readonly RequestStack $requestStack
+        RoutingExtension $routingExtension,
+        BackUrlProvider $backUrlProvider,
+        $requestStack
     ) {
+        $this->routingExtension = $routingExtension;
+        $this->backUrlProvider = $backUrlProvider;
+        $this->requestStack = $requestStack;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getFunctions(): array
+    public function getFunctions()
     {
         return [
             new TwigFunction(
@@ -66,9 +89,13 @@ class PathWithBackUrlExtension extends AbstractExtension
      *
      * @return string
      */
-    public function getPathWithBackUrl(string $name, array $parameters = [], bool $relative = false): string
+    public function getPathWithBackUrl($name, $parameters = [], $relative = false)
     {
-        $fallbackPath = $this->urlGenerator->generate($name, $parameters, $relative ? UrlGeneratorInterface::RELATIVE_PATH : UrlGeneratorInterface::ABSOLUTE_PATH);
+        $fallbackPath = $this->routingExtension->getPath($name, $parameters, $relative);
+
+        if (null === $this->requestStack) {
+            return $fallbackPath;
+        }
 
         $request = $this->requestStack->getCurrentRequest();
 

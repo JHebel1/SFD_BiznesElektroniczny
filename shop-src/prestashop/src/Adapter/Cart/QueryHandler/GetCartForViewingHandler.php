@@ -35,13 +35,11 @@ use Gender;
 use Group;
 use Order;
 use PrestaShop\PrestaShop\Adapter\ImageManager;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Query\GetCartForViewing;
 use PrestaShop\PrestaShop\Core\Domain\Cart\QueryHandler\GetCartForViewingHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Cart\QueryResult\CartView;
 use PrestaShop\PrestaShop\Core\Localization\Locale;
-use PrestaShop\PrestaShop\Core\Util\Sorter;
 use Product;
 use StockAvailable;
 use Validate;
@@ -49,7 +47,6 @@ use Validate;
 /**
  * @internal
  */
-#[AsQueryHandler]
 final class GetCartForViewingHandler implements GetCartForViewingHandlerInterface
 {
     /**
@@ -120,12 +117,7 @@ final class GetCartForViewingHandler implements GetCartForViewingHandlerInterfac
             $total_shipping = $summary['total_shipping'];
         }
 
-        // Sort products by Reference ID (and if equals (like combination) by Supplier Reference)
-        $sorter = new Sorter();
-        $products = $sorter->natural($products, Sorter::ORDER_DESC, 'reference', 'supplier_reference');
-
         foreach ($products as &$product) {
-            // Add proper prices depending on customer group price display style
             if ($tax_calculation_method == PS_TAX_EXC) {
                 $product['product_price'] = $product['price'];
                 $product['product_total'] = $product['total'];
@@ -134,14 +126,12 @@ final class GetCartForViewingHandler implements GetCartForViewingHandlerInterfac
                 $product['product_total'] = $product['total_wt'];
             }
 
-            // Add CURRENT quantity in stock
             $product['qty_in_stock'] = StockAvailable::getQuantityAvailableByProduct(
                 $product['id_product'],
                 isset($product['id_product_attribute']) ? $product['id_product_attribute'] : null,
                 (int) $id_shop
             );
 
-            // Add customizations for the product
             $customized_datas = Product::getAllCustomizedDatas(
                 $context->cart->id,
                 null,
@@ -150,6 +140,10 @@ final class GetCartForViewingHandler implements GetCartForViewingHandlerInterfac
                 (int) $product['id_customization']
             );
             $context->cart->setProductCustomizedDatas($product, $customized_datas);
+
+            if ($customized_datas) {
+                Product::addProductCustomizationPrice($product, $customized_datas);
+            }
         }
         unset($product);
 
@@ -174,22 +168,8 @@ final class GetCartForViewingHandler implements GetCartForViewingHandlerInterfac
 
         $orderInformation = [
             'id' => $order->id,
-            'placed_date' => (new DateTime($order->date_add))->format($context->language->date_format_full),
+            'placed_date' => (new DateTime($order->date_add))->format($context->language->date_format_lite),
         ];
-
-        // Prepare link to share this cart, if it was not ordered yet
-        $cartLink = null;
-        if (!Validate::isLoadedObject($order)) {
-            $cartLink = $context->link->getPageLink(
-                'cart',
-                false,
-                (int) $cart->getAssociatedLanguage()->getId(),
-                [
-                    'recover_cart' => $cart->id,
-                    'token_cart' => md5(_COOKIE_KEY_ . 'recover_cart_' . (int) $cart->id),
-                ]
-            );
-        }
 
         $cartSummary = [
             'products' => $products,
@@ -205,9 +185,6 @@ final class GetCartForViewingHandler implements GetCartForViewingHandlerInterfac
             'total' => $total_price,
             'total_formatted' => $this->locale->formatPrice($total_price, $currency->iso_code),
             'is_tax_included' => $tax_calculation_method == PS_TAX_INC,
-            'cart_link' => $cartLink,
-            'date_add' => (new DateTime($cart->date_add))->format($context->language->date_format_full),
-            'date_upd' => (new DateTime($cart->date_upd))->format($context->language->date_format_full),
         ];
 
         return new CartView($cart->id, $cart->id_currency, $customerInformation, $orderInformation, $cartSummary);
@@ -238,6 +215,7 @@ final class GetCartForViewingHandler implements GetCartForViewingHandlerInterfac
                 'reference' => $product['reference'],
                 'supplier_reference' => $product['supplier_reference'],
                 'stock_quantity' => $product['qty_in_stock'],
+                'customization_quantity' => $product['customizationQuantityTotal'],
                 'cart_quantity' => $product['cart_quantity'],
                 'total_price' => $product['product_total'],
                 'unit_price' => $product['product_price'],
@@ -247,13 +225,27 @@ final class GetCartForViewingHandler implements GetCartForViewingHandlerInterfac
                 'image' => isset($image['id_image']) ? $this->imageManager->getThumbnailForListing($image['id_image']) : '',
             ];
 
+            if (isset($product['customizationQuantityTotal'])) {
+                $formattedProduct['cart_quantity'] =
+                    $product['cart_quantity'] - $product['customizationQuantityTotal'];
+            }
+
             $productCustomization = [];
 
             if ($product['customizedDatas']) {
+                $formattedProduct['unit_price'] = $product['price_wt'];
+                $formattedProduct['unit_price_formatted'] = $this->locale->formatPrice($product['price_wt'], $currency->iso_code);
+                $formattedProduct['total_price'] = $product['total_customization_wt'];
+                $formattedProduct['total_price_formatted'] = $this->locale->formatPrice(
+                    $product['total_customization_wt'],
+                    $currency->iso_code
+                );
+                $formattedProduct['quantity'] = $product['customizationQuantityTotal'];
+
                 foreach ($product['customizedDatas'] as $customizationPerAddress) {
                     foreach ($customizationPerAddress as $customization) {
-                        if (((int) $customization['id_customization'] !== (int) $product['id_customization'])
-                            && count($customizationPerAddress) === 1
+                        if (((int) $customization['id_customization'] !== (int) $product['id_customization']) &&
+                            count($customizationPerAddress) === 1
                         ) {
                             continue;
                         }

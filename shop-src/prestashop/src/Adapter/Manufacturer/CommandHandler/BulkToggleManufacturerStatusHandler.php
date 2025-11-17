@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Manufacturer\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Manufacturer\Command\BulkToggleManufacturerStatusCommand;
 use PrestaShop\PrestaShop\Core\Domain\Manufacturer\CommandHandler\BulkToggleManufacturerStatusHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Manufacturer\Exception\UpdateManufacturerException;
@@ -34,7 +33,6 @@ use PrestaShop\PrestaShop\Core\Domain\Manufacturer\Exception\UpdateManufacturerE
 /**
  * Handles command which toggles manufacturer status in bulk action
  */
-#[AsCommandHandler]
 final class BulkToggleManufacturerStatusHandler extends AbstractManufacturerCommandHandler implements BulkToggleManufacturerStatusHandlerInterface
 {
     /**

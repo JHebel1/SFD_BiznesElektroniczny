@@ -29,16 +29,13 @@ declare(strict_types=1);
 namespace PrestaShop\PrestaShop\Adapter\Hook\QueryHandler;
 
 use Hook;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Hook\Exception\HookNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Hook\Query\GetHookStatus;
 use PrestaShop\PrestaShop\Core\Domain\Hook\QueryHandler\GetHookStatusHandlerInterface;
-use PrestaShop\PrestaShop\Core\Domain\Hook\QueryResult\HookStatus;
 
 /**
  * @internal
  */
-#[AsQueryHandler]
 final class GetHookStatusHandler implements GetHookStatusHandlerInterface
 {
     /**
@@ -46,13 +43,13 @@ final class GetHookStatusHandler implements GetHookStatusHandlerInterface
      */
     public function handle(GetHookStatus $query)
     {
-        $hookId = $query->getId()->getValue();
+        $hookId = $query->getHookId()->getValue();
         $hook = new Hook($hookId);
 
         if ($hook->id !== $hookId) {
             throw new HookNotFoundException(sprintf('Hook with id "%d" was not found.', $hookId));
         }
 
-        return new HookStatus($hook->id, (bool) $hook->active);
+        return (bool) $hook->active;
     }
 }

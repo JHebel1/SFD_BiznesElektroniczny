@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -17,89 +18,79 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-declare(strict_types=1);
 
 namespace PrestaShop\Module\Mbo\Distribution;
 
+use PrestaShop\Module\Mbo\Helpers\Config;
 use PrestaShop\Module\Mbo\Helpers\ErrorHelper;
-use Symfony\Component\Routing\Router;
+use stdClass;
 
 class Client extends BaseClient
 {
     /**
-     * @var Router|null
+     * Register new Shop on Distribution API.
+     *
+     * @param array $params
+     *
+     * @return stdClass
+     *
+     * @usage \ps_mbo::registerShop
      */
-    private $router;
-
-    public function setRouter(Router $router): self
+    public function registerShop(array $params = [])
     {
-        $this->router = $router;
-
-        return $this;
+        return $this->processRequestAndDecode(
+            'shops',
+            self::HTTP_METHOD_POST,
+            ['body' => $this->mergeShopDataWithParams($params)]
+        );
     }
 
     /**
-     * Get a new key from Distribution API.
+     * Unregister a Shop on Distribution API.
      *
-     * @return \stdClass
+     * @return stdClass
      */
-    public function retrieveNewKey(): \stdClass
+    public function unregisterShop()
     {
-        return $this->processRequestAndDecode('shops/get-pub-key');
+        return $this->processRequestAndDecode(
+            'shops/' . Config::getShopMboUuid(),
+            self::HTTP_METHOD_DELETE
+        );
     }
 
     /**
-     * Retrieve the user menu from NEST Api
+     * Update shop on Distribution API.
      *
-     * @return false|\stdClass
+     * @param array $params
+     *
+     * @return stdClass
+     *
+     * @usage \ps_mbo::updateShop
      */
-    public function getEmployeeMenu()
+    public function updateShop(array $params)
     {
-        $languageIsoCode = \Context::getContext()->language->getIsoCode();
-        $cacheKey = __METHOD__ . $languageIsoCode . _PS_VERSION_;
-
-        if ($this->cacheProvider->contains($cacheKey)) {
-            return $this->cacheProvider->fetch($cacheKey);
-        }
-
-        $catalogUrlParams = [
-            'utm_mbo_source' => 'menu-user-back-office',
-        ];
-
-        $this->setQueryParams([
-            'isoLang' => $languageIsoCode,
-            'shopVersion' => _PS_VERSION_,
-            'catalogUrl' => $this->router ? $this->router->generate('admin_mbo_catalog_module', $catalogUrlParams, Router::ABSOLUTE_PATH) : '#',
-        ]);
-        try {
-            $conf = $this->processRequestAndDecode('shops/employee-menu');
-        } catch (\Throwable $e) {
-            return false;
-        }
-        if (empty($conf)) {
-            return false;
-        }
-        $this->cacheProvider->save($cacheKey, $conf, 60 * 60 * 24); // A day
-
-        return $this->cacheProvider->fetch($cacheKey);
+        return $this->processRequestAndDecode(
+            'shops/' . Config::getShopMboUuid(),
+            self::HTTP_METHOD_PUT,
+            ['body' => $this->mergeShopDataWithParams($params)]
+        );
     }
 
     /**
-     * Send a tracking to the API
-     * Send it asynchronously to avoid blocking process for this feature
-     *
      * @param array $eventData
+     *
+     * @return void
      */
-    public function trackEvent(array $eventData): void
+    public function trackEvent(array $eventData)
     {
         try {
             $this->processRequestAndDecode(
                 'shops/events',
                 self::HTTP_METHOD_POST,
-                ['form_params' => $eventData]
+                ['body' => $eventData]
             );
-        } catch (\Throwable $e) {
-            // Do nothing if the tracking fails
+        } catch (\Exception $e) {
+            // Do nothing, we don't want to block the module action
             ErrorHelper::reportError($e);
         }
     }

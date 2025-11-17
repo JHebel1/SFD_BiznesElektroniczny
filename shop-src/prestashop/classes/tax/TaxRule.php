@@ -44,11 +44,11 @@ class TaxRuleCore extends ObjectModel
             'id_tax_rules_group' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true],
             'id_country' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true],
             'id_state' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId'],
-            'zipcode_from' => ['type' => self::TYPE_STRING, 'validate' => 'isPostCode', 'size' => 12],
-            'zipcode_to' => ['type' => self::TYPE_STRING, 'validate' => 'isPostCode', 'size' => 12],
+            'zipcode_from' => ['type' => self::TYPE_STRING, 'validate' => 'isPostCode'],
+            'zipcode_to' => ['type' => self::TYPE_STRING, 'validate' => 'isPostCode'],
             'id_tax' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true],
             'behavior' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'],
-            'description' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'size' => 100],
+            'description' => ['type' => self::TYPE_STRING, 'validate' => 'isString'],
         ],
     ];
 
@@ -63,7 +63,7 @@ class TaxRuleCore extends ObjectModel
     public static function deleteByGroupId($id_group)
     {
         if (empty($id_group)) {
-            throw new PrestaShopException('Parameter "id_group" (id_tax_rules_group you want to delete) is invalid.');
+            die(Tools::displayError());
         }
 
         return Db::getInstance()->execute(
@@ -112,9 +112,19 @@ class TaxRuleCore extends ObjectModel
     }
 
     /**
+     * @deprecated since 1.5
+     */
+    public static function deleteTaxRuleByIdCounty($id_county)
+    {
+        Tools::displayAsDeprecated();
+
+        return true;
+    }
+
+    /**
      * @param int $id_tax
      *
-     * @return int
+     * @return bool
      */
     public static function isTaxInUse($id_tax)
     {
@@ -130,7 +140,7 @@ class TaxRuleCore extends ObjectModel
     }
 
     /**
-     * @param string $zip_codes a range of zipcode (eg: 75000 / 75000-75015)
+     * @param string $zipcode a range of zipcode (eg: 75000 / 75000-75015)
      *
      * @return array an array containing two zipcode ordered by zipcode
      */

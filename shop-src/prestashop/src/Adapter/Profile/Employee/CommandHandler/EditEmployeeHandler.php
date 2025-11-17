@@ -28,7 +28,6 @@ namespace PrestaShop\PrestaShop\Adapter\Profile\Employee\CommandHandler;
 
 use Employee;
 use PrestaShop\PrestaShop\Adapter\LegacyContext;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Crypto\Hashing;
 use PrestaShop\PrestaShop\Core\Domain\Employee\Command\EditEmployeeCommand;
 use PrestaShop\PrestaShop\Core\Domain\Employee\CommandHandler\EditEmployeeHandlerInterface;
@@ -45,7 +44,6 @@ use Shop;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class EditEmployeeHandler extends AbstractEmployeeHandler implements EditEmployeeHandlerInterface
 {
     /**
@@ -103,7 +101,6 @@ final class EditEmployeeHandler extends AbstractEmployeeHandler implements EditE
         $employee = new Employee($command->getEmployeeId()->getValue());
 
         $this->assertEmailIsNotAlreadyUsed($employee, $command->getEmail()->getValue());
-        $this->assertHomepageIsAccessible($command->getDefaultPageId() ?: ((int) $employee->default_tab), $command->getProfileId() ?: ((int) $employee->id_profile));
 
         $this->updateEmployeeWithCommandData($employee, $command);
 

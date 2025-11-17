@@ -32,83 +32,140 @@ use Doctrine\ORM\Mapping as ORM;
  * AttributeGroupLang.
  *
  * @ORM\Table()
- *
  * @ORM\Entity(repositoryClass="PrestaShopBundle\Entity\Repository\AttributeGroupLangRepository")
  */
 class AttributeGroupLang
 {
     /**
      * @ORM\Id
-     *
      * @ORM\ManyToOne(targetEntity="PrestaShopBundle\Entity\AttributeGroup", inversedBy="attributeGroupLangs")
-     *
      * @ORM\JoinColumn(name="id_attribute_group", referencedColumnName="id_attribute_group", nullable=false, onDelete="CASCADE")
      */
-    private AttributeGroup $attributeGroup;
+    private $attributeGroup;
 
     /**
      * @ORM\Id
-     *
      * @ORM\ManyToOne(targetEntity="PrestaShopBundle\Entity\Lang")
-     *
      * @ORM\JoinColumn(name="id_lang", referencedColumnName="id_lang", nullable=false, onDelete="CASCADE")
      */
-    private Lang $lang;
+    private $lang;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="name", type="string", length=128)
      */
-    private string $name;
+    private $name;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="public_name", type="string", length=64)
      */
-    private string $publicName;
+    private $publicName;
 
-    public function setName(string $name): static
+    /**
+     * Get id.
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->attributeGroup;
+    }
+
+    /**
+     * Set name.
+     *
+     * @param string $name
+     *
+     * @return AttributeGroupLang
+     */
+    public function setName($name)
     {
         $this->name = $name;
 
         return $this;
     }
 
-    public function getName(): string
+    /**
+     * Get name.
+     *
+     * @return string
+     */
+    public function getName()
     {
         return $this->name;
     }
 
-    public function setPublicName(string $publicName): static
+    /**
+     * Set publicName.
+     *
+     * @param string $publicName
+     *
+     * @return AttributeGroupLang
+     */
+    public function setPublicName($publicName)
     {
         $this->publicName = $publicName;
 
         return $this;
     }
 
-    public function getPublicName(): string
+    /**
+     * Get publicName.
+     *
+     * @return string
+     */
+    public function getPublicName()
     {
         return $this->publicName;
     }
 
-    public function setAttributeGroup(AttributeGroup $attributeGroup): static
+    /**
+     * Set attributeGroup.
+     *
+     * @param \PrestaShopBundle\Entity\AttributeGroup $attributeGroup
+     *
+     * @return AttributeGroupLang
+     */
+    public function setAttributeGroup(AttributeGroup $attributeGroup)
     {
         $this->attributeGroup = $attributeGroup;
 
         return $this;
     }
 
-    public function getAttributeGroup(): AttributeGroup
+    /**
+     * Get attributeGroup.
+     *
+     * @return \PrestaShopBundle\Entity\AttributeGroup
+     */
+    public function getAttributeGroup()
     {
         return $this->attributeGroup;
     }
 
-    public function setLang(Lang $lang): static
+    /**
+     * Set lang.
+     *
+     * @param \PrestaShopBundle\Entity\Lang $lang
+     *
+     * @return AttributeGroupLang
+     */
+    public function setLang(Lang $lang)
     {
         $this->lang = $lang;
 
         return $this;
     }
 
-    public function getLang(): Lang
+    /**
+     * Get lang.
+     *
+     * @return \PrestaShopBundle\Entity\Lang
+     */
+    public function getLang()
     {
         return $this->lang;
     }

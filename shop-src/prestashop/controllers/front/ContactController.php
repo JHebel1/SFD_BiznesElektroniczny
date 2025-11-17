@@ -25,9 +25,7 @@
  */
 class ContactControllerCore extends FrontController
 {
-    /** @var string */
     public $php_self = 'contact';
-    /** @var bool */
     public $ssl = true;
 
     /**
@@ -35,30 +33,22 @@ class ContactControllerCore extends FrontController
      *
      * @see FrontController::initContent()
      */
-    public function initContent(): void
+    public function initContent()
     {
         parent::initContent();
 
         $this->setTemplate('contact');
     }
 
-    public function getBreadcrumbLinks(): array
+    public function getBreadcrumbLinks()
     {
         $breadcrumb = parent::getBreadcrumbLinks();
 
         $breadcrumb['links'][] = [
             'title' => $this->getTranslator()->trans('Contact us', [], 'Shop.Theme.Global'),
-            'url' => $this->context->link->getPageLink('contact'),
+            'url' => $this->context->link->getPageLink('contact', true),
         ];
 
         return $breadcrumb;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getCanonicalURL(): string
-    {
-        return $this->context->link->getPageLink('contact');
     }
 }

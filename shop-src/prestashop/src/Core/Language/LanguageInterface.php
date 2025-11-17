@@ -37,54 +37,40 @@ interface LanguageInterface
      *
      * @return int
      */
-    public function getId(): int;
+    public function getId();
 
     /**
      * Explicit name of the language
      *
      * @return string
      */
-    public function getName(): string;
+    public function getName();
 
     /**
      * 2-letter iso code
      *
      * @return string
      */
-    public function getIsoCode(): string;
+    public function getIsoCode();
 
     /**
      * 5-letter iso code
      *
      * @return string
      */
-    public function getLocale(): string;
+    public function getLocale();
 
     /**
      * 5-letter iso code
      *
      * @return string
      */
-    public function getLanguageCode(): string;
+    public function getLanguageCode();
 
     /**
      * Is the language RTL (read from right to left)
      *
      * @return bool
      */
-    public function isRTL(): bool;
-
-    /**
-     * Returns format for a date.
-     *
-     * @return string
-     */
-    public function getDateFormat(): string;
-
-    /**
-     * Returns format for a date and time.
-     *
-     * @return string
-     */
-    public function getDateTimeFormat(): string;
+    public function isRTL();
 }

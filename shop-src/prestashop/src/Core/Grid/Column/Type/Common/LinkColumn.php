@@ -30,17 +30,7 @@ use PrestaShop\PrestaShop\Core\Grid\Column\AbstractColumn;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * Class LinkColumn is used to define a column in which there is a link targeting an action route (view, edit, add...).
- *
- * Example:
- * new LinkColumn('name'))
- *  ->setName('Name')
- *   ->setOptions([
- *       'field' => 'name',
- *       'route' => 'admin_edit',
- *       'route_param_name' => 'myId',
- *       'route_param_field' => 'id',
- *   ])
+ * Class LinkColumn is used to define column which is link to record action (view, edit, add).
  */
 final class LinkColumn extends AbstractColumn
 {
@@ -57,14 +47,13 @@ final class LinkColumn extends AbstractColumn
      */
     protected function configureOptions(OptionsResolver $resolver)
     {
-        parent::configureOptions($resolver);
         $resolver
             ->setDefaults([
+                'sortable' => true,
                 'icon' => null,
-                'route_fragment' => null,
                 'button_template' => false,
                 'color_template' => 'primary',
-                'color_template_field' => null,
+                'clickable' => false,
             ])
             ->setRequired([
                 'field',
@@ -79,10 +68,8 @@ final class LinkColumn extends AbstractColumn
             ->setAllowedTypes('field', ['string', 'null'])
             ->setAllowedTypes('icon', ['string', 'null'])
             ->setAllowedTypes('target', ['string', 'null'])
-            ->setAllowedTypes('color_template_field', ['string', 'null'])
             ->setAllowedTypes('sortable', 'bool')
             ->setAllowedTypes('route', 'string')
-            ->setAllowedTypes('route_fragment', ['string', 'null'])
             ->setAllowedTypes('route_param_name', 'string')
             ->setAllowedTypes('route_param_field', 'string')
             ->setAllowedTypes('clickable', 'bool')
@@ -99,6 +86,7 @@ final class LinkColumn extends AbstractColumn
                 'outline',
                 'normal',
             ])
+
         ;
     }
 }

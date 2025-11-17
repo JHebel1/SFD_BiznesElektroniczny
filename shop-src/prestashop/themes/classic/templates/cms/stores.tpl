@@ -35,19 +35,15 @@
       <article id="store-{$store.id}" class="store-item card">
         <div class="store-item-container clearfix">
           <div class="col-md-3 store-picture hidden-sm-down">
-            <picture>
-              {if !empty($store.image.bySize.stores_default.sources.avif)}<source srcset="{$store.image.bySize.stores_default.sources.avif}" type="image/avif">{/if}
-              {if !empty($store.image.bySize.stores_default.sources.webp)}<source srcset="{$store.image.bySize.stores_default.sources.webp}" type="image/webp">{/if}
-              <img
-                src="{$store.image.bySize.stores_default.url}"
-                {if !empty($store.image.legend)}
-                  alt="{$store.image.legend}"
-                  title="{$store.image.legend}"
-                {else}
-                  alt="{$store.name}"
-                {/if}
-              >
-            </picture>
+            <img
+              src="{$store.image.bySize.stores_default.url}"
+              {if !empty($store.image.legend)}
+                alt="{$store.image.legend}"
+                title="{$store.image.legend}"
+              {else}
+                alt="{$store.name}"
+              {/if}
+            >
           </div>
           <div class="col-md-5 col-sm-7 col-xs-12 store-description">
             <p class="h3 card-title">{$store.name}</p>
@@ -60,7 +56,7 @@
             <table>
               {foreach $store.business_hours as $day}
               <tr>
-                <th>{$day.day}</th>
+                <th>{$day.day|truncate:4:'.'}</th>
                 <td>
                   <ul>
                   {foreach $day.hours as $h}

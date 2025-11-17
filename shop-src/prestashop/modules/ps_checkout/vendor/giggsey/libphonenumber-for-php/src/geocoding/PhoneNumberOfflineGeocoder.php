@@ -95,6 +95,7 @@ class PhoneNumberOfflineGeocoder
      * Returns the customary display name in the given language for the given territory the phone
      * number is from. If it could be from many territories, nothing is returned.
      *
+     * @param PhoneNumber $number
      * @param string $locale
      * @return string
      */
@@ -124,6 +125,8 @@ class PhoneNumberOfflineGeocoder
     /**
      * Returns the customary display name in the given language for the given region.
      *
+     * @param $regionCode
+     * @param $locale
      * @return string
      */
     protected function getRegionDisplayName($regionCode, $locale)

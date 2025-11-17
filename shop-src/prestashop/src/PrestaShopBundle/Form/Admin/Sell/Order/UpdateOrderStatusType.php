@@ -68,7 +68,6 @@ class UpdateOrderStatusType extends AbstractType
                 'choices' => $this->statusChoiceProvider->getChoices($choiceProviderParams),
                 'choice_attr' => $this->statusChoiceAttributes,
                 'translation_domain' => false,
-                'autocomplete' => true,
             ])
         ;
     }

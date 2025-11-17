@@ -26,12 +26,12 @@
 
 namespace PrestaShopBundle\Entity\Repository;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Connection;
 use Doctrine\ORM\EntityManager;
-use PDO;
 use PrestaShop\PrestaShop\Adapter\Configuration;
 use PrestaShop\PrestaShop\Adapter\ImageManager;
 use PrestaShop\PrestaShop\Adapter\LegacyContext as ContextAdapter;
+use PrestaShop\PrestaShop\Adapter\Product\ProductDataProvider;
 use PrestaShop\PrestaShop\Adapter\StockManager;
 use PrestaShop\PrestaShop\Core\Stock\StockManager as StockManagerCore;
 use PrestaShopBundle\Api\QueryParamsCollection;
@@ -39,7 +39,6 @@ use PrestaShopBundle\Api\Stock\Movement;
 use PrestaShopBundle\Api\Stock\MovementsCollection;
 use PrestaShopBundle\Entity\ProductIdentity;
 use PrestaShopBundle\Exception\ProductNotFoundException;
-use Product;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class StockRepository extends StockManagementRepository
@@ -121,7 +120,7 @@ class StockRepository extends StockManagementRepository
         $delta = $movement->getDelta();
 
         if ($productIdentity->getProductId() && $delta !== 0) {
-            $product = new Product($productIdentity->getProductId());
+            $product = (new ProductDataProvider())->getProduct($productIdentity->getProductId());
 
             if ($product->id) {
                 $configurationAdapter = new Configuration();
@@ -130,7 +129,7 @@ class StockRepository extends StockManagementRepository
                     $product,
                     $productIdentity->getCombinationId(),
                     $delta,
-                    $this->getCurrentShop()->id,
+                    $this->contextAdapter->getContext()->shop->id,
                     true,
                     [
                         'id_stock_mvt_reason' => ($delta >= 1 ? $configurationAdapter->get('PS_STOCK_MVT_INC_EMPLOYEE_EDITION') : $configurationAdapter->get('PS_STOCK_MVT_DEC_EMPLOYEE_EDITION')),
@@ -152,7 +151,7 @@ class StockRepository extends StockManagementRepository
     private function syncAllStock($idProduct)
     {
         (new StockManager())->updatePhysicalProductQuantity(
-            $this->getCurrentShop()->id,
+            $this->contextAdapter->getContext()->shop->id,
             $this->orderStates['error'],
             $this->orderStates['cancellation'],
             (int) $idProduct
@@ -174,9 +173,9 @@ class StockRepository extends StockManagementRepository
         $statement = $this->connection->prepare($query);
         $this->bindStockManagementValues($statement, null, $productIdentity);
 
-        $result = $statement->executeQuery();
-        $rows = $result->fetchAllAssociative();
-        $result->free();
+        $statement->execute();
+        $rows = $statement->fetchAll();
+        $statement->closeCursor();
         $this->foundRows = $this->getFoundRows();
 
         if (count($rows) === 0) {
@@ -196,7 +195,7 @@ class StockRepository extends StockManagementRepository
     public function getData(QueryParamsCollection $queryParams)
     {
         $this->stockManager->updatePhysicalProductQuantity(
-            $this->getContextualShopId(),
+            $this->shopId,
             $this->orderStates['error'],
             $this->orderStates['cancellation']
         );
@@ -259,15 +258,7 @@ class StockRepository extends StockManagementRepository
           p.id_product                                                                      AS product_id,
           COALESCE(pa.id_product_attribute, 0)                                              AS combination_id,
           IF(COALESCE(p.reference, "") = "", "N/A", p.reference)                            AS product_reference,
-          IF(COALESCE(p.ean13, "") = "", "N/A", p.ean13)                                    AS product_ean13,
-          IF(COALESCE(p.isbn, "") = "", "N/A", p.isbn)                                      AS product_isbn,
-          IF(COALESCE(p.upc, "") = "", "N/A", p.upc)                                        AS product_upc,
-          IF(COALESCE(p.mpn, "") = "", "N/A", p.mpn)                                        AS product_mpn,
           IF(COALESCE(pa.reference, "") = "", "N/A", pa.reference)                          AS combination_reference,
-          IF(COALESCE(pa.ean13, "") = "", "N/A", pa.ean13)                                  AS combination_ean13,
-          IF(COALESCE(pa.isbn, "") = "", "N/A", pa.isbn)                                    AS combination_isbn,
-          IF(COALESCE(pa.upc, "") = "", "N/A", pa.upc)                                      AS combination_upc,
-          IF(COALESCE(pa.mpn, "") = "", "N/A", pa.mpn)                                      AS combination_mpn,
           pl.name                                                                           AS product_name,
           p.id_supplier                                                                     AS supplier_id,
           COALESCE(s.name, "N/A")                                                           AS supplier_name,
@@ -285,7 +276,7 @@ class StockRepository extends StockManagementRepository
           {attribute_name}
         FROM {table_prefix}product p
           LEFT JOIN {table_prefix}product_attribute pa ON (p.id_product = pa.id_product)
-          LEFT JOIN {table_prefix}product_lang pl ON (p.id_product = pl.id_product AND pl.id_lang = :language_id AND pl.id_shop = :shop_id)
+          LEFT JOIN {table_prefix}product_lang pl ON (p.id_product = pl.id_product AND pl.id_lang = :language_id)
           INNER JOIN {table_prefix}product_shop ps ON (p.id_product = ps.id_product AND ps.id_shop = :shop_id)
           LEFT JOIN {table_prefix}stock_available sa
             ON (p.id_product = sa.id_product AND sa.id_shop = :stock_shop_id AND sa.id_shop_group = :stock_group_id AND
@@ -368,10 +359,10 @@ class StockRepository extends StockManagementRepository
                         FROM ' . $this->tablePrefix . 'product_attribute pa
                         WHERE id_product=:id_product';
             $statement = $this->connection->prepare($query);
-            $statement->bindValue('id_product', (int) $row['product_id'], PDO::PARAM_INT);
-            $result = $statement->executeQuery();
-            $this->totalCombinations[$row['product_id']] = $result->fetchOne();
-            $result->free();
+            $statement->bindValue('id_product', (int) $row['product_id'], \PDO::PARAM_INT);
+            $statement->execute();
+            $this->totalCombinations[$row['product_id']] = $statement->fetchColumn(0);
+            $statement->closeCursor();
         }
 
         return $this->totalCombinations[$row['product_id']];

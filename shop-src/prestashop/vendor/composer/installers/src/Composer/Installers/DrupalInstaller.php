@@ -1,10 +1,8 @@
 <?php
-
 namespace Composer\Installers;
 
 class DrupalInstaller extends BaseInstaller
 {
-    /** @var array<string, string> */
     protected $locations = array(
         'core'             => 'core/',
         'module'           => 'modules/{$name}/',

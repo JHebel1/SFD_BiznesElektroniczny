@@ -74,7 +74,7 @@ abstract class AbstractCatalogPriceRuleHandler
     {
         try {
             return $specificPriceRule->delete();
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new CatalogPriceRuleException(sprintf('An error occurred when deleting SpecificPriceRule object with id "%s".', $specificPriceRule->id));
         }
     }

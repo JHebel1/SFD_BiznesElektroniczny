@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -23,7 +24,6 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
-
 declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Core\Translation\Builder\Map;
@@ -152,7 +152,7 @@ class Catalogue
             }
 
             // update child and get its counters
-            [$count, $missing] = $this->updateCounters($subtree[$key]);
+            list($count, $missing) = $this->updateCounters($subtree[$key]);
 
             // update this tree's counters by adding the child's
             $subtree[self::METADATA_KEY_NAME]['count'] += $count;

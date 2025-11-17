@@ -59,7 +59,6 @@ class UpdateOrderShippingType extends AbstractType
                 'choices' => $this->carrierForOrderChoiceProvider->getChoices([
                     'order_id' => $options['order_id'],
                 ]),
-                'autocomplete' => true,
             ])
             ->add('current_order_carrier_id', HiddenType::class)
             ->add('tracking_number', TextType::class, [

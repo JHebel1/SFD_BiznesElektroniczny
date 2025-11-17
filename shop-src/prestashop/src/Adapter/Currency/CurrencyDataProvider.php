@@ -162,17 +162,12 @@ class CurrencyDataProvider implements CurrencyDataProviderInterface
      *
      * @return Currency
      */
-    public function getDefaultCurrency(): Currency
+    public function getDefaultCurrency()
     {
         if (null === $this->defaultCurrency) {
             $this->defaultCurrency = new Currency((int) $this->configuration->get('PS_CURRENCY_DEFAULT'), null, $this->shopId);
         }
 
         return $this->defaultCurrency;
-    }
-
-    public function getDefaultCurrencySymbol(): string
-    {
-        return $this->getDefaultCurrency()->symbol;
     }
 }

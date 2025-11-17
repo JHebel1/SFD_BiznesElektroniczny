@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Order\CommandHandler;
 
 use OrderInvoice;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Order\Invoice\Command\UpdateInvoiceNoteCommand;
 use PrestaShop\PrestaShop\Core\Domain\Order\Invoice\CommandHandler\UpdateInvoiceNoteHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Order\Invoice\Exception\InvoiceException;
@@ -37,7 +36,6 @@ use Validate;
 /**
  * @internal
  */
-#[AsCommandHandler]
 final class UpdateInvoiceNoteHandler implements UpdateInvoiceNoteHandlerInterface
 {
     /**

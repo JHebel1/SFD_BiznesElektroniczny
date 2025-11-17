@@ -11,36 +11,33 @@
 
 namespace Twig\TokenParser;
 
-use Twig\Node\Expression\Variable\AssignContextVariable;
-use Twig\Node\Expression\Variable\AssignTemplateVariable;
-use Twig\Node\Expression\Variable\TemplateVariable;
+use Twig\Error\SyntaxError;
+use Twig\Node\Expression\AssignNameExpression;
 use Twig\Node\ImportNode;
-use Twig\Node\Node;
 use Twig\Token;
 
 /**
  * Imports macros.
  *
- *   {% from 'forms.html.twig' import forms %}
+ *   {% from 'forms.html' import forms %}
  *
- * @internal
+ * @final
  */
-final class FromTokenParser extends AbstractTokenParser
+class FromTokenParser extends AbstractTokenParser
 {
-    public function parse(Token $token): Node
+    public function parse(Token $token)
     {
         $macro = $this->parser->getExpressionParser()->parseExpression();
         $stream = $this->parser->getStream();
         $stream->expect(Token::NAME_TYPE, 'import');
 
         $targets = [];
-        while (true) {
+        do {
             $name = $stream->expect(Token::NAME_TYPE)->getValue();
 
+            $alias = $name;
             if ($stream->nextIf('as')) {
-                $alias = new AssignContextVariable($stream->expect(Token::NAME_TYPE)->getValue(), $token->getLine());
-            } else {
-                $alias = new AssignContextVariable($name, $token->getLine());
+                $alias = $stream->expect(Token::NAME_TYPE)->getValue();
             }
 
             $targets[$name] = $alias;
@@ -48,22 +45,28 @@ final class FromTokenParser extends AbstractTokenParser
             if (!$stream->nextIf(Token::PUNCTUATION_TYPE, ',')) {
                 break;
             }
-        }
+        } while (true);
 
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        $internalRef = new AssignTemplateVariable(new TemplateVariable(null, $token->getLine()), $this->parser->isMainScope());
-        $node = new ImportNode($macro, $internalRef, $token->getLine());
+        $var = new AssignNameExpression($this->parser->getVarName(), $token->getLine());
+        $node = new ImportNode($macro, $var, $token->getLine(), $this->getTag());
 
         foreach ($targets as $name => $alias) {
-            $this->parser->addImportedSymbol('function', $alias->getAttribute('name'), 'macro_'.$name, $internalRef);
+            if ($this->parser->isReservedMacroName($name)) {
+                throw new SyntaxError(sprintf('"%s" cannot be an imported macro as it is a reserved keyword.', $name), $token->getLine(), $stream->getSourceContext());
+            }
+
+            $this->parser->addImportedSymbol('function', $alias, 'get'.$name, $var);
         }
 
         return $node;
     }
 
-    public function getTag(): string
+    public function getTag()
     {
         return 'from';
     }
 }
+
+class_alias('Twig\TokenParser\FromTokenParser', 'Twig_TokenParser_From');

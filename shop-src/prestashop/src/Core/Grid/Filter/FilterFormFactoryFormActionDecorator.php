@@ -82,7 +82,7 @@ final class FilterFormFactoryFormActionDecorator implements GridFilterFormFactor
         foreach ($filterForm as $formItem) {
             $formBuilder->add(
                 $formItem->getName(),
-                $formItem->getConfig()->getType()->getInnerType()::class,
+                get_class($formItem->getConfig()->getType()->getInnerType()),
                 $formItem->getConfig()->getOptions()
             );
         }

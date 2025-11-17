@@ -27,6 +27,7 @@
 namespace PrestaShopBundle\Entity\Repository;
 
 use Doctrine\DBAL\Connection;
+use PDO;
 
 /**
  * Class ModuleRepository is responsible for retrieving module data from database.
@@ -77,7 +78,7 @@ class ModuleRepository
             ->andWhere('mc.id_shop = :id_shop')
             ->setParameter('id_shop', $shopId);
 
-        return $qb->executeQuery()->fetchFirstColumn();
+        return $qb->execute()->fetchAll(PDO::FETCH_COLUMN);
     }
 
     /**
@@ -98,7 +99,7 @@ class ModuleRepository
             ->andWhere('mc.id_shop = :id_shop')
             ->setParameter('id_shop', $shopId);
 
-        return $qb->executeQuery()->fetchFirstColumn();
+        return $qb->execute()->fetchAll(PDO::FETCH_COLUMN);
     }
 
     /**
@@ -119,7 +120,7 @@ class ModuleRepository
             ->andWhere('mg.id_shop = :id_shop')
             ->setParameter('id_shop', $shopId);
 
-        return $qb->executeQuery()->fetchFirstColumn();
+        return $qb->execute()->fetchAll(PDO::FETCH_COLUMN);
     }
 
     /**
@@ -140,6 +141,6 @@ class ModuleRepository
             ->andWhere('mc.id_shop = :id_shop')
             ->setParameter('id_shop', $shopId);
 
-        return $qb->executeQuery()->fetchFirstColumn();
+        return $qb->execute()->fetchAll(PDO::FETCH_COLUMN);
     }
 }

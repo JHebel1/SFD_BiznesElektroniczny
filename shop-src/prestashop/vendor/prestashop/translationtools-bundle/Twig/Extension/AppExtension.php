@@ -1,20 +1,12 @@
 <?php
-/**
- * This file is authored by PrestaShop SA and Contributors <contact@prestashop.com>
- *
- * It is distributed under MIT license.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace PrestaShop\TranslationToolsBundle\Twig\Extension;
 
-use Symfony\Contracts\Translation\TranslatorInterface;
-use Twig\Extension\AbstractExtension;
-use Twig\TwigFunction;
+use Symfony\Component\Translation\TranslatorInterface;
+use Twig_Environment;
+use Twig_Extension_InitRuntimeInterface;
 
-class AppExtension extends AbstractExtension
+class AppExtension extends \Twig_Extension implements Twig_Extension_InitRuntimeInterface
 {
     /**
      * @var TranslatorInterface
@@ -29,6 +21,17 @@ class AppExtension extends AbstractExtension
         $this->translation = $translation;
     }
 
+    public function initRuntime(Twig_Environment $environment)
+    {
+        $environment->registerUndefinedFunctionCallback(function () {
+            return;
+        });
+
+        $environment->registerUndefinedFilterCallback(function () {
+            return;
+        });
+    }
+
     /**
      * We need to define and reset each twig function as the definition
      * of theses function is stored in PrestaShop codebase.
@@ -36,11 +39,13 @@ class AppExtension extends AbstractExtension
     public function getFunctions()
     {
         return [
-            new TwigFunction('renderhooksarray', [$this, 'transChoice']),
+            new \Twig_SimpleFunction('renderhooksarray', [$this, 'transChoice']),
         ];
     }
 
     /**
+     * @param $string
+     *
      * @return string
      */
     public function transChoice($string)
@@ -48,6 +53,9 @@ class AppExtension extends AbstractExtension
         return $this->translation->transChoice($string);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getName()
     {
         return 'app';

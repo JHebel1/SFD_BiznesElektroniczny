@@ -25,7 +25,6 @@
  */
 class IndexControllerCore extends FrontController
 {
-    /** @var string */
     public $php_self = 'index';
 
     /**
@@ -33,20 +32,12 @@ class IndexControllerCore extends FrontController
      *
      * @see FrontController::initContent()
      */
-    public function initContent(): void
+    public function initContent()
     {
         parent::initContent();
         $this->context->smarty->assign([
             'HOOK_HOME' => Hook::exec('displayHome'),
         ]);
         $this->setTemplate('index');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getCanonicalURL(): string
-    {
-        return $this->context->link->getPageLink('index');
     }
 }

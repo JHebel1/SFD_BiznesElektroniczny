@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * This file is part of the FOSJsRoutingBundle package.
  *
@@ -20,7 +18,7 @@ use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Flash\AutoExpireFlashBag;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Controller class.
@@ -29,30 +27,50 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
  */
 class Controller
 {
-    protected CacheControlConfig $cacheControlConfig;
+    /**
+     * @var mixed
+     */
+    protected $serializer;
+
+    /**
+     * @var ExposedRoutesExtractorInterface
+     */
+    protected $exposedRoutesExtractor;
+
+    /**
+     * @var CacheControlConfig
+     */
+    protected $cacheControlConfig;
+
+    /**
+     * @var boolean
+     */
+    protected $debug;
 
     /**
      * Default constructor.
      *
      * @param object                          $serializer             Any object with a serialize($data, $format) method
-     * @param ExposedRoutesExtractorInterface $exposedRoutesExtractor the extractor service
-     * @param bool                            $debug
+     * @param ExposedRoutesExtractorInterface $exposedRoutesExtractor The extractor service.
+     * @param array                           $cacheControl
+     * @param boolean                         $debug
      */
-    public function __construct(
-        private RoutesResponse $routesResponse,
-        private mixed $serializer,
-        private ExposedRoutesExtractorInterface $exposedRoutesExtractor,
-        array $cacheControl = [],
-        private bool $debug = false,
-    ) {
-        $this->cacheControlConfig = new CacheControlConfig($cacheControl);
+    public function __construct($serializer, ExposedRoutesExtractorInterface $exposedRoutesExtractor, array $cacheControl = array(), $debug = false)
+    {
+        $this->serializer             = $serializer;
+        $this->exposedRoutesExtractor = $exposedRoutesExtractor;
+        $this->cacheControlConfig     = new CacheControlConfig($cacheControl);
+        $this->debug                  = $debug;
     }
 
-    public function indexAction(Request $request, $_format): Response
+    /**
+     * indexAction action.
+     */
+    public function indexAction(Request $request, $_format)
     {
-        if (!$request->attributes->getBoolean('_stateless') && $request->hasSession()
-            && ($session = $request->getSession())->isStarted() && $session->getFlashBag() instanceof AutoExpireFlashBag
-        ) {
+        $session = $request->hasSession() ? $request->getSession() : null;
+
+        if ($request->hasPreviousSession() && $session->getFlashBag() instanceof AutoExpireFlashBag) {
             // keep current flashes for one more request if using AutoExpireFlashBag
             $session->getFlashBag()->setAll($session->getFlashBag()->peekAll());
         }
@@ -60,39 +78,42 @@ class Controller
         $cache = new ConfigCache($this->exposedRoutesExtractor->getCachePath($request->getLocale()), $this->debug);
 
         if (!$cache->isFresh() || $this->debug) {
-            $exposedRoutes = $this->exposedRoutesExtractor->getRoutes();
+            $exposedRoutes    = $this->exposedRoutesExtractor->getRoutes();
             $serializedRoutes = $this->serializer->serialize($exposedRoutes, 'json');
             $cache->write($serializedRoutes, $this->exposedRoutesExtractor->getResources());
         } else {
             $path = method_exists($cache, 'getPath') ? $cache->getPath() : (string) $cache;
             $serializedRoutes = file_get_contents($path);
-            $exposedRoutes = $this->serializer->deserialize(
+            $exposedRoutes    = $this->serializer->deserialize(
                 $serializedRoutes,
                 'Symfony\Component\Routing\RouteCollection',
                 'json'
             );
         }
 
-        $this->routesResponse->setBaseUrl($this->exposedRoutesExtractor->getBaseUrl());
-        $this->routesResponse->setRoutes($exposedRoutes);
-        $this->routesResponse->setPrefix($this->exposedRoutesExtractor->getPrefix($request->getLocale()));
-        $this->routesResponse->setHost($this->exposedRoutesExtractor->getHost());
-        $this->routesResponse->setPort($this->exposedRoutesExtractor->getPort());
-        $this->routesResponse->setScheme($this->exposedRoutesExtractor->getScheme());
-        $this->routesResponse->setLocale($request->getLocale());
-        $this->routesResponse->setDomains($request->query->has('domain') ? explode(',', $request->query->get('domain')) : []);
+        $routesResponse = new RoutesResponse(
+            $this->exposedRoutesExtractor->getBaseUrl(),
+            $exposedRoutes,
+            $this->exposedRoutesExtractor->getPrefix($request->getLocale()),
+            $this->exposedRoutesExtractor->getHost(),
+            $this->exposedRoutesExtractor->getPort(),
+            $this->exposedRoutesExtractor->getScheme(),
+            $request->getLocale(),
+            $request->query->has('domain') ? explode(',', $request->query->get('domain')) : array()
+        );
 
-        $content = $this->serializer->serialize($this->routesResponse, 'json');
+        $content = $this->serializer->serialize($routesResponse, 'json');
 
         if (null !== $callback = $request->query->get('callback')) {
-            if (!\JsonpCallbackValidator::validate($callback)) {
-                throw new BadRequestHttpException('Invalid JSONP callback value');
+            $validator = new \JsonpCallbackValidator();
+            if (!$validator->validate($callback)) {
+                throw new HttpException(400, 'Invalid JSONP callback value');
             }
 
-            $content = '/**/'.$callback.'('.$content.');';
+            $content = '/**/' . $callback . '(' . $content . ');';
         }
 
-        $response = new Response($content, 200, ['Content-Type' => $request->getMimeType($_format)]);
+        $response = new Response($content, 200, array('Content-Type' => $request->getMimeType($_format)));
         $this->cacheControlConfig->apply($response);
 
         return $response;

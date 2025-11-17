@@ -67,11 +67,6 @@ class CartShipping
     private $giftMessage;
 
     /**
-     * @var bool
-     */
-    private $isVirtual;
-
-    /**
      * @param string $shippingPrice
      * @param bool $freeShipping
      * @param CartDeliveryOption[] $deliveryOptions
@@ -79,7 +74,6 @@ class CartShipping
      * @param bool $isGift
      * @param bool $isRecycledPackaging
      * @param string $giftMessage
-     * @param bool $isVirtual
      */
     public function __construct(
         string $shippingPrice,
@@ -88,8 +82,7 @@ class CartShipping
         ?int $selectedCarrierId,
         bool $isGift,
         bool $isRecycledPackaging,
-        string $giftMessage,
-        bool $isVirtual
+        string $giftMessage
     ) {
         $this->shippingPrice = $shippingPrice;
         $this->freeShipping = $freeShipping;
@@ -98,7 +91,6 @@ class CartShipping
         $this->isGift = $isGift;
         $this->isRecycledPackaging = $isRecycledPackaging;
         $this->giftMessage = $giftMessage;
-        $this->isVirtual = $isVirtual;
     }
 
     /**
@@ -155,13 +147,5 @@ class CartShipping
     public function getGiftMessage(): string
     {
         return $this->giftMessage;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isVirtual(): bool
-    {
-        return $this->isVirtual;
     }
 }

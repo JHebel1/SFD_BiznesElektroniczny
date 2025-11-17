@@ -31,10 +31,6 @@ namespace PrestaShop\PrestaShop\Core\Domain\Configuration;
 use PrestaShop\PrestaShop\Core\ConfigurationInterface;
 use PrestaShop\PrestaShop\Core\Domain\Shop\ValueObject\ShopConstraint;
 
-/**
- * @method getInt($key, $default = 0, ShopConstraint $shopConstraint = null)
- * @method getBoolean($key, $default = false, ShopConstraint $shopConstraint = null)
- */
 interface ShopConfigurationInterface extends ConfigurationInterface
 {
     /**
@@ -44,7 +40,7 @@ interface ShopConfigurationInterface extends ConfigurationInterface
      *
      * @return mixed
      */
-    public function get($key, $default = null, ?ShopConstraint $shopConstraint = null);
+    public function get($key, $default = null, ShopConstraint $shopConstraint = null);
 
     /**
      * @param string $key
@@ -53,7 +49,7 @@ interface ShopConfigurationInterface extends ConfigurationInterface
      *
      * @return ShopConfigurationInterface
      */
-    public function set($key, $value, ?ShopConstraint $shopConstraint = null);
+    public function set($key, $value, ShopConstraint $shopConstraint = null);
 
     /**
      * @param string $key
@@ -61,19 +57,5 @@ interface ShopConfigurationInterface extends ConfigurationInterface
      *
      * @return bool
      */
-    public function has($key, ?ShopConstraint $shopConstraint = null);
-
-    /**
-     * @param string $key
-     *
-     * @return ShopConfigurationInterface
-     */
-    public function remove($key);
-
-    /**
-     * Get all configuration keys
-     *
-     * @return array
-     */
-    public function keys();
+    public function has($key, ShopConstraint $shopConstraint = null);
 }

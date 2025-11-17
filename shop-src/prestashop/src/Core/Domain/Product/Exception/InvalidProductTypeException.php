@@ -61,16 +61,11 @@ class InvalidProductTypeException extends ProductException
     public const EXPECTED_NO_COMBINATIONS_TYPE = 50;
 
     /**
-     * Code used when trying to change a product into a pack while it is already associated with another.
-     */
-    public const EXPECTED_NO_EXISTING_PACK_ASSOCIATIONS = 60;
-
-    /**
      * @param int $code
      * @param string $message
      * @param Throwable|null $previous
      */
-    public function __construct($code, $message = '', ?Throwable $previous = null)
+    public function __construct($code, $message = '', Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }

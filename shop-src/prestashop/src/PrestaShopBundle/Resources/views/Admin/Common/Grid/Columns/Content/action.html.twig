@@ -1,4 +1,4 @@
-{# **
+{#**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
  *
@@ -21,7 +21,7 @@
  * @author    PrestaShop SA and Contributors <contact@prestashop.com>
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
- * #}
+ *#}
 
 {% set actions = column.options.actions %}
 
@@ -30,28 +30,29 @@
     {% set regularActions = [] %}
 
     {% for action in actions %}
-      {% if action.isApplicable(record) %}
-        {% if action.options['use_inline_display'] == true %}
-            {% set inlineActions = inlineActions|merge([action]) %}
-          {% else %}
-            {% set regularActions = regularActions|merge([action]) %}
-        {% endif %}
+      {% if action.options['use_inline_display'] == true %}
+          {% set inlineActions = inlineActions|merge([action]) %}
+        {% else %}
+          {% set regularActions = regularActions|merge([action]) %}
       {% endif %}
     {% endfor %}
 
     <div class="btn-group-action text-right">
       {% if inlineActions is not empty %}
-        <div class="btn-group btn-group-inline d-flex justify-content-start">
+        <div class="btn-group d-flex justify-content-between text-right">
           {% for inlineAction in inlineActions -%}
-              {% set class = 'dropdown-item inline-dropdown-item ' ~ inlineAction.options.attr.class|default('') %}
+            {% if inlineAction.isApplicable(record) %}
 
-              {{ include('@PrestaShop/Admin/Common/Grid/Actions/Row/' ~ inlineAction.type ~ '.html.twig', {
-                grid: grid,
-                column: column,
-                attributes: {class: class|trim, tooltip_name: true},
-                record: record,
-                action: inlineAction
+              {% set class = 'dropdown-item inline-dropdown-item' %}
+
+              {{ include('@PrestaShop/Admin/Common/Grid/Actions/Row/'~inlineAction.type~'.html.twig', {
+                'grid': grid,
+                'column': column,
+                'attributes': {'class': class, 'tooltip_name': true},
+                'record': record,
+                'action': inlineAction
               }) }}
+            {% endif %}
           {% endfor %}
         </div>
       {% endif %}
@@ -61,20 +62,18 @@
           {% set skippedActions, isFirstRendered = 0, false %}
 
           {# Render first item that is not in dropwdown #}
-          {% for action in regularActions %}
+          {% for action in regularActions  %}
             {% if not isFirstRendered %}
               {% set skippedActions = skippedActions + 1 %}
             {% endif %}
 
-            {% if not isFirstRendered %}
-              {% set class = 'dropdown-item ' ~ action.options.attr.class|default('') %}
-
-              {{ include('@PrestaShop/Admin/Common/Grid/Actions/Row/' ~ action.type ~ '.html.twig', {
-                grid: grid,
-                column: column,
-                attributes: {class: class|trim, tooltip_name: true},
-                record: record,
-                action: action
+            {% if action.isApplicable(record) and not isFirstRendered %}
+              {{ include('@PrestaShop/Admin/Common/Grid/Actions/Row/'~action.type~'.html.twig', {
+                'grid': grid,
+                'column': column,
+                'attributes': {'class': 'dropdown-item', 'tooltip_name': true},
+                'record': record,
+                'action': action
               }) }}
 
               {% set isFirstRendered = true %}
@@ -91,13 +90,13 @@
             </a>
 
             <div class="dropdown-menu dropdown-menu-right">
-              {% for action in regularActions|slice(skippedActions) %}
-                {{ include('@PrestaShop/Admin/Common/Grid/Actions/Row/' ~ action.type ~ '.html.twig', {
-                  grid: grid,
-                  column: column,
-                  attributes: {class: 'dropdown-item', tooltip_name: false},
-                  record: record,
-                  action: action
+              {% for action in regularActions|slice(skippedActions) if action.isApplicable(record) %}
+                {{ include('@PrestaShop/Admin/Common/Grid/Actions/Row/'~action.type~'.html.twig', {
+                  'grid': grid,
+                  'column': column,
+                  'attributes': {'class': 'dropdown-item', 'tooltip_name': false},
+                  'record': record,
+                  'action': action
                 }) }}
               {% endfor %}
             </div>

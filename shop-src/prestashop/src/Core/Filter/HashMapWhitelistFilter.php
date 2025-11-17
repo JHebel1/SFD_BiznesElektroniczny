@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -27,7 +28,6 @@
 namespace PrestaShop\PrestaShop\Core\Filter;
 
 use PrestaShop\PrestaShop\Adapter\Presenter\AbstractLazyArray;
-use RuntimeException;
 
 /**
  * This class filters associative arrays.
@@ -156,7 +156,7 @@ class HashMapWhitelistFilter implements FilterInterface
      *
      * @return array The filtered subject
      *
-     * @throws RuntimeException
+     * @throws \RuntimeException
      */
     public function filter($subject)
     {

@@ -70,13 +70,10 @@ final class ImportDataFormatter
      */
     public function getPrice($field)
     {
-        $field = str_replace(
-            [',', '%'],
-            ['.', ''],
-            $field
-        );
+        $field = (float) str_replace(',', '.', $field);
+        $field = (float) str_replace('%', '', $field);
 
-        return (float) $field;
+        return $field;
     }
 
     /**
@@ -130,7 +127,7 @@ final class ImportDataFormatter
             return [];
         }
 
-        $content = fgetcsv($fd, 0, $separator, '"', '');
+        $content = fgetcsv($fd, 0, $separator);
         fclose($fd);
 
         if ($uniqidPath !== false && file_exists($uniqidPath)) {

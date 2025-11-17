@@ -76,7 +76,7 @@ class ShopUrlCore extends ObjectModel
             $this->physical_uri = '/';
         }
 
-        $this->virtual_uri = trim(str_replace(' ', '', $this->virtual_uri ?? ''), '/');
+        $this->virtual_uri = trim(str_replace(' ', '', $this->virtual_uri), '/');
         if ($this->virtual_uri) {
             $this->virtual_uri = preg_replace('#/+#', '/', trim($this->virtual_uri, '/')) . '/';
         }
@@ -103,7 +103,7 @@ class ShopUrlCore extends ObjectModel
     /**
      * Get list of shop urls.
      *
-     * @param int|bool $id_shop
+     * @param bool $id_shop
      *
      * @return PrestaShopCollection Collection of ShopUrl
      */
@@ -197,13 +197,13 @@ class ShopUrlCore extends ObjectModel
     {
         ShopUrl::cacheMainDomainForShop($id_shop);
 
-        return self::$main_domain[(int) $id_shop] ?? null;
+        return self::$main_domain[(int) $id_shop];
     }
 
     public static function getMainShopDomainSSL($id_shop = null)
     {
         ShopUrl::cacheMainDomainForShop($id_shop);
 
-        return self::$main_domain_ssl[(int) $id_shop] ?? null;
+        return self::$main_domain_ssl[(int) $id_shop];
     }
 }

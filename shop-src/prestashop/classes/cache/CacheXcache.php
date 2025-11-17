@@ -26,6 +26,8 @@
 
 /**
  * This class require Xcache extension.
+ *
+ * @since 1.5.0
  */
 class CacheXcacheCore extends Cache
 {

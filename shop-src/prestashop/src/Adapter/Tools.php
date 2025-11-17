@@ -26,8 +26,8 @@
 
 namespace PrestaShop\PrestaShop\Adapter;
 
+use PrestaShop\Decimal\DecimalNumber;
 use PrestaShop\PrestaShop\Adapter\File\HtaccessFileGenerator;
-use PrestaShopException;
 use Tools as LegacyTools;
 
 /**
@@ -41,13 +41,50 @@ class Tools
     /**
      * Return the friendly url from the provided string.
      *
+     * @deprecated use linkRewrite
+     *
      * @param string $str
+     * @param bool $utf8Decode (deprecated)
      *
      * @return string
      */
-    public function linkRewrite($str)
+    public function link_rewrite($str, $utf8Decode = null)
     {
+        return $this->linkRewrite($str, $utf8Decode);
+    }
+
+    /**
+     * Return the friendly url from the provided string.
+     *
+     * @param string $str
+     * @param bool $utf8Decode (deprecated)
+     *
+     * @return string
+     */
+    public function linkRewrite($str, $utf8Decode = null)
+    {
+        if ($utf8Decode !== null) {
+            LegacyTools::displayParameterAsDeprecated('utf8_decode');
+        }
+
         return LegacyTools::str2url($str);
+    }
+
+    /**
+     * Polyfill for bcadd if BC Math extension is not installed.
+     *
+     * @deprecated since 1.7.2.2 - Use PrestaShop\Decimal\DecimalNumber instead
+     */
+    public function bcadd($left_operand, $right_operand, $scale = null)
+    {
+        $result = (new DecimalNumber((string) $left_operand))
+            ->plus(new DecimalNumber((string) $right_operand));
+
+        if (null === $scale) {
+            return (string) $result;
+        }
+
+        return (string) $result->toPrecision($scale);
     }
 
     /**
@@ -71,13 +108,31 @@ class Tools
     }
 
     /**
-     * @see LegacyTools::generateHtaccess()
+     * @see LegacyTools::generateRobotsFile()
      *
      * @return bool
      */
     public function generateHtaccess()
     {
         return LegacyTools::generateHtaccess();
+    }
+
+    /**
+     * @see HtaccessFileGenerator::generateFile()
+     *
+     * @param bool $disableMultiView enable/disable Multiviews option
+     *
+     * @return bool
+     */
+    private function generateHtaccessOnMultiViews($disableMultiView = false)
+    {
+        return LegacyTools::generateHtaccess(
+            null,
+            null,
+            null,
+            '',
+            $disableMultiView
+        );
     }
 
     /**
@@ -113,9 +168,9 @@ class Tools
     }
 
     /**
-     * Returns the rounded value of $value to specified precision, according to your configuration.
+     * returns the rounded value of $value to specified precision, according to your configuration;.
      *
-     * Warning - this method accepts our own PS rounding constants with different integer values.
+     * @note : PHP 5.3.0 introduce a 3rd parameter mode in round function
      *
      * @param float $value
      * @param int $precision
@@ -191,15 +246,27 @@ class Tools
     }
 
     /**
+     * Delete unicode class from regular expression patterns.
+     *
+     * @param string $pattern
+     *
+     * @return string pattern
+     */
+    public function cleanNonUnicodeSupport($pattern)
+    {
+        return LegacyTools::cleanNonUnicodeSupport($pattern);
+    }
+
+    /**
      * @see LegacyTools::displayDate()
      *
      * @return string
      *
-     * @throws PrestaShopException
+     * @throws \PrestaShopException
      */
-    public function displayDate($date, $full = false)
+    public function displayDate($date, $id_lang = null, $full = false, $separator = null)
     {
-        return LegacyTools::displayDate($date, $full);
+        return LegacyTools::displayDate($date, $id_lang, $full, $separator);
     }
 
     /**

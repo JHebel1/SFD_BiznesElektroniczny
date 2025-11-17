@@ -12,42 +12,68 @@
 
 namespace Twig;
 
-use Twig\Node\Node;
+use Twig\Node\ModuleNode;
 
 /**
+ * Compiles a node to PHP code.
+ *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class Compiler
+class Compiler implements \Twig_CompilerInterface
 {
-    private $lastLine;
-    private $source;
-    private $indentation;
-    private $debugInfo = [];
-    private $sourceOffset;
-    private $sourceLine;
+    protected $lastLine;
+    protected $source;
+    protected $indentation;
+    protected $env;
+    protected $debugInfo = [];
+    protected $sourceOffset;
+    protected $sourceLine;
+    protected $filename;
     private $varNameSalt = 0;
-    private $didUseEcho = false;
-    private $didUseEchoStack = [];
 
-    public function __construct(
-        private Environment $env,
-    ) {
+    public function __construct(Environment $env)
+    {
+        $this->env = $env;
     }
 
-    public function getEnvironment(): Environment
+    /**
+     * @deprecated since 1.25 (to be removed in 2.0)
+     */
+    public function getFilename()
+    {
+        @trigger_error(sprintf('The %s() method is deprecated since version 1.25 and will be removed in 2.0.', __FUNCTION__), E_USER_DEPRECATED);
+
+        return $this->filename;
+    }
+
+    /**
+     * Returns the environment instance related to this compiler.
+     *
+     * @return Environment
+     */
+    public function getEnvironment()
     {
         return $this->env;
     }
 
-    public function getSource(): string
+    /**
+     * Gets the current PHP code after compilation.
+     *
+     * @return string The PHP code
+     */
+    public function getSource()
     {
         return $this->source;
     }
 
     /**
+     * Compiles a node.
+     *
+     * @param int $indentation The current indentation
+     *
      * @return $this
      */
-    public function reset(int $indentation = 0)
+    public function compile(\Twig_NodeInterface $node, $indentation = 0)
     {
         $this->lastLine = null;
         $this->source = '';
@@ -58,64 +84,36 @@ class Compiler
         $this->indentation = $indentation;
         $this->varNameSalt = 0;
 
+        if ($node instanceof ModuleNode) {
+            // to be removed in 2.0
+            $this->filename = $node->getTemplateName();
+        }
+
+        $node->compile($this);
+
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    public function compile(Node $node, int $indentation = 0)
+    public function subcompile(\Twig_NodeInterface $node, $raw = true)
     {
-        $this->reset($indentation);
-        $this->didUseEchoStack[] = $this->didUseEcho;
-
-        try {
-            $this->didUseEcho = false;
-            $node->compile($this);
-
-            if ($this->didUseEcho) {
-                trigger_deprecation('twig/twig', '3.9', 'Using "%s" is deprecated, use "yield" instead in "%s", then flag the class with #[\Twig\Attribute\YieldReady].', $this->didUseEcho, \get_class($node));
-            }
-
-            return $this;
-        } finally {
-            $this->didUseEcho = array_pop($this->didUseEchoStack);
-        }
-    }
-
-    /**
-     * @return $this
-     */
-    public function subcompile(Node $node, bool $raw = true)
-    {
-        if (!$raw) {
+        if (false === $raw) {
             $this->source .= str_repeat(' ', $this->indentation * 4);
         }
 
-        $this->didUseEchoStack[] = $this->didUseEcho;
+        $node->compile($this);
 
-        try {
-            $this->didUseEcho = false;
-            $node->compile($this);
-
-            if ($this->didUseEcho) {
-                trigger_deprecation('twig/twig', '3.9', 'Using "%s" is deprecated, use "yield" instead in "%s", then flag the class with #[\Twig\Attribute\YieldReady].', $this->didUseEcho, \get_class($node));
-            }
-
-            return $this;
-        } finally {
-            $this->didUseEcho = array_pop($this->didUseEchoStack);
-        }
+        return $this;
     }
 
     /**
      * Adds a raw string to the compiled code.
      *
+     * @param string $string The string
+     *
      * @return $this
      */
-    public function raw(string $string)
+    public function raw($string)
     {
-        $this->checkForEcho($string);
         $this->source .= $string;
 
         return $this;
@@ -126,10 +124,10 @@ class Compiler
      *
      * @return $this
      */
-    public function write(...$strings)
+    public function write()
     {
+        $strings = \func_get_args();
         foreach ($strings as $string) {
-            $this->checkForEcho($string);
             $this->source .= str_repeat(' ', $this->indentation * 4).$string;
         }
 
@@ -137,13 +135,31 @@ class Compiler
     }
 
     /**
+     * Appends an indentation to the current PHP code after compilation.
+     *
+     * @return $this
+     *
+     * @deprecated since 1.27 (to be removed in 2.0).
+     */
+    public function addIndentation()
+    {
+        @trigger_error('The '.__METHOD__.' method is deprecated since version 1.27 and will be removed in 2.0. Use write(\'\') instead.', E_USER_DEPRECATED);
+
+        $this->source .= str_repeat(' ', $this->indentation * 4);
+
+        return $this;
+    }
+
+    /**
      * Adds a quoted string to the compiled code.
+     *
+     * @param string $value The string
      *
      * @return $this
      */
-    public function string(string $value)
+    public function string($value)
     {
-        $this->source .= \sprintf('"%s"', addcslashes($value, "\0\t\"\$\\"));
+        $this->source .= sprintf('"%s"', addcslashes($value, "\0\t\"\$\\"));
 
         return $this;
     }
@@ -151,19 +167,21 @@ class Compiler
     /**
      * Returns a PHP representation of a given value.
      *
+     * @param mixed $value The value to convert
+     *
      * @return $this
      */
     public function repr($value)
     {
         if (\is_int($value) || \is_float($value)) {
-            if (false !== $locale = setlocale(\LC_NUMERIC, '0')) {
-                setlocale(\LC_NUMERIC, 'C');
+            if (false !== $locale = setlocale(LC_NUMERIC, '0')) {
+                setlocale(LC_NUMERIC, 'C');
             }
 
             $this->raw(var_export($value, true));
 
             if (false !== $locale) {
-                setlocale(\LC_NUMERIC, $locale);
+                setlocale(LC_NUMERIC, $locale);
             }
         } elseif (null === $value) {
             $this->raw('null');
@@ -190,14 +208,26 @@ class Compiler
     }
 
     /**
+     * Adds debugging information.
+     *
      * @return $this
      */
-    public function addDebugInfo(Node $node)
+    public function addDebugInfo(\Twig_NodeInterface $node)
     {
         if ($node->getTemplateLine() != $this->lastLine) {
-            $this->write(\sprintf("// line %d\n", $node->getTemplateLine()));
+            $this->write(sprintf("// line %d\n", $node->getTemplateLine()));
 
-            $this->sourceLine += substr_count($this->source, "\n", $this->sourceOffset);
+            // when mbstring.func_overload is set to 2
+            // mb_substr_count() replaces substr_count()
+            // but they have different signatures!
+            if (((int) ini_get('mbstring.func_overload')) & 2) {
+                @trigger_error('Support for having "mbstring.func_overload" different from 0 is deprecated version 1.29 and will be removed in 2.0.', E_USER_DEPRECATED);
+
+                // this is much slower than the "right" version
+                $this->sourceLine += mb_substr_count(mb_substr($this->source, $this->sourceOffset), "\n");
+            } else {
+                $this->sourceLine += substr_count($this->source, "\n", $this->sourceOffset);
+            }
             $this->sourceOffset = \strlen($this->source);
             $this->debugInfo[$this->sourceLine] = $node->getTemplateLine();
 
@@ -207,7 +237,7 @@ class Compiler
         return $this;
     }
 
-    public function getDebugInfo(): array
+    public function getDebugInfo()
     {
         ksort($this->debugInfo);
 
@@ -215,9 +245,13 @@ class Compiler
     }
 
     /**
+     * Indents the generated code.
+     *
+     * @param int $step The number of indentation to add
+     *
      * @return $this
      */
-    public function indent(int $step = 1)
+    public function indent($step = 1)
     {
         $this->indentation += $step;
 
@@ -225,11 +259,15 @@ class Compiler
     }
 
     /**
+     * Outdents the generated code.
+     *
+     * @param int $step The number of indentation to remove
+     *
      * @return $this
      *
      * @throws \LogicException When trying to outdent too much so the indentation would become negative
      */
-    public function outdent(int $step = 1)
+    public function outdent($step = 1)
     {
         // can't outdent by more steps than the current indentation level
         if ($this->indentation < $step) {
@@ -241,17 +279,10 @@ class Compiler
         return $this;
     }
 
-    public function getVarName(): string
+    public function getVarName()
     {
-        return \sprintf('_v%d', $this->varNameSalt++);
-    }
-
-    private function checkForEcho(string $string): void
-    {
-        if ($this->didUseEcho) {
-            return;
-        }
-
-        $this->didUseEcho = preg_match('/^\s*+(echo|print)\b/', $string, $m) ? $m[1] : false;
+        return sprintf('__internal_%s', hash('sha256', __METHOD__.$this->varNameSalt++));
     }
 }
+
+class_alias('Twig\Compiler', 'Twig_Compiler');

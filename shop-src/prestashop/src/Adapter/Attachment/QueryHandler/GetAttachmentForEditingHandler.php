@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Attachment\QueryHandler;
 
 use Attachment;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Attachment\Exception\AttachmentNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Attachment\Query\GetAttachmentForEditing;
 use PrestaShop\PrestaShop\Core\Domain\Attachment\QueryHandler\GetAttachmentForEditingHandlerInterface;
@@ -40,7 +39,6 @@ use SplFileInfo;
  *
  * @internal
  */
-#[AsQueryHandler]
 final class GetAttachmentForEditingHandler implements GetAttachmentForEditingHandlerInterface
 {
     /**
@@ -54,7 +52,7 @@ final class GetAttachmentForEditingHandler implements GetAttachmentForEditingHan
 
         try {
             $attachment = new Attachment($attachmentIdValue);
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new AttachmentNotFoundException(sprintf('Attachment with id "%s" was not found.', $attachmentIdValue));
         }
 

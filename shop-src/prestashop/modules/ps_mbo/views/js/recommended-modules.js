@@ -30,8 +30,8 @@ var mbo = {};
     fancybox: '.fancybox-quick-view',
     contentContainer: '#content',
     modulesListModal: '#modules_list_container',
-    modulesListModalContainer: '#content',
     modulesListModalContent: '#modules_list_container_tab_modal',
+    modulesListLoader: '#modules_list_loader',
   };
 
   var pageMapNewTheme = {
@@ -40,11 +40,32 @@ var mbo = {};
     toolbarLastElement: '.toolbar-icons a:last-of-type',
     recommendedModulesButton: '#recommended-modules-button',
     oldButton: '#page-header-desc-configuration-modules-list',
-    contentContainer: '#main-div .content-div',
+    contentContainer: '#main-div .content-div .container:last',
     modulesListModal: '#modules_list_container',
     modulesListModalContainer: '#main-div .content-div',
     modulesListModalContent: '#modules_list_container_tab_modal',
+    modulesListLoader: '#modules_list_loader',
   };
+
+  var decodeHTMLEntities = function(text) {
+    var entities = [
+        ['amp', '&'],
+        ['apos', '\''],
+        ['#x27', '\''],
+        ['#x2F', '/'],
+        ['#39', '\''],
+        ['#47', '/'],
+        ['lt', '<'],
+        ['gt', '>'],
+        ['nbsp', ' '],
+        ['quot', '"']
+    ];
+
+    for (var i = 0, max = entities.length; i < max; ++i) 
+        text = text.replace(new RegExp('&'+entities[i][0]+';', 'g'), entities[i][1]);
+
+    return text;
+  }
 
   /**
    * Handles page interactions
@@ -127,12 +148,10 @@ var mbo = {};
      * @param {boolean} config.shouldAttachRecommendedModulesAfterContent
      * @param {boolean} config.shouldAttachRecommendedModulesButton
      * @param {boolean} config.shouldUseLegacyTheme
-     * @param {object} pageMap
-     * @param {string} pageMap.contentContainer
      *
      * @return this
      */
-    this.insertRecommendedModules = function(config, pageMap) {
+    this.insertRecommendedModules = function(config) {
       if (pageMap.contentContainer) {
         var recommendedModulesRequest = $.ajax({
           type: 'GET',
@@ -141,7 +160,9 @@ var mbo = {};
         });
 
         recommendedModulesRequest.done(function(data) {
-          $(pageMap.contentContainer).append(data.content);
+          var recommendedModulesContainer = new RecommendedModulesContainer(config, data.content);
+
+          $(pageMap.contentContainer).append(recommendedModulesContainer.getMarkup());
         });
 
         recommendedModulesRequest.fail(function(jqXHR, textStatus, errorThrown) {
@@ -169,7 +190,6 @@ var mbo = {};
    * @param {boolean} config.shouldAttachRecommendedModulesAfterContent
    * @param {boolean} config.shouldAttachRecommendedModulesButton
    * @param {boolean} config.shouldUseLegacyTheme
-   *
    * @constructor
    */
   var RecommendedModulesButton = function(config) {
@@ -180,15 +200,15 @@ var mbo = {};
     if (config.shouldUseLegacyTheme) {
       $markup = $(
         '<li id="recommended-modules-button-container">\n' +
-        '  <a id="' + buttonId + '" class="toolbar_btn pointer btn-secondary" href="' + config.recommendedModulesUrl + '" title="' + label + '">\n' +
-        '    <i class="material-icons">extension</i>\n' +
+        '  <a id="' + buttonId + '" class="toolbar_btn pointer mbo-modules-recommended-button " href="' + config.recommendedModulesUrl + '" title="' + label + '">\n' +
+        '    <i class="material-icons mi-extension">extension</i>\n' +
         '    <div>' + label + '</div>\n' +
         '  </a>\n' +
         '</li>'
       );
     } else {
       $markup = $(
-        '<a class="btn btn-secondary" id="' + buttonId + '" href="' + config.recommendedModulesUrl + '" title="' + label + '">\n' +
+        '<a class="btn btn-secondary" id="' + buttonId + '" href="' + config.recommendedModulesUrl + '" title="' + label + '">' +
         '<i class="material-icons">extension</i>\n' +
         label +
         '</a>'
@@ -218,6 +238,7 @@ var mbo = {};
    */
   var RecommendedModulesContainer = function(config, content) {
     var containerTitle = config.translations['Recommended Modules and Services'];
+    var containerDescription = decodeHTMLEntities(config.translations['description']);
     var containerId = 'recommended-modules-container';
     var $markup;
 
@@ -228,7 +249,9 @@ var mbo = {};
         '    <i class="icon-puzzle-piece"></i>\n' +
         '    ' + containerTitle + '\n' +
         '  </h3>\n' +
+        '  <div class="recommended-modal-content-description">' + containerDescription + '</div>\n' +
         '  <div class="modules_list_container_tab row">\n' +
+        
         '    ' + content +'\n' +
         '  </div>\n' +
         '</div>'
@@ -242,8 +265,9 @@ var mbo = {};
         '        <i class="material-icons">extension</i>\n' +
         '        ' + containerTitle + '\n' +
         '      </h3>\n' +
+        '        <div class="recommended-modal-content-description">'+ containerDescription +'</div>\n'+
         '      <div class="card-block">\n' +
-        '        ' + content +'\n' +
+        '       ' + content +'\n' +
         '      </div>\n' +
         '    </div>\n' +
         '  </div>\n' +
@@ -304,27 +328,32 @@ var mbo = {};
    * @constructor
    */
   var RecommendedModulesModal = function(pageMap, config) {
-    let $markup = $(
-      '<div id="modules_list_container" class="modal modal-vcenter fade" role="dialog">\n' +
-      '  <div class="modal-wrapper">\n' +
-      '    <div class="modal-dialog">\n' +
-      '      <div class="modal-content">\n' +
-      '        <div class="modal-header">\n' +
-      '          <h4 class="modal-title module-modal-title">\n' +
-      '            ' + config.translations['Recommended Modules and Services'] + '\n' +
-      '          </h4>\n' +
-      '          <button type="button" class="close" data-dismiss="modal" aria-label="' + config.translations['Close'] + '">\n' +
-      '            <span aria-hidden="true">&times;</span>\n' +
-      '          </button>\n' +
-      '        </div>\n' +
-      '        <div class="modal-body row">\n' +
-      '          <div id="modules_list_container_tab_modal" class="col-xs-12 col-sm-12 col-md-12 col-lg-12" style="display:none;"></div>\n' +
-      '        </div>\n' +
-      '      </div>\n' +
-      '    </div>\n' +
-      '  </div>\n' +
-      '</div>'
-    );
+    var $markup;
+
+    if (!config.shouldUseLegacyTheme) {
+      $markup = $(
+        '<div id="modules_list_container" class="modal modal-vcenter fade" role="dialog">\n' +
+        '  <div class="modal-dialog">\n' +
+        '    <div class="modal-content">\n' +
+        '      <div class="modal-header">\n' +
+        '        <h4 class="modal-title module-modal-title">\n' +
+        '          ' + config.translations['Recommended Modules and Services'] + '\n' +
+        '        </h4>\n' +
+        '        <button type="button" class="close" data-dismiss="modal" aria-label="' + config.translations['Close'] + '">\n' +
+        '          <span aria-hidden="true">&times;</span>\n' +
+        '        </button>\n' +
+        '      </div>\n' +
+        '      <div class="modal-body row">\n' +
+        '        <div id="modules_list_container_tab_modal" class="col-md-12" style="display:none;"></div>\n' +
+        '        <div id="modules_list_loader" class="col-md-12 text-center">\n' +
+        '          <button class="btn-primary-reverse onclick unbind spinner"></button>\n' +
+        '        </div>\n' +
+        '      </div>\n' +
+        '    </div>\n' +
+        '  </div>\n' +
+        '</div>'
+      );
+    }
 
     /**
      * Returns the button's markup
@@ -348,17 +377,29 @@ var mbo = {};
   var RecommendedModulesPopinHandler = function(pageMap, config) {
 
     var initPopin = function() {
-      if ($(pageMap.modulesListModal).length === 0) {
-        var modal = new RecommendedModulesModal(pageMap, config);
-        $(pageMap.modulesListModalContainer).append(modal.getMarkup().get(0).outerHTML);
+      if (config.shouldUseLegacyTheme) {
+        $(pageMap.fancybox).fancybox({
+          type: 'ajax',
+          autoDimensions: false,
+          autoSize: false,
+          width: 600,
+          height: 'auto',
+          helpers: {
+            overlay: {
+              locked: false
+            }
+          }
+        });
+        $(pageMap.modulesListModal).find('h3.modal-title').text(config.translations['Recommended Modules and Services']);
+      } else {
+        if (!$(pageMap.modulesListModal).length) {
+          var modal = new RecommendedModulesModal(pageMap, config);
+          $(pageMap.modulesListModalContainer).append(modal.getMarkup().get(0).outerHTML);
+        }
       }
     };
 
     var openModulesList = function() {
-      var cdcContainer = $('#cdc-container')
-      if(cdcContainer.length > 0 && cdcContainer.html().length > 0) {
-        cdcContainer.html('')
-      }
       var recommendedModulesRequest = $.ajax({
         type: 'GET',
         dataType: 'json',
@@ -368,7 +409,9 @@ var mbo = {};
       $(pageMap.modulesListModal).modal('show');
 
       recommendedModulesRequest.done(function (data) {
-        $(pageMap.modulesListModalContent).html(data.content).show();
+        var descriptionHtml = decodeHTMLEntities(config.translations['description']);
+        $(pageMap.modulesListModalContent).html('<div class="recommended-modal-description">' + descriptionHtml  + '</div>' + data.content).slideDown();
+        $(pageMap.modulesListLoader).hide();
       });
 
       recommendedModulesRequest.fail(function(jqXHR, textStatus, errorThrown) {
@@ -378,7 +421,8 @@ var mbo = {};
           content += jqXHR.responseJSON.content;
         }
 
-        $(pageMap.modulesListModalContent).html(content).show();
+        $(pageMap.modulesListModalContent).html(content).slideDown();
+        $(pageMap.modulesListLoader).hide();
       });
     };
 
@@ -424,7 +468,7 @@ var mbo = {};
     }
 
     if (config.shouldAttachRecommendedModulesAfterContent) {
-      page.insertRecommendedModules(config, pageMap);
+      page.insertRecommendedModules(config);
     }
   };
 

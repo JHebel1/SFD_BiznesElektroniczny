@@ -23,39 +23,12 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
-
-use PrestaShop\PrestaShop\Core\Domain\OrderState\OrderStateSettings;
-
-/**
- * Copyright since 2007 PrestaShop SA and Contributors
- * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.md.
- * It is also available through the world-wide-web at this URL:
- * https://opensource.org/licenses/OSL-3.0
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to license@prestashop.com so we can send you a copy immediately.
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
- * versions in the future. If you wish to customize PrestaShop for your
- * needs please refer to https://devdocs.prestashop.com/ for more information.
- *
- * @author    PrestaShop SA and Contributors <contact@prestashop.com>
- * @copyright Since 2007 PrestaShop SA and Contributors
- * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
- */
 class OrderStateCore extends ObjectModel
 {
-    /** @var string|array<int, string> Name */
+    /** @var array<string> Name */
     public $name;
 
-    /** @var string|array<int, string> Template name if there is any e-mail to send */
+    /** @var array<string> Template name if there is any e-mail to send */
     public $template;
 
     /** @var bool Send an e-mail to customer ? */
@@ -92,8 +65,8 @@ class OrderStateCore extends ObjectModel
     /** @var bool Attach PDF Delivery Slip */
     public $pdf_delivery;
 
-    /** @var bool True if order status has been deleted (staying in database as deleted) */
-    public $deleted = false;
+    /** @var bool True if carrier has been deleted (staying in database as deleted) */
+    public $deleted = 0;
 
     /**
      * @see ObjectModel::$definition
@@ -104,9 +77,9 @@ class OrderStateCore extends ObjectModel
         'multilang' => true,
         'fields' => [
             'send_email' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],
-            'module_name' => ['type' => self::TYPE_STRING, 'validate' => 'isModuleName', 'size' => 255],
+            'module_name' => ['type' => self::TYPE_STRING, 'validate' => 'isModuleName'],
             'invoice' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],
-            'color' => ['type' => self::TYPE_STRING, 'validate' => 'isColor', 'size' => 32],
+            'color' => ['type' => self::TYPE_STRING, 'validate' => 'isColor'],
             'logable' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],
             'shipped' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],
             'unremovable' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],
@@ -118,7 +91,7 @@ class OrderStateCore extends ObjectModel
             'deleted' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],
 
             /* Lang fields */
-            'name' => ['type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'required' => true, 'size' => OrderStateSettings::NAME_MAX_LENGTH],
+            'name' => ['type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'required' => true, 'size' => 64],
             'template' => ['type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isTplName', 'size' => 64],
         ],
     ];
@@ -131,17 +104,17 @@ class OrderStateCore extends ObjectModel
         ],
     ];
 
-    public const FLAG_NO_HIDDEN = 1;  /* 00001 */
-    public const FLAG_LOGABLE = 2;  /* 00010 */
-    public const FLAG_DELIVERY = 4;  /* 00100 */
-    public const FLAG_SHIPPED = 8;  /* 01000 */
-    public const FLAG_PAID = 16; /* 10000 */
+    const FLAG_NO_HIDDEN = 1;  /* 00001 */
+    const FLAG_LOGABLE = 2;  /* 00010 */
+    const FLAG_DELIVERY = 4;  /* 00100 */
+    const FLAG_SHIPPED = 8;  /* 01000 */
+    const FLAG_PAID = 16; /* 10000 */
 
     /**
      * Get all available order statuses.
      *
      * @param int $id_lang Language id for status name
-     * @param bool $filterDeleted
+     * @param bool $getDeletedStates
      *
      * @return array Order statuses
      */
@@ -187,7 +160,7 @@ class OrderStateCore extends ObjectModel
 
     public function isRemovable()
     {
-        return !$this->unremovable;
+        return !($this->unremovable);
     }
 
     /**
@@ -201,7 +174,7 @@ class OrderStateCore extends ObjectModel
      */
     public static function existsLocalizedNameInDatabase(string $name, int $idLang, ?int $excludeIdOrderState): bool
     {
-        return (bool) Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue(
+        return (bool) DB::getInstance(_PS_USE_SQL_SLAVE_)->getValue(
             'SELECT COUNT(*) AS count' .
             ' FROM ' . _DB_PREFIX_ . 'order_state_lang osl' .
             ' INNER JOIN ' . _DB_PREFIX_ . 'order_state os ON (os.`id_order_state` = osl.`id_order_state` AND osl.`id_lang` = ' . $idLang . ')' .

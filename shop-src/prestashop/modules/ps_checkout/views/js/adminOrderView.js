@@ -1,4 +1,3 @@
-'use strict';
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -17,6 +16,7 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
+'use strict';
 
 let ps_checkout = {};
 let {$} = window;
@@ -246,15 +246,6 @@ let {$} = window;
                 text: jqXHR.responseJSON.content,
                 class: 'danger',
               }));
-            }
-
-            if (undefined !== jqXHR.responseJSON && undefined !== jqXHR.responseJSON.errors) {
-              for (const error of jqXHR.responseJSON.errors) {
-                $(refundModalNotificationContainer).append(payPalOrderNotification.createErrorHTMLElement({
-                  text: error,
-                  class: 'danger',
-                }));
-              }
             }
 
             $(refundModalLoaderContainer).hide();

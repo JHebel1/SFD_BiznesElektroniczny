@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Customer\QueryHandler;
 
 use Customer;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Exception\CustomerByEmailNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Exception\CustomerException;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Query\GetCustomerForAddressCreation;
@@ -38,7 +37,6 @@ use PrestaShopDatabaseException;
 /**
  * Handles finding customer by email
  */
-#[AsQueryHandler]
 final class GetCustomerForAddressCreationHandler implements GetCustomerForAddressCreationHandlerInterface
 {
     /**
@@ -55,7 +53,7 @@ final class GetCustomerForAddressCreationHandler implements GetCustomerForAddres
 
         try {
             $result = Customer::searchByName($email);
-        } catch (PrestaShopDatabaseException) {
+        } catch (PrestaShopDatabaseException $e) {
             throw new CustomerException(sprintf('Failed to fetch results for customers with email %s', $email));
         }
 

@@ -24,15 +24,11 @@
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
 use PrestaShop\PrestaShop\Adapter\Presenter\Order\OrderPresenter;
-use PrestaShop\PrestaShop\Core\Security\PasswordPolicyConfiguration;
 
 class GuestTrackingControllerCore extends FrontController
 {
-    /** @var bool */
     public $ssl = true;
-    /** @var bool */
     public $auth = false;
-    /** @var string */
     public $php_self = 'guest-tracking';
     protected $order;
 
@@ -41,7 +37,7 @@ class GuestTrackingControllerCore extends FrontController
      *
      * @see FrontController::init()
      */
-    public function init(): void
+    public function init()
     {
         if ($this->context->customer->isLogged()) {
             Tools::redirect('history.php');
@@ -55,7 +51,7 @@ class GuestTrackingControllerCore extends FrontController
      *
      * @see FrontController::postProcess()
      */
-    public function postProcess(): void
+    public function postProcess()
     {
         $order_reference = current(explode('#', Tools::getValue('order_reference')));
         $email = Tools::getValue('email');
@@ -75,52 +71,22 @@ class GuestTrackingControllerCore extends FrontController
         $this->order = Order::getByReferenceAndEmail($order_reference, $email);
         if (!Validate::isLoadedObject($this->order)) {
             $this->errors[] = $this->getTranslator()->trans(
-                'We couldn\'t find your order with the information provided, please try again',
-                [],
-                'Shop.Notifications.Error'
-            );
+                    'We couldn\'t find your order with the information provided, please try again',
+                    [],
+                    'Shop.Notifications.Error'
+                );
         }
 
         if (Tools::isSubmit('submitTransformGuestToCustomer') && Tools::getValue('password')) {
             $customer = new Customer((int) $this->order->id_customer);
-            /** @var string $password */
             $password = Tools::getValue('password');
 
-            if (empty($password)) {
+            if (strlen($password) < Validate::PASSWORD_LENGTH) {
                 $this->errors[] = $this->trans(
-                    'Enter a password to transform your guest account into a customer account.',
-                    [],
+                    'Your password must be at least %min% characters long.',
+                    ['%min%' => Validate::PASSWORD_LENGTH],
                     'Shop.Forms.Help'
                 );
-            } elseif (!Validate::isAcceptablePasswordLength($password)) {
-                $this->errors[] = $this->trans(
-                    'Your password length must be between %d and %d',
-                    [Configuration::get(PasswordPolicyConfiguration::CONFIGURATION_MINIMUM_LENGTH), Configuration::get(PasswordPolicyConfiguration::CONFIGURATION_MAXIMUM_LENGTH)],
-                    'Shop.Forms.Help'
-                );
-            } elseif (!Validate::isAcceptablePasswordScore($password)) {
-                $this->errors[] = $this->trans(
-                    'Customer password is too weak',
-                    [],
-                    'Shop.Forms.Help'
-                );
-            // Prevent error
-            // A) either on page refresh
-            // B) if we already transformed him in other window or through backoffice
-            } elseif ($customer->is_guest == 0) {
-                $this->errors[] = $this->trans(
-                    'A customer account has already been created from this guest account. Please sign in.',
-                    [],
-                    'Shop.Notifications.Error'
-                );
-            // Check if a different customer with the same email was not already created in a different window or through backoffice
-            } elseif (Customer::customerExists($customer->email)) {
-                $this->errors[] = $this->trans(
-                    'You can\'t transform your account into a customer account, because a registered customer with the same email already exists.',
-                    [],
-                    'Shop.Notifications.Error'
-                );
-            // Attempt to convert the customer
             } elseif ($customer->transformToCustomer($this->context->language->id, $password)) {
                 $this->success[] = $this->trans(
                     'Your guest account has been successfully transformed into a customer account. You can now log in as a registered shopper.',
@@ -128,7 +94,7 @@ class GuestTrackingControllerCore extends FrontController
                     'Shop.Notifications.Success'
                 );
             } else {
-                $this->errors[] = $this->trans(
+                $this->success[] = $this->trans(
                     'An unexpected error occurred while creating your account.',
                     [],
                     'Shop.Notifications.Error'
@@ -142,14 +108,12 @@ class GuestTrackingControllerCore extends FrontController
      *
      * @see FrontController::initContent()
      */
-    public function initContent(): void
+    public function initContent()
     {
         parent::initContent();
 
         if (!Validate::isLoadedObject($this->order)) {
-            $this->setTemplate('customer/guest-login');
-
-            return;
+            return $this->setTemplate('customer/guest-login');
         }
 
         if ((int) $this->order->isReturnable()) {
@@ -160,21 +124,19 @@ class GuestTrackingControllerCore extends FrontController
             );
         }
 
-        // Kept for backwards compatibility (is_customer), inline it in later versions
-        $registered_customer_exists = Customer::customerExists(Tools::getValue('email'));
+        $presented_order = (new OrderPresenter())->present($this->order);
 
         $this->context->smarty->assign([
-            'order' => (new OrderPresenter())->present($this->order),
+            'order' => $presented_order,
             'guest_email' => Tools::getValue('email'),
-            'registered_customer_exists' => $registered_customer_exists,
-            'is_customer' => $registered_customer_exists, // Kept for backwards compatibility
+            'is_customer' => Customer::customerExists(Tools::getValue('email'), false, true),
             'HOOK_DISPLAYORDERDETAIL' => Hook::exec('displayOrderDetail', ['order' => $this->order]),
         ]);
 
-        $this->setTemplate('customer/guest-tracking');
+        return $this->setTemplate('customer/guest-tracking');
     }
 
-    public function getBreadcrumbLinks(): array
+    public function getBreadcrumbLinks()
     {
         $breadcrumbLinks = parent::getBreadcrumbLinks();
 
@@ -191,13 +153,5 @@ class GuestTrackingControllerCore extends FrontController
         }
 
         return $breadcrumbLinks;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getCanonicalURL(): string
-    {
-        return $this->context->link->getPageLink('guest-tracking');
     }
 }

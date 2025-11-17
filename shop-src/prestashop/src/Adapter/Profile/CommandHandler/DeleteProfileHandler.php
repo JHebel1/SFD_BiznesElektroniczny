@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Profile\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Profile\Command\DeleteProfileCommand;
 use PrestaShop\PrestaShop\Core\Domain\Profile\CommandHandler\DeleteProfileHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Profile\Exception\CannotDeleteSuperAdminProfileException;
@@ -42,7 +41,6 @@ use Profile;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class DeleteProfileHandler extends AbstractProfileHandler implements DeleteProfileHandlerInterface
 {
     /**

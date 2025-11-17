@@ -29,14 +29,12 @@ declare(strict_types=1);
 namespace PrestaShop\PrestaShop\Adapter\Product\FeatureValue\CommandHandler;
 
 use PrestaShop\PrestaShop\Adapter\Product\FeatureValue\Update\ProductFeatureValueUpdater;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Product\FeatureValue\Command\SetProductFeatureValuesCommand;
 use PrestaShop\PrestaShop\Core\Domain\Product\FeatureValue\CommandHandler\SetProductFeatureValuesHandlerInterface;
 
 /**
  * Handles @see SetProductFeatureValuesCommand using legacy object model
  */
-#[AsCommandHandler]
 class SetProductFeatureValuesHandler implements SetProductFeatureValuesHandlerInterface
 {
     /**

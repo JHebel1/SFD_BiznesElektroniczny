@@ -26,7 +26,6 @@
 
 namespace PrestaShopBundle\Utils;
 
-use InvalidArgumentException;
 use PrestaShop\PrestaShop\Core\Util\ArabicToLatinDigitConverter;
 
 /**
@@ -39,7 +38,7 @@ class FloatParser
      */
     private $arabicToLatinNumberConverter;
 
-    public function __construct(?ArabicToLatinDigitConverter $arabicToLatinDigitConverter = null)
+    public function __construct(ArabicToLatinDigitConverter $arabicToLatinDigitConverter = null)
     {
         $this->arabicToLatinNumberConverter = $arabicToLatinDigitConverter ?? new ArabicToLatinDigitConverter();
     }
@@ -60,15 +59,15 @@ class FloatParser
      *
      * @param string $value
      *
-     * @return float
+     * @throws \InvalidArgumentException if the provided value is not a string
+     *                                   or if it cannot be interpreted as a number
      *
-     * @throws InvalidArgumentException if the provided value is not a string
-     *                                  or if it cannot be interpreted as a number
+     * @return float
      */
     public function fromString($value)
     {
         if (!is_string($value)) {
-            throw new InvalidArgumentException(sprintf('Invalid argument: string expected, got %s', gettype($value)));
+            throw new \InvalidArgumentException(sprintf('Invalid argument: string expected, got %s', gettype($value)));
         }
 
         $value = trim($value);
@@ -89,7 +88,7 @@ class FloatParser
 
         foreach ($split as $part) {
             if ('' === $part) {
-                throw new InvalidArgumentException(sprintf('Invalid argument: "%s" cannot be interpreted as a number', $value));
+                throw new \InvalidArgumentException(sprintf('Invalid argument: "%s" cannot be interpreted as a number', $value));
             }
         }
 

@@ -32,6 +32,7 @@ use PrestaShop\PrestaShop\Core\Language\Copier\LanguageCopierConfigInterface;
 use PrestaShop\PrestaShop\Core\Language\Copier\LanguageCopierInterface;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class LanguageCopier responsible for copying a language into another language.
@@ -42,6 +43,11 @@ final class LanguageCopier implements LanguageCopierInterface
      * @var LanguageDataProvider
      */
     private $languageDataProvider;
+
+    /**
+     * @var TranslatorInterface
+     */
+    private $translator;
 
     /**
      * @var Filesystem
@@ -55,15 +61,18 @@ final class LanguageCopier implements LanguageCopierInterface
 
     /**
      * @param LanguageDataProvider $languageDataProvider
+     * @param TranslatorInterface $translator
      * @param Filesystem $filesystem
      * @param ThemeCollection $themeCollection
      */
     public function __construct(
         LanguageDataProvider $languageDataProvider,
+        TranslatorInterface $translator,
         Filesystem $filesystem,
         ThemeCollection $themeCollection
     ) {
         $this->languageDataProvider = $languageDataProvider;
+        $this->translator = $translator;
         $this->filesystem = $filesystem;
         $this->themeCollection = $themeCollection;
     }
@@ -89,7 +98,7 @@ final class LanguageCopier implements LanguageCopierInterface
         foreach ($languageFiles as $source => $destination) {
             try {
                 $this->filesystem->mkdir(dirname($destination));
-            } catch (IOExceptionInterface) {
+            } catch (IOExceptionInterface $exception) {
                 $errors[] = [
                     'key' => 'Cannot create the folder "%folder%". Please check your directory writing permissions.',
                     'domain' => 'Admin.International.Notification',
@@ -103,7 +112,7 @@ final class LanguageCopier implements LanguageCopierInterface
 
             try {
                 $this->filesystem->copy($source, $destination);
-            } catch (IOExceptionInterface) {
+            } catch (IOExceptionInterface $exception) {
                 $errors[] = [
                     'key' => 'Impossible to copy "%source%" to "%dest%".',
                     'domain' => 'Admin.International.Notification',
@@ -175,8 +184,8 @@ final class LanguageCopier implements LanguageCopierInterface
                 'parameters' => [],
             ];
         } elseif (
-            $themeFrom === $themeTo
-            && $languageFrom === $languageTo
+            $themeFrom === $themeTo &&
+            $languageFrom === $languageTo
         ) {
             $errors[] = [
                 'key' => 'There is nothing to copy (same language and theme).',
@@ -224,7 +233,7 @@ final class LanguageCopier implements LanguageCopierInterface
     private function isModuleContext($source, $destination, $language)
     {
         // Legacy condition
-        return str_contains($destination, 'modules') && basename($source) === $language . '.php';
+        return false !== strpos($destination, 'modules') && basename($source) === $language . '.php';
     }
 
     /**

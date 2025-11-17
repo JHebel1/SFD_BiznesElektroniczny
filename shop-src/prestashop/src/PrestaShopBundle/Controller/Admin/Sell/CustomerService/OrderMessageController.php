@@ -28,8 +28,6 @@ namespace PrestaShopBundle\Controller\Admin\Sell\CustomerService;
 
 use Exception;
 use Language;
-use PrestaShop\PrestaShop\Adapter\Feature\MultistoreFeature;
-use PrestaShop\PrestaShop\Core\Context\LanguageContext;
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\Command\BulkDeleteOrderMessageCommand;
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\Command\DeleteOrderMessageCommand;
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\Exception\OrderMessageException;
@@ -37,13 +35,9 @@ use PrestaShop\PrestaShop\Core\Domain\OrderMessage\Exception\OrderMessageNameAlr
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\Exception\OrderMessageNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\Query\GetOrderMessageForEditing;
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\QueryResult\EditableOrderMessage;
-use PrestaShop\PrestaShop\Core\Form\IdentifiableObject\Builder\FormBuilderInterface;
-use PrestaShop\PrestaShop\Core\Form\IdentifiableObject\Handler\FormHandlerInterface;
-use PrestaShop\PrestaShop\Core\Grid\GridFactoryInterface;
 use PrestaShop\PrestaShop\Core\Search\Filters\OrderMessageFilters;
-use PrestaShopBundle\Controller\Admin\PrestaShopAdminController;
-use PrestaShopBundle\Security\Attribute\AdminSecurity;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
+use PrestaShopBundle\Security\Annotation\AdminSecurity;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -51,33 +45,31 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Manages page under "Sell > Customer Service > Order Messages"
  */
-class OrderMessageController extends PrestaShopAdminController
+class OrderMessageController extends FrameworkBundleAdminController
 {
     /**
      * Show list of Order messages
+     *
+     * @AdminSecurity("is_granted(['read'], request.get('_legacy_controller'))")
      *
      * @param OrderMessageFilters $filters
      * @param Request $request
      *
      * @return Response
      */
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))")]
-    public function indexAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.core.grid.grid_factory.order_message')]
-        GridFactoryInterface $orderMessageGridFactory,
-        OrderMessageFilters $filters
-    ): Response {
-        $grid = $orderMessageGridFactory->getGrid($filters);
+    public function indexAction(OrderMessageFilters $filters, Request $request): Response
+    {
+        $gridFactory = $this->get('prestashop.core.grid.grid_factory.order_message');
+        $grid = $gridFactory->getGrid($filters);
 
         return $this->render('@PrestaShop/Admin/Sell/CustomerService/OrderMessage/index.html.twig', [
             'help_link' => $this->generateSidebarLink($request->attributes->get('_legacy_controller')),
             'enableSidebar' => true,
-            'layoutTitle' => $this->trans('Order messages', [], 'Admin.Navigation.Menu'),
+            'layoutTitle' => $this->trans('Order Messages', 'Admin.Navigation.Menu'),
             'layoutHeaderToolbarBtn' => [
                 'add' => [
                     'href' => $this->generateUrl('admin_order_messages_create'),
-                    'desc' => $this->trans('Add new order message', [], 'Admin.Orderscustomers.Feature'),
+                    'desc' => $this->trans('Add new order message', 'Admin.Orderscustomers.Feature'),
                     'icon' => 'add_circle_outline',
                 ],
             ],
@@ -88,19 +80,20 @@ class OrderMessageController extends PrestaShopAdminController
     /**
      * Create new order message
      *
+     * @AdminSecurity(
+     *     "is_granted(['create'], request.get('_legacy_controller'))",
+     *     redirectRoute="admin_order_messages_index"
+     * )
+     *
      * @param Request $request
      *
      * @return Response
      */
-    #[AdminSecurity("is_granted('create', request.get('_legacy_controller'))", redirectRoute: 'admin_order_messages_index')]
-    public function createAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.core.form.identifiable_object.builder.order_message_form_builder')]
-        FormBuilderInterface $formBuilder,
-        #[Autowire(service: 'prestashop.core.form.identifiable_object.handler.order_message_form_handler')]
-        FormHandlerInterface $formHandler,
-        MultistoreFeature $multiStoreFeature
-    ): Response {
+    public function createAction(Request $request): Response
+    {
+        $formBuilder = $this->get('prestashop.core.form.identifiable_object.builder.order_message_form_builder');
+        $formHandler = $this->get('prestashop.core.form.identifiable_object.handler.order_message_form_handler');
+
         $form = $formBuilder->getForm();
         $form->handleRequest($request);
 
@@ -108,7 +101,7 @@ class OrderMessageController extends PrestaShopAdminController
             $result = $formHandler->handle($form);
 
             if ($result->getIdentifiableObjectId()) {
-                $this->addFlash('success', $this->trans('Successful creation', [], 'Admin.Notifications.Success'));
+                $this->addFlash('success', $this->trans('Successful creation.', 'Admin.Notifications.Success'));
 
                 return $this->redirectToRoute('admin_order_messages_index');
             }
@@ -119,40 +112,39 @@ class OrderMessageController extends PrestaShopAdminController
         return $this->render('@PrestaShop/Admin/Sell/CustomerService/OrderMessage/create.html.twig', [
             'help_link' => $this->generateSidebarLink($request->attributes->get('_legacy_controller')),
             'enableSidebar' => true,
-            'layoutTitle' => $this->trans('New order message', [], 'Admin.Navigation.Menu'),
+            'layoutTitle' => $this->trans('Add new', 'Admin.Actions'),
             'orderMessageForm' => $form->createView(),
             'multistoreInfoTip' => $this->trans(
-                'Note that this feature is only available in the "all stores" context. It will be added to all your stores.',
-                [],
+                'Note that this feature is available in all shops context only. It will be added to all your stores.',
                 'Admin.Notifications.Info'
             ),
-            'multistoreIsUsed' => $multiStoreFeature->isUsed(),
+            'multistoreIsUsed' => $this->get('prestashop.adapter.multistore_feature')->isUsed(),
         ]);
     }
 
     /**
      * Edit existing order message
      *
+     * @AdminSecurity(
+     *     "is_granted(['update'], request.get('_legacy_controller'))",
+     *     redirectRoute="admin_order_messages_index"
+     * )
+     *
      * @param int $orderMessageId
      * @param Request $request
      *
      * @return Response
      */
-    #[AdminSecurity("is_granted('update', request.get('_legacy_controller'))", redirectRoute: 'admin_order_messages_index')]
-    public function editAction(
-        int $orderMessageId,
-        Request $request,
-        #[Autowire(service: 'prestashop.core.form.identifiable_object.builder.order_message_form_builder')]
-        FormBuilderInterface $formBuilder,
-        #[Autowire(service: 'prestashop.core.form.identifiable_object.handler.order_message_form_handler')]
-        FormHandlerInterface $formHandler,
-        LanguageContext $languageContext
-    ): Response {
+    public function editAction(int $orderMessageId, Request $request): Response
+    {
+        $formBuilder = $this->get('prestashop.core.form.identifiable_object.builder.order_message_form_builder');
+        $formHandler = $this->get('prestashop.core.form.identifiable_object.handler.order_message_form_handler');
+
         try {
             /** @var EditableOrderMessage $editableOrderMessage */
-            $editableOrderMessage = $this->dispatchQuery(new GetOrderMessageForEditing($orderMessageId));
+            $editableOrderMessage = $this->getQueryBus()->handle(new GetOrderMessageForEditing($orderMessageId));
 
-            $orderMessageName = $editableOrderMessage->getLocalizedName()[$languageContext->getId()];
+            $orderMessageName = $editableOrderMessage->getLocalizedName()[$this->getContextLangId()];
 
             $form = $formBuilder->getFormFor($orderMessageId);
             $form->handleRequest($request);
@@ -160,20 +152,22 @@ class OrderMessageController extends PrestaShopAdminController
             $result = $formHandler->handleFor($orderMessageId, $form);
 
             if ($result->getIdentifiableObjectId()) {
-                $this->addFlash('success', $this->trans('Successful update', [], 'Admin.Notifications.Success'));
+                $this->addFlash('success', $this->trans('Successful update.', 'Admin.Notifications.Success'));
 
                 return $this->redirectToRoute('admin_order_messages_index');
             }
         } catch (Exception $e) {
             $this->addFlash('error', $this->getErrorMessageForException($e, $this->getErrorMessages($e)));
+        }
 
+        if (!isset($form) || !isset($orderMessageName)) {
             return $this->redirectToRoute('admin_order_messages_index');
         }
 
         return $this->render('@PrestaShop/Admin/Sell/CustomerService/OrderMessage/edit.html.twig', [
             'help_link' => $this->generateSidebarLink($request->attributes->get('_legacy_controller')),
             'enableSidebar' => true,
-            'layoutTitle' => $this->trans('Editing message %s', [$orderMessageName], 'Admin.Navigation.Menu'),
+            'layoutTitle' => sprintf($this->trans('Edit: %s', 'Admin.Actions'), $orderMessageName),
             'orderMessageForm' => $form->createView(),
         ]);
     }
@@ -181,17 +175,21 @@ class OrderMessageController extends PrestaShopAdminController
     /**
      * Delete single order message
      *
+     * @AdminSecurity(
+     *     "is_granted(['delete'], request.get('_legacy_controller'))",
+     *     redirectRoute="admin_order_messages_index"
+     * )
+     *
      * @param int $orderMessageId
      *
      * @return RedirectResponse
      */
-    #[AdminSecurity("is_granted('delete', request.get('_legacy_controller'))", redirectRoute: 'admin_order_messages_index')]
     public function deleteAction(int $orderMessageId): RedirectResponse
     {
         try {
-            $this->dispatchCommand(new DeleteOrderMessageCommand($orderMessageId));
+            $this->getCommandBus()->handle(new DeleteOrderMessageCommand($orderMessageId));
 
-            $this->addFlash('success', $this->trans('Successful deletion', [], 'Admin.Notifications.Success'));
+            $this->addFlash('success', $this->trans('Successful deletion.', 'Admin.Notifications.Success'));
         } catch (Exception $e) {
             $this->addFlash('error', $this->getErrorMessageForException($e, $this->getErrorMessages($e)));
         }
@@ -202,23 +200,27 @@ class OrderMessageController extends PrestaShopAdminController
     /**
      * Delete order messages in bulk action
      *
+     * @AdminSecurity(
+     *     "is_granted(['delete'], request.get('_legacy_controller'))",
+     *     redirectRoute="admin_order_messages_index"
+     * )
+     *
      * @param Request $request
      *
      * @return RedirectResponse
      */
-    #[AdminSecurity("is_granted('delete', request.get('_legacy_controller'))", redirectRoute: 'admin_order_messages_index')]
     public function bulkDeleteAction(Request $request): RedirectResponse
     {
         try {
             $orderMessageIds = array_map(static function ($orderMessageId) {
                 return (int) $orderMessageId;
-            }, $request->request->all('order_message_order_messages_bulk'));
+            }, $request->request->get('order_message_order_messages_bulk'));
 
-            $this->dispatchCommand(new BulkDeleteOrderMessageCommand($orderMessageIds));
+            $this->getCommandBus()->handle(new BulkDeleteOrderMessageCommand($orderMessageIds));
 
             $this->addFlash(
                 'success',
-                $this->trans('The selection has been successfully deleted.', [], 'Admin.Notifications.Success')
+                $this->trans('The selection has been successfully deleted.', 'Admin.Notifications.Success')
             );
         } catch (Exception $e) {
             $this->addFlash('error', $this->getErrorMessageForException($e, $this->getErrorMessages($e)));
@@ -234,7 +236,7 @@ class OrderMessageController extends PrestaShopAdminController
      *
      * @return array
      */
-    private function getErrorMessages(?Exception $e = null): array
+    private function getErrorMessages(Exception $e = null): array
     {
         $language = $e instanceof OrderMessageNameAlreadyUsedException ? (new Language($e->getLangId()))->name : '';
 
@@ -242,26 +244,23 @@ class OrderMessageController extends PrestaShopAdminController
             OrderMessageException::class => [
                 OrderMessageException::FAILED_DELETE => $this->trans(
                     'An error occurred while deleting the object.',
-                    [],
                     'Admin.Notifications.Error'
                 ),
                 OrderMessageException::FAILED_BULK_DELETE => $this->trans(
                     'An error occurred while deleting this selection.',
-                    [],
                     'Admin.Notifications.Error'
                 ),
             ],
             OrderMessageNotFoundException::class => $this->trans(
-                'The object cannot be loaded (or found).',
-                [],
+                'The object cannot be loaded (or found)',
                 'Admin.Notifications.Error'
             ),
             OrderMessageNameAlreadyUsedException::class => $this->trans(
                 'An order message with the same name already exists in %s.',
+                'Admin.Orderscustomers.Notification',
                 [
                     $language,
-                ],
-                'Admin.Orderscustomers.Notification',
+                ]
             ),
         ];
     }

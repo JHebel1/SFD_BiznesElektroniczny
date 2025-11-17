@@ -39,16 +39,16 @@ class YamlModuleLoader extends Loader
     /**
      * @var array the list of activated modules
      */
-    private $installedModulesPaths;
+    private $activeModulesPaths;
 
     /**
      * @var bool we load the route collection only once per request
      */
     private $isLoaded = false;
 
-    public function __construct(array $installedModulesPaths)
+    public function __construct(array $activeModulesPaths)
     {
-        $this->installedModulesPaths = $installedModulesPaths;
+        $this->activeModulesPaths = $activeModulesPaths;
     }
 
     /**
@@ -62,7 +62,7 @@ class YamlModuleLoader extends Loader
 
         $routes = new RouteCollection();
 
-        foreach ($this->installedModulesPaths as $modulePath) {
+        foreach ($this->activeModulesPaths as $modulePath) {
             $routingFile = $modulePath . '/config/routes.yml';
             if (file_exists($routingFile)) {
                 $loadedRoutes = $this->import($routingFile, 'yaml');

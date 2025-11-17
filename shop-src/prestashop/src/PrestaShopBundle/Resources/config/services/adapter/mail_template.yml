@@ -2,12 +2,12 @@ services:
   _defaults:
     public: true
 
-  PrestaShop\PrestaShop\Adapter\MailTemplate\MailTemplateTwigRenderer:
+  prestashop.adapter.mail_template.twig_renderer:
+    class: 'PrestaShop\PrestaShop\Adapter\MailTemplate\MailTemplateTwigRenderer'
     arguments:
-      - '@twig'
+      - '@templating.engine.twig'
       - '@prestashop.core.mail_template.variables_builder'
       - '@prestashop.core.hook.dispatcher'
-      - "@=service('prestashop.adapter.legacy.configuration').getBoolean('PS_GIFT_WRAPPING')"
     calls:
       - method: 'addTransformation'
         arguments:
@@ -16,18 +16,13 @@ services:
         arguments:
           - '@prestashop.core.mail_template.transformation.html_textify'
 
-  prestashop.adapter.mail_template.twig_renderer:
-    alias: 'PrestaShop\PrestaShop\Adapter\MailTemplate\MailTemplateTwigRenderer'
-    deprecated:
-      package: PrestaShop\PrestaShop
-      version: 9.0
-
   prestashop.adapter.mail_template.partial_template_renderer:
     class: 'PrestaShop\PrestaShop\Adapter\MailTemplate\MailPartialTemplateRenderer'
     arguments:
       - "@=service('prestashop.adapter.legacy.context').getSmarty()"
 
-  PrestaShop\PrestaShop\Adapter\MailTemplate\MailPreviewVariablesBuilder:
+  prestashop.adapter.mail_template.preview_variables_builder:
+    class: 'PrestaShop\PrestaShop\Adapter\MailTemplate\MailPreviewVariablesBuilder'
     arguments:
       - '@prestashop.adapter.legacy.configuration'
       - '@prestashop.adapter.legacy.context'
@@ -35,9 +30,3 @@ services:
       - "@prestashop.adapter.mail_template.partial_template_renderer"
       - "@prestashop.core.localization.locale.context_locale"
       - "@translator"
-
-  prestashop.adapter.mail_template.preview_variables_builder:
-    alias: 'PrestaShop\PrestaShop\Adapter\MailTemplate\MailPreviewVariablesBuilder'
-    deprecated:
-      package: PrestaShop\PrestaShop
-      version: 9.0

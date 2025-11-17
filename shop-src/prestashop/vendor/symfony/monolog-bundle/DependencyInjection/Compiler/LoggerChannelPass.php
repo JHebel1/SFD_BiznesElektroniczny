@@ -23,8 +23,6 @@ use Symfony\Component\DependencyInjection\Reference;
  * Replaces the default logger by another one with its own channel for tagged services.
  *
  * @author Christophe Coevoet <stof@notk.org>
- *
- * @internalsince 3.9.0
  */
 class LoggerChannelPass implements CompilerPassInterface
 {
@@ -68,17 +66,19 @@ class LoggerChannelPass implements CompilerPassInterface
                 }
                 $definition->setMethodCalls($calls);
 
-                $binding = new BoundArgument(new Reference($loggerId));
+                if (\method_exists($definition, 'getBindings')) {
+                    $binding = new BoundArgument(new Reference($loggerId));
 
-                // Mark the binding as used already, to avoid reporting it as unused if the service does not use a
-                // logger injected through the LoggerInterface alias.
-                $values = $binding->getValues();
-                $values[2] = true;
-                $binding->setValues($values);
+                    // Mark the binding as used already, to avoid reporting it as unused if the service does not use a
+                    // logger injected through the LoggerInterface alias.
+                    $values = $binding->getValues();
+                    $values[2] = true;
+                    $binding->setValues($values);
 
-                $bindings = $definition->getBindings();
-                $bindings['Psr\Log\LoggerInterface'] = $binding;
-                $definition->setBindings($bindings);
+                    $bindings = $definition->getBindings();
+                    $bindings['Psr\Log\LoggerInterface'] = $binding;
+                    $definition->setBindings($bindings);
+                }
             }
         }
 
@@ -117,9 +117,11 @@ class LoggerChannelPass implements CompilerPassInterface
     }
 
     /**
+     * @param array $configuration
+     *
      * @return array
      */
-    protected function processChannels(?array $configuration)
+    protected function processChannels($configuration)
     {
         if (null === $configuration) {
             return $this->channels;
@@ -135,9 +137,11 @@ class LoggerChannelPass implements CompilerPassInterface
     /**
      * Create new logger from the monolog.logger_prototype
      *
-     * @return void
+     * @param string $channel
+     * @param string $loggerId
+     * @param ContainerBuilder $container
      */
-    protected function createLogger(string $channel, string $loggerId, ContainerBuilder $container)
+    protected function createLogger($channel, $loggerId, ContainerBuilder $container)
     {
         if (!in_array($channel, $this->channels)) {
             $logger = new ChildDefinition('monolog.logger_prototype');
@@ -146,16 +150,29 @@ class LoggerChannelPass implements CompilerPassInterface
             $this->channels[] = $channel;
         }
 
-        $parameterName = $channel . 'Logger';
+        // Allows only for Symfony 4.2+
+        if (\method_exists($container, 'registerAliasForArgument')) {
+            $parameterName = $channel . 'Logger';
 
-        $container->registerAliasForArgument($loggerId, LoggerInterface::class, $parameterName);
+            $container->registerAliasForArgument($loggerId, LoggerInterface::class, $parameterName);
+        }
     }
 
     /**
      * Creates a copy of a reference and alters the service ID.
+     *
+     * @param Reference $reference
+     * @param string    $serviceId
+     *
+     * @return Reference
      */
-    private function changeReference(Reference $reference, string $serviceId): Reference
+    private function changeReference(Reference $reference, $serviceId)
     {
+        if (method_exists($reference, 'isStrict')) {
+            // Stay compatible with Symfony 2
+            return new Reference($serviceId, $reference->getInvalidBehavior(), $reference->isStrict(false));
+        }
+
         return new Reference($serviceId, $reference->getInvalidBehavior());
     }
 }

@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Address\CommandHandler;
 
 use PrestaShop\PrestaShop\Adapter\Address\AbstractAddressHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Address\Command\BulkDeleteAddressCommand;
 use PrestaShop\PrestaShop\Core\Domain\Address\CommandHandler\BulkDeleteAddressHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Address\Exception\AddressException;
@@ -36,7 +35,6 @@ use PrestaShop\PrestaShop\Core\Domain\Address\Exception\BulkDeleteAddressExcepti
 /**
  * Handles command which deletes addresses in bulk action
  */
-#[AsCommandHandler]
 final class BulkDeleteAddressHandler extends AbstractAddressHandler implements BulkDeleteAddressHandlerInterface
 {
     /**
@@ -55,7 +53,7 @@ final class BulkDeleteAddressHandler extends AbstractAddressHandler implements B
                 if (!$this->deleteAddress($address)) {
                     $errors[] = $address->id;
                 }
-            } catch (AddressException) {
+            } catch (AddressException $e) {
                 $errors[] = $addressId->getValue();
             }
         }

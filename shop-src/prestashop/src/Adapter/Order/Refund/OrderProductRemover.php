@@ -38,16 +38,37 @@ use PrestaShop\PrestaShop\Adapter\Cart\Comparator\CartProductsComparator;
 use PrestaShop\PrestaShop\Adapter\Cart\Comparator\CartProductUpdate;
 use PrestaShop\PrestaShop\Core\Domain\Order\Exception\DeleteCustomizedProductFromOrderException;
 use PrestaShop\PrestaShop\Core\Domain\Order\Exception\DeleteProductFromOrderException;
-use PrestaShopDatabaseException;
-use PrestaShopException;
+use Psr\Log\LoggerInterface;
 use SpecificPrice;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class OrderProductRemover
 {
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @var TranslatorInterface
+     */
+    private $translator;
+
+    /**
      * @var CartProductsComparator
      */
     private $cartProductComparator;
+
+    /**
+     * OrderProductRemover constructor.
+     *
+     * @param LoggerInterface $logger
+     */
+    public function __construct(LoggerInterface $logger, TranslatorInterface $translator)
+    {
+        $this->logger = $logger;
+        $this->translator = $translator;
+    }
 
     /**
      * @param Order $order
@@ -63,7 +84,6 @@ class OrderProductRemover
     ): CartProductsComparator {
         $cart = new Cart($order->id_cart);
 
-        $this->removeSpecificProductCartRules($order, $orderDetail);
         // Important to remove order cart rule before the product is removed, so that cart rule can detect if it's applied on it
         $this->deleteOrderCartRule($order, $orderDetail, $cart);
 
@@ -128,8 +148,8 @@ class OrderProductRemover
      * @param OrderDetail $orderDetail
      *
      * @throws DeleteProductFromOrderException
-     * @throws PrestaShopDatabaseException
-     * @throws PrestaShopException
+     * @throws \PrestaShopDatabaseException
+     * @throws \PrestaShopException
      */
     private function deleteOrderDetail(
         Order $order,
@@ -232,37 +252,6 @@ class OrderProductRemover
         if (!empty($existingSpecificPriceId)) {
             $specificPrice = new SpecificPrice($existingSpecificPriceId);
             $specificPrice->delete();
-        }
-    }
-
-    /**
-     * This method removes cart rules which was applied to specific product when that product is being deleted.
-     *
-     * @param Order $order
-     * @param OrderDetail $orderDetail
-     *
-     * @return void
-     */
-    private function removeSpecificProductCartRules(
-        Order $order,
-        OrderDetail $orderDetail
-    ): void {
-        foreach ($order->getCartRules() as $orderCartRule) {
-            $cartRuleId = (int) $orderCartRule['id_cart_rule'];
-            $cartRule = new CartRule($cartRuleId);
-
-            if ($cartRuleId === (int) $cartRule->id && (int) $cartRule->reduction_product !== (int) $orderDetail->product_id) {
-                continue;
-            }
-
-            $orderCartRuleId = (int) $orderCartRule['id_order_cart_rule'];
-            $orderCartRuleObj = new OrderCartRule($orderCartRuleId);
-            if ((int) $orderCartRuleObj->id !== $orderCartRuleId) {
-                continue;
-            }
-
-            $orderCartRuleObj->deleted = true;
-            $orderCartRuleObj->save();
         }
     }
 }

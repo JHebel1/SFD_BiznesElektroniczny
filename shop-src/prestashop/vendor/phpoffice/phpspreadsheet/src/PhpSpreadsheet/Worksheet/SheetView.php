@@ -11,7 +11,7 @@ class SheetView
     const SHEETVIEW_PAGE_LAYOUT = 'pageLayout';
     const SHEETVIEW_PAGE_BREAK_PREVIEW = 'pageBreakPreview';
 
-    private const SHEET_VIEW_TYPES = [
+    private static $sheetViewTypes = [
         self::SHEETVIEW_NORMAL,
         self::SHEETVIEW_PAGE_LAYOUT,
         self::SHEETVIEW_PAGE_BREAK_PREVIEW,
@@ -22,7 +22,7 @@ class SheetView
      *
      * Valid values range from 10 to 400.
      *
-     * @var ?int
+     * @var int
      */
     private $zoomScale = 100;
 
@@ -31,7 +31,7 @@ class SheetView
      *
      * Valid values range from 10 to 400.
      *
-     * @var ?int
+     * @var int
      */
     private $zoomScaleNormal = 100;
 
@@ -64,7 +64,7 @@ class SheetView
     /**
      * Get ZoomScale.
      *
-     * @return ?int
+     * @return int
      */
     public function getZoomScale()
     {
@@ -75,16 +75,18 @@ class SheetView
      * Set ZoomScale.
      * Valid values range from 10 to 400.
      *
-     * @param ?int $zoomScale
+     * @param int $pValue
+     *
+     * @throws PhpSpreadsheetException
      *
      * @return $this
      */
-    public function setZoomScale($zoomScale)
+    public function setZoomScale($pValue)
     {
         // Microsoft Office Excel 2007 only allows setting a scale between 10 and 400 via the user interface,
         // but it is apparently still able to handle any scale >= 1
-        if ($zoomScale === null || $zoomScale >= 1) {
-            $this->zoomScale = $zoomScale;
+        if (($pValue >= 1) || $pValue === null) {
+            $this->zoomScale = $pValue;
         } else {
             throw new PhpSpreadsheetException('Scale must be greater than or equal to 1.');
         }
@@ -95,7 +97,7 @@ class SheetView
     /**
      * Get ZoomScaleNormal.
      *
-     * @return ?int
+     * @return int
      */
     public function getZoomScaleNormal()
     {
@@ -106,14 +108,16 @@ class SheetView
      * Set ZoomScale.
      * Valid values range from 10 to 400.
      *
-     * @param ?int $zoomScaleNormal
+     * @param int $pValue
+     *
+     * @throws PhpSpreadsheetException
      *
      * @return $this
      */
-    public function setZoomScaleNormal($zoomScaleNormal)
+    public function setZoomScaleNormal($pValue)
     {
-        if ($zoomScaleNormal === null || $zoomScaleNormal >= 1) {
-            $this->zoomScaleNormal = $zoomScaleNormal;
+        if (($pValue >= 1) || $pValue === null) {
+            $this->zoomScaleNormal = $pValue;
         } else {
             throw new PhpSpreadsheetException('Scale must be greater than or equal to 1.');
         }
@@ -124,11 +128,11 @@ class SheetView
     /**
      * Set ShowZeroes setting.
      *
-     * @param bool $showZeros
+     * @param bool $pValue
      */
-    public function setShowZeros($showZeros): void
+    public function setShowZeros($pValue)
     {
-        $this->showZeros = $showZeros;
+        $this->showZeros = $pValue;
     }
 
     /**
@@ -157,22 +161,39 @@ class SheetView
      *        'pageLayout'        self::SHEETVIEW_PAGE_LAYOUT
      *        'pageBreakPreview'  self::SHEETVIEW_PAGE_BREAK_PREVIEW
      *
-     * @param ?string $sheetViewType
+     * @param string $pValue
+     *
+     * @throws PhpSpreadsheetException
      *
      * @return $this
      */
-    public function setView($sheetViewType)
+    public function setView($pValue)
     {
         // MS Excel 2007 allows setting the view to 'normal', 'pageLayout' or 'pageBreakPreview' via the user interface
-        if ($sheetViewType === null) {
-            $sheetViewType = self::SHEETVIEW_NORMAL;
+        if ($pValue === null) {
+            $pValue = self::SHEETVIEW_NORMAL;
         }
-        if (in_array($sheetViewType, self::SHEET_VIEW_TYPES)) {
-            $this->sheetviewType = $sheetViewType;
+        if (in_array($pValue, self::$sheetViewTypes)) {
+            $this->sheetviewType = $pValue;
         } else {
             throw new PhpSpreadsheetException('Invalid sheetview layout type.');
         }
 
         return $this;
+    }
+
+    /**
+     * Implement PHP __clone to create a deep clone, not just a shallow copy.
+     */
+    public function __clone()
+    {
+        $vars = get_object_vars($this);
+        foreach ($vars as $key => $value) {
+            if (is_object($value)) {
+                $this->$key = clone $value;
+            } else {
+                $this->$key = $value;
+            }
+        }
     }
 }

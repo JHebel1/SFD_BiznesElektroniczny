@@ -30,9 +30,7 @@ use PrestaShop\PrestaShop\Core\Domain\Country\Exception\CountryConstraintExcepti
 use PrestaShop\PrestaShop\Core\Domain\Country\ValueObject\CountryId;
 use PrestaShop\PrestaShop\Core\Domain\Customer\ValueObject\CustomerId;
 use PrestaShop\PrestaShop\Core\Domain\State\Exception\StateConstraintException;
-use PrestaShop\PrestaShop\Core\Domain\State\ValueObject\NoStateId;
 use PrestaShop\PrestaShop\Core\Domain\State\ValueObject\StateId;
-use PrestaShop\PrestaShop\Core\Domain\State\ValueObject\StateIdInterface;
 
 /**
  * Adds new customer address
@@ -100,7 +98,7 @@ class AddCustomerAddressCommand
     private $address2;
 
     /**
-     * @var StateIdInterface
+     * @var StateId|null
      */
     private $stateId;
 
@@ -149,14 +147,14 @@ class AddCustomerAddressCommand
         string $city,
         int $countryId,
         string $postcode,
-        ?string $dni = null,
-        ?string $company = null,
-        ?string $vat_number = null,
-        ?string $address2 = null,
+        string $dni = null,
+        string $company = null,
+        string $vat_number = null,
+        string $address2 = null,
         int $id_state = 0,
-        ?string $phone = null,
+        string $phone = null,
         ?string $phone_mobile = null,
-        ?string $other = null
+        string $other = null
     ) {
         $this->customerId = new CustomerId($customerId);
         $this->addressAlias = $addressAlias;
@@ -170,10 +168,10 @@ class AddCustomerAddressCommand
         $this->company = $company;
         $this->vatNumber = $vat_number;
         $this->address2 = $address2;
+        $this->stateId = new StateId($id_state);
         $this->homePhone = $phone;
         $this->mobilePhone = $phone_mobile;
         $this->other = $other;
-        $this->stateId = $id_state === NoStateId::NO_STATE_ID_VALUE ? new NoStateId() : new StateId($id_state);
     }
 
     /**
@@ -273,9 +271,9 @@ class AddCustomerAddressCommand
     }
 
     /**
-     * @return StateIdInterface
+     * @return StateId|null
      */
-    public function getStateId(): StateIdInterface
+    public function getStateId(): ?StateId
     {
         return $this->stateId;
     }

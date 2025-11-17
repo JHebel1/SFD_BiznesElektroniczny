@@ -52,7 +52,7 @@ abstract class AbstractObjectModelValidator
                 throw new $exceptionClass(
                     sprintf(
                         'Invalid %s %s. Got "%s"',
-                        $objectModel::class,
+                        get_class($objectModel),
                         $propertyName,
                         $objectModel->{$propertyName}
                     ),
@@ -61,7 +61,7 @@ abstract class AbstractObjectModelValidator
             }
         } catch (PrestaShopException $e) {
             throw new CoreException(
-                sprintf('Error occurred when validating %s property "%s"', $objectModel::class, $propertyName),
+                sprintf('Error occurred when validating %s property "%s"', get_class($objectModel), $propertyName),
                 0,
                 $e
             );
@@ -86,7 +86,7 @@ abstract class AbstractObjectModelValidator
                     throw new $exceptionClass(
                         sprintf(
                             'Invalid %s localized property "%s" for language with id "%d"',
-                            $objectModel::class,
+                            get_class($objectModel),
                             $propertyName,
                             $langId
                         ),
@@ -96,7 +96,7 @@ abstract class AbstractObjectModelValidator
             }
         } catch (PrestaShopException $e) {
             throw new CoreException(
-                sprintf('Error occurred when trying to validate %s localized property "%s"', $objectModel::class, $propertyName),
+                sprintf('Error occurred when trying to validate %s localized property "%s"', get_class($objectModel), $propertyName),
                 0,
                 $e
             );

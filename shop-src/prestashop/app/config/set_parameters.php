@@ -26,37 +26,23 @@
 
 use PrestaShopBundle\Install\Upgrade;
 
-$parametersFilepath = __DIR__ . '/parameters.php';
-if (file_exists($parametersFilepath)) {
-    $parameters = require $parametersFilepath;
-} else {
-    // When no parameters file is present (before install) we define null values for mandatory parameters to avoid breaking the CI
-    $parameters = [
-        'parameters' => [
-            'secret' => 'secret',
-            'locale' => 'en',
-            'database_host' => '',
-            'database_port' => null,
-            'database_name' => '',
-            'database_user' => '',
-            'database_password' => '',
-            'database_prefix' => 'ps_',
-            'api_private_key' => null,
-            'api_public_key' => null,
-            'cookie_key' => '',
-            'new_cookie_key' => null,
-            'ps_cache_enable' => null,
-            'ps_caching' => null,
-        ],
-    ];
+$parametersFilepath = __DIR__  . '/parameters.php';
+if (!file_exists($parametersFilepath)) {
+    // let's check first if there's some old config files which could be migrated
+    if (Upgrade::migrateSettingsFile() === false) {
+        // nothing to migrate ? return
+        return;
+    }
 }
 
+$parameters = require $parametersFilepath;
+
 if (!array_key_exists('parameters', $parameters)) {
-    throw new Exception('Missing "parameters" key in "parameters.php" configuration file');
+    throw new \Exception('Missing "parameters" key in "parameters.php" configuration file');
 }
 
 if (!defined('_PS_IN_TEST_') && isset($_SERVER['argv'])) {
-    $input = new Symfony\Component\Console\Input\ArgvInput();
+    $input = new \Symfony\Component\Console\Input\ArgvInput();
     $env = $input->getParameterOption(['--env', '-e'], getenv('SYMFONY_ENV') ?: 'dev');
 
     if ($env === 'test') {
@@ -64,27 +50,24 @@ if (!defined('_PS_IN_TEST_') && isset($_SERVER['argv'])) {
     }
 }
 
-if (isset($container) && $container instanceof Symfony\Component\DependencyInjection\Container) {
+if ($container instanceof \Symfony\Component\DependencyInjection\Container) {
     foreach ($parameters['parameters'] as $key => $value) {
         $container->setParameter($key, $value);
     }
 
     $driver = 'array';
     $cacheType = [
+        'CacheMemcache' => ['memcache'],
         'CacheMemcached' => ['memcached'],
-        'CacheApc' => ['apcu'],
-    ];
-    $adapters = [
-        'array' => 'cache.adapter.array',
-        'memcached' => 'cache.adapter.memcached',
-        'apcu' => 'cache.adapter.apcu',
+        'CacheApc' => ['apcu', 'apc'],
+        'CacheXcache' => ['xcache'],
     ];
 
     if (isset(
-        $parameters['parameters']['ps_cache_enable'],
-        $parameters['parameters']['ps_caching'],
-        $cacheType[$parameters['parameters']['ps_caching']]
-    )
+            $parameters['parameters']['ps_cache_enable'],
+            $parameters['parameters']['ps_caching'],
+            $cacheType[$parameters['parameters']['ps_caching']]
+        )
         && true === $parameters['parameters']['ps_cache_enable']
     ) {
         foreach ($cacheType[$parameters['parameters']['ps_caching']] as $type) {
@@ -95,7 +78,6 @@ if (isset($container) && $container instanceof Symfony\Component\DependencyInjec
         }
     }
     $container->setParameter('cache.driver', $driver);
-    $container->setParameter('cache.adapter', $adapters[$driver]);
 
     // Parameter used only in dev and test env
     $envParameter = getenv('DISABLE_DEBUG_TOOLBAR');

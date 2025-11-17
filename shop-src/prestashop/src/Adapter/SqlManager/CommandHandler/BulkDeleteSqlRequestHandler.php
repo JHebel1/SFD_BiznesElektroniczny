@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\SqlManager\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Command\BulkDeleteSqlRequestCommand;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\CommandHandler\BulkDeleteSqlRequestHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Exception\CannotDeleteSqlRequestException;
@@ -37,7 +36,6 @@ use RequestSql;
 /**
  * Class BulkDeleteSqlRequestHandler handles bulk delete of SqlRequest command.
  */
-#[AsCommandHandler]
 final class BulkDeleteSqlRequestHandler implements BulkDeleteSqlRequestHandlerInterface
 {
     /**
@@ -52,10 +50,7 @@ final class BulkDeleteSqlRequestHandler implements BulkDeleteSqlRequestHandlerIn
                 $entity = new RequestSql($sqlRequestId->getValue());
 
                 if (false === $entity->delete()) {
-                    throw new CannotDeleteSqlRequestException(
-                        sprintf('Failed to delete SqlRequest with id %d', $sqlRequestId->getValue()),
-                        CannotDeleteSqlRequestException::CANNOT_BULK_DELETE
-                    );
+                    throw new CannotDeleteSqlRequestException(sprintf('Failed to delete SqlRequest with id %s', $sqlRequestId), CannotDeleteSqlRequestException::CANNOT_BULK_DELETE);
                 }
             }
         } catch (PrestaShopException $e) {

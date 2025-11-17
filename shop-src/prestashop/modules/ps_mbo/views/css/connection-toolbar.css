@@ -16,21 +16,15 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-#page-header-desc-configuration-accounts_logout {
-  color: #fff !important;
-  background-color: #18703d !important;
-  border-color: #18703d !important;
-  -webkit-box-shadow: none !important;
-  box-shadow: none !important;
-}
-
-.mbo-large-tooltip .tooltip-inner {
-  max-width: unset !important;
-  white-space: pre-line;
-  word-wrap: normal;
-}
-@media screen and (max-width: 300px) {
-  .mbo-large-tooltip .tooltip-inner {
-    max-width: 100%;
-  }
+.adminpsmbomodule .header-toolbar .container-fluid,
+.adminpsmbomodule .header-toolbar .page-head-tabs,
+.adminmodulesmanage #page-header-desc-configuration-addons_connect,
+.adminmodulesmanage #page-header-desc-configuration-addons_logout,
+.adminmodulesupdates #page-header-desc-configuration-addons_connect,
+.adminmodulesupdates #page-header-desc-configuration-addons_logout,
+.adminmodulesnotifications #page-header-desc-configuration-addons_connect,
+.adminmodulesnotifications #page-header-desc-configuration-addons_logout,
+.adminpsmbouninstalledmodules #page-header-desc-configuration-addons_connect,
+.adminpsmbouninstalledmodules #page-header-desc-configuration-addons_logout {
+  display: none;
 }

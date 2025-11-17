@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\SqlManager\QueryHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\DatabaseTableFields;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Query\GetDatabaseTableFieldsList;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\QueryHandler\GetDatabaseTableFieldsListHandlerInterface;
@@ -38,7 +37,6 @@ use RequestSql;
  *
  * @internal
  */
-#[AsQueryHandler]
 final class GetDatabaseTableFieldsListHandler implements GetDatabaseTableFieldsListHandlerInterface
 {
     /**

@@ -26,9 +26,8 @@
 
 namespace PrestaShopBundle\Security\Voter;
 
-use PrestaShop\PrestaShop\Core\Security\AccessCheckerInterface;
-use PrestaShop\PrestaShop\Core\Security\Permission;
-use PrestaShopBundle\Entity\Employee\Employee;
+use Access;
+use PrestaShopBundle\Security\Admin\Employee;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
@@ -37,55 +36,21 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
  */
 class PageVoter extends Voter
 {
-    /**
-     * @deprecated since 9.0
-     */
-    public const CREATE = Permission::CREATE;
+    public const CREATE = 'create';
 
-    /**
-     * @deprecated since 9.0
-     */
-    public const UPDATE = Permission::UPDATE;
+    public const UPDATE = 'update';
 
-    /**
-     * @deprecated since 9.0
-     */
-    public const DELETE = Permission::DELETE;
+    public const DELETE = 'delete';
 
-    /**
-     * @deprecated since 9.0
-     */
-    public const READ = Permission::READ;
+    public const READ = 'read';
 
-    /**
-     * @deprecated since 9.0
-     */
-    public const LEVEL_DELETE = Permission::LEVEL_DELETE;
+    public const LEVEL_DELETE = 4;
 
-    /**
-     * @deprecated since 9.0
-     */
-    public const LEVEL_UPDATE = Permission::LEVEL_UPDATE;
+    public const LEVEL_UPDATE = 2;
 
-    /**
-     * @deprecated since 9.0
-     */
-    public const LEVEL_CREATE = Permission::LEVEL_CREATE;
+    public const LEVEL_CREATE = 3;
 
-    /**
-     * @deprecated since 9.0
-     */
-    public const LEVEL_READ = Permission::LEVEL_READ;
-
-    /**
-     * @var AccessCheckerInterface
-     */
-    private $accessChecker;
-
-    public function __construct(AccessCheckerInterface $accessChecker)
-    {
-        $this->accessChecker = $accessChecker;
-    }
+    public const LEVEL_READ = 1;
 
     /**
      * Indicates if this voter should pronounce on this attribute and subject.
@@ -95,14 +60,9 @@ class PageVoter extends Voter
      *
      * @return bool
      */
-    protected function supports($attribute, $subject): bool
+    protected function supports($attribute, $subject)
     {
-        return in_array($attribute, [
-            Permission::CREATE,
-            Permission::UPDATE,
-            Permission::DELETE,
-            Permission::READ,
-        ], true);
+        return in_array($attribute, [self::CREATE, self::UPDATE, self::DELETE, self::READ]);
     }
 
     /**
@@ -112,14 +72,29 @@ class PageVoter extends Voter
      *
      * @return bool
      */
-    protected function voteOnAttribute($attribute, $subject, TokenInterface $token): bool
+    protected function voteOnAttribute($attribute, $subject, TokenInterface $token)
     {
         /** @var Employee $user */
         $user = $token->getUser();
-        $employeeProfileId = $user->getProfile()->getId();
-        $action = $this->buildAction((string) $subject, (string) $attribute);
+        $employeeProfileId = $user->getData()->id_profile;
+        $action = $this->buildAction($subject, $attribute);
 
-        return $this->accessChecker->isEmployeeGranted($action, (int) $employeeProfileId);
+        return $this->can($action, $employeeProfileId);
+    }
+
+    /**
+     * Checks if the provided user profile is allowed to perform the requested action.
+     *
+     * @param string $action
+     * @param int $employeeProfileId
+     *
+     * @return bool
+     *
+     * @throws \Exception
+     */
+    protected function can($action, $employeeProfileId)
+    {
+        return Access::isGranted('ROLE_MOD_TAB_' . strtoupper($action), $employeeProfileId);
     }
 
     /**
@@ -130,12 +105,12 @@ class PageVoter extends Voter
      *
      * @return string
      */
-    private function buildAction(string $subject, string $attribute): string
+    private function buildAction($subject, $attribute)
     {
         $action = $subject;
 
         // add underscore to join if needed
-        if (!str_ends_with($action, '_')) {
+        if (substr($action, -1) !== '_') {
             $action .= '_';
         }
 

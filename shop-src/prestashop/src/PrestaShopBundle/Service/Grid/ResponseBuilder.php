@@ -29,32 +29,29 @@ namespace PrestaShopBundle\Service\Grid;
 use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\GridDefinitionFactoryInterface;
 use PrestaShop\PrestaShop\Core\Grid\Definition\GridDefinitionInterface;
 use PrestaShop\PrestaShop\Core\Grid\Filter\GridFilterFormFactoryInterface;
-use PrestaShopBundle\Entity\Repository\AdminFilterRepository;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Router;
 
 class ResponseBuilder
 {
+    /** @var GridFilterFormFactoryInterface */
+    private $filterFormFactory;
+
+    /** @var Router */
+    private $router;
+
     /**
      * @param GridFilterFormFactoryInterface $filterFormFactory
      * @param Router $router
-     * @param AdminFilterRepository $adminFilterRepository
-     * @param int|null $employeeId
-     * @param int $shopId
-     * @param RequestStack $requestStack
      */
     public function __construct(
-        private readonly GridFilterFormFactoryInterface $filterFormFactory,
-        private readonly Router $router,
-        private readonly AdminFilterRepository $adminFilterRepository,
-        private readonly ?int $employeeId,
-        private readonly int $shopId,
-        private readonly RequestStack $requestStack
+        GridFilterFormFactoryInterface $filterFormFactory,
+        Router $router
     ) {
+        $this->filterFormFactory = $filterFormFactory;
+        $this->router = $router;
     }
 
     /**
@@ -82,24 +79,11 @@ class ResponseBuilder
 
         $redirectParams = [];
         if ($filtersForm->isSubmitted()) {
-            if ($filtersForm->isValid()) {
-                if ($this->checkIsFormDataEmpty($filtersForm->getData())) {
-                    $this->resetPersistedFilter($filterId);
-                }
-
-                $redirectParams = [
-                    $filterId => [
-                        'filters' => $filtersForm->getData(),
-                    ],
-                ];
-            } else {
-                foreach ($filtersForm->getErrors(true) as $error) {
-                    $fieldLabel = $error->getOrigin()->getConfig()->getOption('label') ?: $error->getOrigin()->getName();
-                    /** @var Session $session */
-                    $session = $this->requestStack->getSession();
-                    $session->getFlashBag()->add('error', sprintf('%s: %s', $fieldLabel, $error->getMessage()));
-                }
-            }
+            $redirectParams = [
+                $filterId => [
+                    'filters' => $filtersForm->getData(),
+                ],
+            ];
         }
 
         foreach ($queryParamsToKeep as $paramName) {
@@ -111,50 +95,8 @@ class ResponseBuilder
             }
         }
 
-        return new RedirectResponse($this->router->generate($redirectRoute, $redirectParams));
-    }
+        $redirectUrl = $this->router->generate($redirectRoute, $redirectParams);
 
-    /**
-     * @param string $filterId
-     *
-     * @return void
-     */
-    private function resetPersistedFilter(string $filterId): void
-    {
-        if (empty($filterId)) {
-            return;
-        }
-        $adminFilter = $this->adminFilterRepository->findByEmployeeAndFilterId(
-            $this->employeeId,
-            $this->shopId,
-            $filterId
-        );
-        if (!$adminFilter) {
-            return;
-        }
-        $this->adminFilterRepository->unsetFilters($adminFilter);
-    }
-
-    /**
-     * Return true if array is empty (null values or empty array)
-     *
-     * @param array $formData
-     *
-     * @return bool
-     */
-    private function checkIsFormDataEmpty(array $formData): bool
-    {
-        foreach ($formData as $data) {
-            if ($data === null) {
-                continue;
-            }
-            if (is_array($data) && $this->checkIsFormDataEmpty($data)) {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
+        return new RedirectResponse($redirectUrl, 302);
     }
 }

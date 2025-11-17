@@ -27,12 +27,10 @@
 namespace PrestaShopBundle\DependencyInjection\Compiler;
 
 use Symfony\Component\Config\FileLocator;
-use Symfony\Component\Config\Loader\LoaderResolver;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\Finder\Finder;
 
 /**
  * Load services stored in installed modules.
@@ -60,21 +58,27 @@ class LoadServicesFromModulesPass implements CompilerPassInterface
      */
     public function process(ContainerBuilder $container)
     {
-        $installedModules = $container->getParameter('prestashop.installed_modules');
-        $moduleDir = $container->getParameter('prestashop.module_dir');
+        if (!$container->hasParameter('kernel.active_modules')) {
+            return;
+        }
 
-        foreach ($installedModules as $moduleName) {
-            $modulePath = $moduleDir . $moduleName;
-            $moduleConfigPath = $modulePath . $this->configPath;
-            if (file_exists($moduleConfigPath . 'services.yml')) {
-                $fileLocator = new FileLocator($moduleConfigPath);
-                $loader = new YamlFileLoader($container, $fileLocator);
-                $loader->setResolver(new LoaderResolver([
-                    new PhpFileLoader($container, $fileLocator),
-                    new XmlFileLoader($container, $fileLocator),
-                ]));
-                $loader->load('services.yml');
+        $activeModules = $container->getParameter('kernel.active_modules');
+        foreach ($this->getModulesPaths() as $modulePath) {
+            if (in_array($modulePath->getFilename(), $activeModules)) {
+                $moduleConfigPath = $modulePath . $this->configPath;
+                if (file_exists($moduleConfigPath . 'services.yml')) {
+                    $loader = new YamlFileLoader($container, new FileLocator($moduleConfigPath));
+                    $loader->load('services.yml');
+                }
             }
         }
+    }
+
+    /**
+     * @return Finder
+     */
+    private function getModulesPaths()
+    {
+        return Finder::create()->directories()->in(_PS_MODULE_DIR_)->depth(0);
     }
 }

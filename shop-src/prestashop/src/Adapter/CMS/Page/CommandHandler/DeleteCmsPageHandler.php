@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\CMS\Page\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\CmsPage\Command\DeleteCmsPageCommand;
 use PrestaShop\PrestaShop\Core\Domain\CmsPage\CommandHandler\DeleteCmsPageHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\CmsPage\Exception\CannotDeleteCmsPageException;
@@ -36,7 +35,6 @@ use PrestaShopException;
 /**
  * Deletes given cms page.
  */
-#[AsCommandHandler]
 final class DeleteCmsPageHandler extends AbstractCmsPageHandler implements DeleteCmsPageHandlerInterface
 {
     /**

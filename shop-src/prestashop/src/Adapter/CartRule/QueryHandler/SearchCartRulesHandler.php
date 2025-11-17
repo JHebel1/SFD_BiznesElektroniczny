@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\CartRule\QueryHandler;
 
 use CartRule;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\CartRule\Query\SearchCartRules;
 use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryHandler\SearchCartRulesHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\FoundCartRule;
@@ -35,7 +34,6 @@ use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\FoundCartRule;
 /**
  * Searches for cart rules by search phrase using legacy object model
  */
-#[AsQueryHandler]
 final class SearchCartRulesHandler implements SearchCartRulesHandlerInterface
 {
     /**

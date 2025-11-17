@@ -95,7 +95,7 @@ abstract class AbstractSupplierHandler extends AbstractObjectModelHandler
 
         try {
             return $supplier->delete();
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new SupplierException(sprintf('An error occurred when deleting Supplier object with id "%s".', $supplier->id));
         }
     }

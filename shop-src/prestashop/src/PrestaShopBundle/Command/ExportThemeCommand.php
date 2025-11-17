@@ -26,46 +26,15 @@
 
 namespace PrestaShopBundle\Command;
 
-use PrestaShop\PrestaShop\Core\Addon\Theme\ThemeExporter;
-use PrestaShop\PrestaShop\Core\Addon\Theme\ThemeRepository;
-use Smarty_Autoloader;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\FormatterHelper;
+\Smarty_Autoloader::register();
+
+use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
-Smarty_Autoloader::register();
-
-class ExportThemeCommand extends Command
+class ExportThemeCommand extends ContainerAwareCommand
 {
-    /**
-     * @var ThemeRepository
-     */
-    private $themeRepository;
-
-    /**
-     * @var ThemeExporter
-     */
-    private $themeExporter;
-
-    /**
-     * @var TranslatorInterface
-     */
-    private $translator;
-
-    public function __construct(
-        ThemeRepository $themeRepository,
-        ThemeExporter $themeExporter,
-        TranslatorInterface $translator
-    ) {
-        parent::__construct();
-        $this->themeRepository = $themeRepository;
-        $this->themeExporter = $themeExporter;
-        $this->translator = $translator;
-    }
-
     protected function configure()
     {
         $this
@@ -74,15 +43,17 @@ class ExportThemeCommand extends Command
             ->addArgument('theme', InputArgument::REQUIRED, 'Theme to export directory name.');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $theme = $this->themeRepository->getInstanceByName($input->getArgument('theme'));
+        $repository = $this->getContainer()->get('prestashop.core.addon.theme.repository');
+        $theme = $repository->getInstanceByName($input->getArgument('theme'));
 
-        $path = $this->themeExporter->export($theme);
+        $themeExporter = $this->getContainer()->get('prestashop.core.addon.theme.exporter');
+        $path = $themeExporter->export($theme);
 
-        /** @var FormatterHelper $formatter */
         $formatter = $this->getHelper('formatter');
-        $successMsg = $this->translator->trans(
+        $translator = $this->getContainer()->get('translator');
+        $successMsg = $translator->trans(
             'Your theme has been correctly exported: %path%',
             ['%path%' => $path],
             'Admin.Design.Notification'

@@ -39,8 +39,8 @@ class SearchEngineCore extends ObjectModel
         'table' => 'search_engine',
         'primary' => 'id_search_engine',
         'fields' => [
-            'server' => ['type' => self::TYPE_STRING, 'validate' => 'isUrl', 'required' => true, 'size' => 64],
-            'getvar' => ['type' => self::TYPE_STRING, 'validate' => 'isModuleName', 'required' => true, 'size' => 16],
+            'server' => ['type' => self::TYPE_STRING, 'validate' => 'isUrl', 'required' => true],
+            'getvar' => ['type' => self::TYPE_STRING, 'validate' => 'isModuleName', 'required' => true],
         ],
     ];
 
@@ -78,7 +78,5 @@ class SearchEngineCore extends ObjectModel
                 return $str;
             }
         }
-
-        return '';
     }
 }

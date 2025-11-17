@@ -66,7 +66,7 @@ class TranslationService
         $doctrine = $this->container->get('doctrine');
 
         /** @var Lang|null $lang */
-        $lang = $doctrine->getManager()->getRepository(Lang::class)->findOneByLocale($locale);
+        $lang = $doctrine->getManager()->getRepository('PrestaShopBundle:Lang')->findOneByLocale($locale);
 
         if (!$lang instanceof Lang) {
             throw InvalidLanguageException::localeNotFound($locale);
@@ -100,14 +100,14 @@ class TranslationService
      */
     private function getResourcesDirectory()
     {
-        return $this->container->getParameter('kernel.project_dir') . '/app/Resources';
+        return $this->container->getParameter('kernel.root_dir') . '/Resources';
     }
 
     /**
      * @param string $lang
      * @param string|null $type
-     * @param string|null $theme
-     * @param string|null $search
+     * @param string $theme
+     * @param null $search
      *
      * @return array|mixed
      */
@@ -188,9 +188,7 @@ class TranslationService
      * @return array
      *
      * @throws Exception
-     *
      * @todo: we need module information here
-     *
      * @todo: we need to improve the Vuejs application to send the information
      */
     public function listDomainTranslation(
@@ -240,11 +238,11 @@ class TranslationService
         $translation = null;
 
         try {
-            $queryBuilder = $entityManager->getRepository(Translation::class)
+            $queryBuilder = $entityManager->getRepository('PrestaShopBundle:Translation')
                 ->createQueryBuilder('t')
                 ->where('t.lang = :lang')->setParameter('lang', $lang)
                 ->andWhere('t.domain = :domain')->setParameter('domain', $domain)
-                ->andWhere('t.key = :key')->setParameter('key', $key)
+                ->andWhere('t.key LIKE :key')->setParameter('key', $key)
             ;
             if ($theme !== null) {
                 $queryBuilder->andWhere('t.theme = :theme')->setParameter('theme', $theme);
@@ -302,7 +300,7 @@ class TranslationService
      * @param Lang $lang
      * @param string $domain
      * @param string $key
-     * @param string|null $theme
+     * @param null $theme
      *
      * @return bool
      */
@@ -320,7 +318,7 @@ class TranslationService
             $searchTranslation['theme'] = $theme;
         }
 
-        $translation = $entityManager->getRepository(Translation::class)->findOneBy($searchTranslation);
+        $translation = $entityManager->getRepository('PrestaShopBundle:Translation')->findOneBy($searchTranslation);
 
         $resetTranslationSuccessfully = false;
         if (null === $translation) {

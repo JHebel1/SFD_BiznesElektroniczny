@@ -21,76 +21,15 @@ declare(strict_types=1);
 
 namespace PrestaShop\Module\Mbo\Handler\ErrorHandler;
 
-use Sentry\Client;
-use Sentry\State\Scope;
-use Sentry\UserDataBag;
+use Exception;
 
 class ErrorHandler implements ErrorHandlerInterface
 {
     /**
-     * @var Client
-     */
-    protected $client;
-
-    /**
-     * @var UserDataBag
-     */
-    protected $user;
-
-    /**
-     * @var array|false|string
-     */
-    protected $dsn;
-
-    public function __construct()
-    {
-        $this->dsn = getenv('SENTRY_CREDENTIALS');
-
-        if (empty($this->dsn)) {
-            return;
-        }
-
-        try {
-            \Sentry\init([
-                'dsn' => $this->dsn,
-                'release' => \ps_mbo::VERSION,
-                'environment' => getenv('SENTRY_ENVIRONMENT'),
-                'traces_sample_rate' => 0.5,
-                'sample_rate' => 0.5,
-            ]);
-
-            \Sentry\configureScope(function (Scope $scope): void {
-                $scope->setContext('shop info', [
-                    'prestashop_version' => _PS_VERSION_,
-                    'mbo_cdc_url' => getenv('MBO_CDC_URL'),
-                    'distribution_api_url' => getenv('DISTRIBUTION_API_URL'),
-                    'addons_api_url' => getenv('ADDONS_API_URL'),
-                ]);
-            });
-        } catch (\Throwable $e) {
-            // Do nothing here, Sentry seems not working well
-        }
-    }
-
-    /**
      * {@inheritDoc}
      */
-    public function handle(\Throwable $error, ?array $data = []): void
+    public function handle(Exception $error, ?array $data = []): void
     {
-        if (empty($this->dsn)) {
-            return;
-        }
-
-        try {
-            if (!empty($data)) {
-                \Sentry\configureScope(function (Scope $scope) use ($data): void {
-                    $scope->setContext('Additional data', $data);
-                });
-            }
-
-            \Sentry\captureException($error);
-        } catch (\Throwable $e) {
-            // Do nothing here, Sentry seems not working well
-        }
+        // Do nothing here, Just prepare the field for Sentry or other error reporter
     }
 }

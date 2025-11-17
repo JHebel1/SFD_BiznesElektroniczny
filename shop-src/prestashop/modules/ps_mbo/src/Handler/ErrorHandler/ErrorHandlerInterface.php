@@ -20,11 +20,13 @@
 
 namespace PrestaShop\Module\Mbo\Handler\ErrorHandler;
 
+use Exception;
+
 interface ErrorHandlerInterface
 {
     /**
-     * @param \Throwable $error
+     * @param Exception $error
      * @param array|null $data
      */
-    public function handle(\Throwable $error, ?array $data = null): void;
+    public function handle(Exception $error, ?array $data = null): void;
 }

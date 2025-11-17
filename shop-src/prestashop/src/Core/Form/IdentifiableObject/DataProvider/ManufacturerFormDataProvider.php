@@ -79,6 +79,7 @@ final class ManufacturerFormDataProvider implements FormDataProviderInterface
             'description' => $editableManufacturer->getLocalizedDescriptions(),
             'meta_title' => $editableManufacturer->getLocalizedMetaTitles(),
             'meta_description' => $editableManufacturer->getLocalizedMetaDescriptions(),
+            'meta_keyword' => $editableManufacturer->getLocalizedMetaKeywords(),
             'is_enabled' => $editableManufacturer->isEnabled(),
         ];
 

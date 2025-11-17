@@ -69,6 +69,11 @@ class EditableManufacturer
     private $localizedMetaDescriptions;
 
     /**
+     * @var string[]
+     */
+    private $localizedMetaKeywords;
+
+    /**
      * @var bool
      */
     private $enabled;
@@ -86,6 +91,7 @@ class EditableManufacturer
      * @param array $localizedDescriptions
      * @param array $localizedMetaTitles
      * @param array $localizedMetaDescriptions
+     * @param array $localizedMetaKeywords
      * @param array|null $logoImage
      * @param array $associatedShops
      */
@@ -97,6 +103,7 @@ class EditableManufacturer
         array $localizedDescriptions,
         array $localizedMetaTitles,
         array $localizedMetaDescriptions,
+        array $localizedMetaKeywords,
         $logoImage,
         array $associatedShops
     ) {
@@ -107,6 +114,7 @@ class EditableManufacturer
         $this->logoImage = $logoImage;
         $this->localizedMetaTitles = $localizedMetaTitles;
         $this->localizedMetaDescriptions = $localizedMetaDescriptions;
+        $this->localizedMetaKeywords = $localizedMetaKeywords;
         $this->enabled = $enabled;
         $this->associatedShops = $associatedShops;
     }
@@ -165,6 +173,14 @@ class EditableManufacturer
     public function getLocalizedMetaDescriptions()
     {
         return $this->localizedMetaDescriptions;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getLocalizedMetaKeywords()
+    {
+        return $this->localizedMetaKeywords;
     }
 
     /**

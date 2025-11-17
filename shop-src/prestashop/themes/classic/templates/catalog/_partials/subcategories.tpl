@@ -31,43 +31,17 @@
         {foreach from=$subcategories item=subcategory}
           <li>
             <div class="subcategory-image">
-              <a href="{$subcategory.url}" title="{$subcategory.name|escape:'html':'UTF-8'}" class="img">
-                {if !empty($subcategory.thumbnail.large.url)}
-                  <picture>
-                    {if !empty($subcategory.thumbnail.large.sources.avif)}<source srcset="{$subcategory.thumbnail.large.sources.avif}" type="image/avif">{/if}
-                    {if !empty($subcategory.thumbnail.large.sources.webp)}<source srcset="{$subcategory.thumbnail.large.sources.webp}" type="image/webp">{/if}
-                    <img
-                      class="img-fluid"
-                      src="{$subcategory.thumbnail.large.url}"
-                      alt="{$subcategory.name|escape:'html':'UTF-8'}"
-                      loading="lazy"
-                      width="{$subcategory.thumbnail.large.width}"
-                      height="{$subcategory.thumbnail.large.height}"/>
-                  </picture>
-                {else}
-                  <picture>
-                    {if !empty($urls.no_picture_image.large.sources.avif)}<source srcset="{$urls.no_picture_image.large.sources.avif}" type="image/avif">{/if}
-                    {if !empty($urls.no_picture_image.large.sources.webp)}<source srcset="{$urls.no_picture_image.large.sources.webp}" type="image/webp">{/if}
-                    <img
-                      class="img-fluid"
-                      src="{$urls.no_picture_image.large.url}"
-                      alt="{$subcategory.name|escape:'html':'UTF-8'}"
-                      loading="lazy"
-                      width="{$urls.no_picture_image.large.width}"
-                      height="{$urls.no_picture_image.large.height}"/>
-                  </picture>
+              <a href="{$link->getCategoryLink($subcategory.id_category, $subcategory.link_rewrite)|escape:'html':'UTF-8'}" title="{$subcategory.name|escape:'html':'UTF-8'}" class="img">
+                {if !empty($subcategory.image.large.url)}
+                  <img class="replace-2x" src="{$subcategory.image.large.url}" alt="{$subcategory.name|escape:'html':'UTF-8'}" loading="lazy" width="141" height="180"/>
                 {/if}
               </a>
             </div>
 
-            <h5>
-              <a class="subcategory-name" href="{$subcategory.url}">
-                {$subcategory.name|truncate:25:'...'|escape:'html':'UTF-8'}
-              </a>
-            </h5>
-            {if $subcategory.description}
-              <div class="cat_desc">{$subcategory.description|unescape:'html' nofilter}</div>
-            {/if}
+            <h5><a class="subcategory-name" href="{$link->getCategoryLink($subcategory.id_category, $subcategory.link_rewrite)|escape:'html':'UTF-8'}">{$subcategory.name|truncate:25:'...'|escape:'html':'UTF-8'}</a></h5>
+              {if $subcategory.description}
+                <div class="cat_desc">{$subcategory.description|unescape:'html' nofilter}</div>
+              {/if}
           </li>
         {/foreach}
       </ul>

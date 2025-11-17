@@ -30,7 +30,7 @@ use PrestaShop\PrestaShop\Adapter\Configuration;
 use PrestaShop\PrestaShop\Adapter\Hosting\HostingInformation;
 use PrestaShop\PrestaShop\Core\Configuration\PhpExtensionCheckerInterface;
 use RuntimeException;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Looks at server configuration in order to check if PrestaShop's Webservice feature can be enabled.
@@ -86,7 +86,7 @@ final class ServerRequirementsChecker implements ServerRequirementsCheckerInterf
      *
      * @return array empty if no errors
      */
-    public function checkForErrors(): array
+    public function checkForErrors()
     {
         $issues = $this->lookForIssues();
 
@@ -123,7 +123,7 @@ final class ServerRequirementsChecker implements ServerRequirementsCheckerInterf
             $issues[] = self::ISSUE_HTTPS_NOT_AVAILABLE;
         }
 
-        if (!str_contains($this->hostingInformation->getServerInformation()['version'], 'Apache')) {
+        if (false === strpos($this->hostingInformation->getServerInformation()['version'], 'Apache')) {
             return $issues;
         }
 
@@ -149,24 +149,24 @@ final class ServerRequirementsChecker implements ServerRequirementsCheckerInterf
     {
         return [
             self::ISSUE_APACHE_MOD_AUTH_BASIC_NOT_AVAILABLE => $this->translator->trans(
-                'Please activate the \'mod_auth_basic\' Apache module to allow the use of the PrestaShop webservice.',
+                'Please activate the \'mod_rewrite\' Apache module to allow the PrestaShop webservice.',
                 [],
-                'Install'
+                'Admin.Advparameters.Notification'
             ),
             self::ISSUE_APACHE_MOD_AUTH_REWRITE_NOT_AVAILABLE => $this->translator->trans(
                 'We could not check to see if basic authentication and rewrite extensions have been activated. Please manually check if they\'ve been activated in order to use the PrestaShop webservice.',
                 [],
-                'Install'
+                'Admin.Advparameters.Notification'
             ),
             self::ISSUE_EXT_SIMPLEXML_NOT_AVAILABLE => $this->translator->trans(
                 'Please activate the \'SimpleXML\' PHP extension to allow testing of PrestaShop\'s webservice.',
                 [],
-                'Install'
+                'Admin.Advparameters.Notification'
             ),
             self::ISSUE_HTTPS_NOT_AVAILABLE => $this->translator->trans(
                 'It is preferable to use SSL (https:) for webservice calls, as it avoids the "man in the middle" type security issues.',
                 [],
-                'Install'
+                'Admin.Advparameters.Notification'
             ),
         ];
     }

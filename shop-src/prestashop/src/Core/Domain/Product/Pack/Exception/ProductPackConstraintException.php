@@ -49,7 +49,8 @@ class ProductPackConstraintException extends ProductPackException
     public const INVALID_STOCK_TYPE = 30;
 
     /**
-     * Code is used when trying to link a pack stock with its product and one of them has no advanced stock
+     * Code is used when trying to link a pack stock with its product and one of them
+     * has no advanced stock
      */
     public const INCOMPATIBLE_STOCK_TYPE = 40;
 }

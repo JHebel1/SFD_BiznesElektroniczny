@@ -65,10 +65,10 @@ class EntityRepository
 
     public function __call($method, $arguments)
     {
-        if (str_starts_with($method, 'findOneBy')) {
+        if (0 === strpos($method, 'findOneBy')) {
             $one = true;
             $by = substr($method, 9);
-        } elseif (str_starts_with($method, 'findBy')) {
+        } elseif (0 === strpos($method, 'findBy')) {
             $one = false;
             $by = substr($method, 6);
         } else {

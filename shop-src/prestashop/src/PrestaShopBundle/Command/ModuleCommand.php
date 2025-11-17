@@ -28,30 +28,37 @@ namespace PrestaShopBundle\Command;
 
 use Employee;
 use PrestaShop\PrestaShop\Adapter\LegacyContext;
-use PrestaShop\PrestaShop\Adapter\Module\AdminModuleDataProvider;
-use PrestaShop\PrestaShop\Adapter\Module\Configuration\ModuleSelfConfigurator;
-use PrestaShop\PrestaShop\Core\ConfigurationInterface;
-use PrestaShop\PrestaShop\Core\Context\ContextBuilderPreparer;
-use PrestaShop\PrestaShop\Core\Module\ModuleManager;
-use Symfony\Component\Console\Command\Command;
+use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManager;
+use PrestaShopBundle\Translation\Translator;
+use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
-class ModuleCommand extends Command
+class ModuleCommand extends ContainerAwareCommand
 {
     private $allowedActions = [
         'install',
         'uninstall',
         'enable',
         'disable',
+        'enable_mobile',
+        'disable_mobile',
         'reset',
         'upgrade',
         'configure',
-        'delete',
     ];
+
+    /**
+     * @var FormatterHelper
+     */
+    protected $formatter;
+
+    /**
+     * @var Translator
+     */
+    protected $translator;
 
     /**
      * @var InputInterface
@@ -62,17 +69,6 @@ class ModuleCommand extends Command
      * @var OutputInterface
      */
     protected $output;
-
-    public function __construct(
-        protected readonly TranslatorInterface $translator,
-        protected readonly LegacyContext $context,
-        protected readonly ModuleSelfConfigurator $moduleSelfConfigurator,
-        protected readonly ModuleManager $moduleManager,
-        protected readonly ContextBuilderPreparer $contextBuilderPreparer,
-        protected readonly ConfigurationInterface $configuration,
-    ) {
-        parent::__construct();
-    }
 
     protected function configure()
     {
@@ -86,20 +82,21 @@ class ModuleCommand extends Command
 
     protected function init(InputInterface $input, OutputInterface $output)
     {
+        $this->formatter = $this->getHelper('formatter');
+        $this->translator = $this->getContainer()->get('translator');
         $this->input = $input;
         $this->output = $output;
-        // We need to have an employee or the module hooks don't work
-        // see LegacyHookSubscriber
-        if (!$this->context->getContext()->employee) {
-            // Even a non existing employee is fine
-            $this->context->getContext()->employee = new Employee(42);
+        /** @var LegacyContext $legacyContext */
+        $legacyContext = $this->getContainer()->get('prestashop.adapter.legacy.context');
+        //We need to have an employee or the module hooks don't work
+        //see LegacyHookSubscriber
+        if (!$legacyContext->getContext()->employee) {
+            //Even a non existing employee is fine
+            $legacyContext->getContext()->employee = new Employee(42);
         }
-
-        // We must initialize the language context because ModuleRepository depends on it for its cache key
-        $this->contextBuilderPreparer->prepareLanguageId($this->configuration->get('PS_LANG_DEFAULT'));
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->init($input, $output);
 
@@ -131,13 +128,14 @@ class ModuleCommand extends Command
 
     protected function executeConfigureModuleAction($moduleName, $file = null)
     {
-        $this->moduleSelfConfigurator->module($moduleName);
+        $moduleSelfConfigurator = $this->getContainer()->get('prestashop.adapter.module.self_configurator');
+        $moduleSelfConfigurator->module($moduleName);
         if ($file) {
-            $this->moduleSelfConfigurator->file($file);
+            $moduleSelfConfigurator->file($file);
         }
 
         // Check if validation passed and exit in case of errors
-        $errors = $this->moduleSelfConfigurator->validate();
+        $errors = $moduleSelfConfigurator->validate();
         if (!empty($errors)) {
             // Display errors as a list
             $errors = array_map(function ($val) { return '- ' . $val; }, $errors);
@@ -153,7 +151,7 @@ class ModuleCommand extends Command
         }
 
         // Actual configuration
-        $this->moduleSelfConfigurator->configure();
+        $moduleSelfConfigurator->configure();
         $this->displayMessage(
             $this->translator->trans('Configuration successfully applied.', [], 'Admin.Modules.Notification'),
             'info'
@@ -162,12 +160,16 @@ class ModuleCommand extends Command
 
     protected function executeGenericModuleAction($action, $moduleName)
     {
-        if ($this->moduleManager->{$action}($moduleName)) {
+        /**
+         * @var ModuleManager
+         */
+        $moduleManager = $this->getContainer()->get('prestashop.module.manager');
+        if ($moduleManager->{$action}($moduleName)) {
             $this->displayMessage(
                 $this->translator->trans(
                     '%action% action on module %module% succeeded.',
                     [
-                        '%action%' => ucfirst(AdminModuleDataProvider::ACTIONS_TRANSLATION_LABELS[$action]),
+                        '%action%' => ucfirst(str_replace('_', ' ', $action)),
                         '%module%' => $moduleName, ],
                     'Admin.Modules.Notification'
                 )
@@ -176,7 +178,7 @@ class ModuleCommand extends Command
             return;
         }
 
-        $error = $this->moduleManager->getError($moduleName);
+        $error = $moduleManager->getError($moduleName);
         $this->displayMessage(
             $this->translator->trans(
                 'Cannot %action% module %module%. %error_details%',
@@ -192,11 +194,8 @@ class ModuleCommand extends Command
 
     protected function displayMessage($message, $type = 'info')
     {
-        /** @var FormatterHelper $formatter */
-        $formatter = $this->getHelper('formatter');
-
         $this->output->writeln(
-            $formatter->formatBlock($message, $type, true)
+            $this->formatter->formatBlock($message, $type, true)
         );
     }
 }

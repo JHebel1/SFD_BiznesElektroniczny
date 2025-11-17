@@ -50,7 +50,7 @@ class OrderCartRuleCore extends ObjectModel
     public $free_shipping;
 
     /** @var bool value : deleted from order */
-    public $deleted = false;
+    public $deleted = 0;
 
     /**
      * @see ObjectModel::$definition
@@ -62,7 +62,7 @@ class OrderCartRuleCore extends ObjectModel
             'id_order' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true],
             'id_cart_rule' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true],
             'id_order_invoice' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId'],
-            'name' => ['type' => self::TYPE_HTML, 'required' => true, 'size' => 254],
+            'name' => ['type' => self::TYPE_HTML, 'required' => true],
             'value' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => true],
             'value_tax_excl' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => true],
             'free_shipping' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],

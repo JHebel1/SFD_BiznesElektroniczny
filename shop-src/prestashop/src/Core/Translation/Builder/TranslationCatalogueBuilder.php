@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Core\Translation\Builder;
 
+use Doctrine\Common\Inflector\Inflector;
 use InvalidArgumentException;
 use PrestaShop\PrestaShop\Core\Translation\Builder\Map\Catalogue;
 use PrestaShop\PrestaShop\Core\Translation\Builder\Map\Domain;
@@ -37,7 +38,6 @@ use PrestaShop\PrestaShop\Core\Translation\Storage\Provider\CatalogueProviderFac
 use PrestaShop\PrestaShop\Core\Translation\Storage\Provider\Definition\OthersProviderDefinition;
 use PrestaShop\PrestaShop\Core\Translation\Storage\Provider\Definition\ProviderDefinitionInterface;
 use PrestaShop\PrestaShop\Core\Translation\Storage\Provider\Definition\ThemeProviderDefinition;
-use PrestaShop\PrestaShop\Core\Util\Inflector;
 use PrestaShopBundle\Translation\Provider\AbstractProvider;
 
 /**
@@ -83,14 +83,14 @@ class TranslationCatalogueBuilder
         string $domain,
         array $search
     ): array {
-        $this->validateParameters($providerDefinition, $domain);
+        $this->validateParameters($providerDefinition, $locale, $search, $domain);
 
         // When building tree, we keep 3 leaves of Domain i.e OneTwoThreeFour will become OneTwoThree_four
         // see PrestaShop\PrestaShop\Core\Translation\Builder\Map\Domain::mergeTree
         // When getting messages for a domain, we have to do the reverse operation to match the catalogue domain
         $catalogueDomain = $domain;
         if ($catalogueDomain !== OthersProviderDefinition::OTHERS_DOMAIN_NAME) {
-            $catalogueDomain = ucfirst(Inflector::getInflector()->camelize($catalogueDomain));
+            $catalogueDomain = ucfirst(Inflector::camelize($catalogueDomain));
         }
 
         $domainTranslation = $this->getRawCatalogue(
@@ -167,7 +167,7 @@ class TranslationCatalogueBuilder
         array $search,
         ?string $domain = null
     ): Catalogue {
-        $this->validateParameters($providerDefinition);
+        $this->validateParameters($providerDefinition, $locale, $search);
 
         $provider = $this->catalogueProviderFactory->getProvider($providerDefinition);
 
@@ -214,12 +214,16 @@ class TranslationCatalogueBuilder
 
     /**
      * @param ProviderDefinitionInterface $providerDefinition Translation storage provider configuration
+     * @param string $locale
+     * @param array $search
      * @param string|null $domain
      *
      * @throws UnexpectedTranslationTypeException
      */
     private function validateParameters(
         ProviderDefinitionInterface $providerDefinition,
+        string $locale,
+        array $search,
         ?string $domain = null
     ): void {
         if (!in_array($providerDefinition->getType(), ProviderDefinitionInterface::ALLOWED_TYPES)) {

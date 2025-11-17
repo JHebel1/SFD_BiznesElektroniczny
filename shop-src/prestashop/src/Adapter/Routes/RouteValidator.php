@@ -48,30 +48,20 @@ class RouteValidator
     }
 
     /**
-     * @deprecated since 9.0.1, use isRouteValid instead.
-     */
-    public function doesRouteContainsRequiredKeywords($routeId, $rule)
-    {
-        $errors = $this->isRouteValid($routeId, $rule);
-
-        return $errors['missing'] ?? [];
-    }
-
-    /**
-     * Check if a route rule is valid.
+     * Check if a route rule contain all required keywords of default route definition.
      *
      * @param string $routeId
      * @param string $rule Rule to verify
      *
-     * @return array - returns list of missing or unknown keywords
+     * @return array - returns list of missing keywords
      *
      * @throws PrestaShopException
      */
-    public function isRouteValid(string $routeId, string $rule): array
+    public function doesRouteContainsRequiredKeywords($routeId, $rule)
     {
-        $errors = [];
-        $validationResult = Dispatcher::getInstance()->validateRoute($routeId, $rule, $errors);
+        $missingKeywords = [];
+        $validationResult = Dispatcher::getInstance()->validateRoute($routeId, $rule, $missingKeywords);
 
-        return $validationResult ? [] : $errors;
+        return $validationResult ? [] : $missingKeywords;
     }
 }

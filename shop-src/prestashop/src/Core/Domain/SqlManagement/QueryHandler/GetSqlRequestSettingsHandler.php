@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Core\Domain\SqlManagement\QueryHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\ConfigurationInterface;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Query\GetSqlRequestSettings;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\SqlRequestSettings;
@@ -35,10 +34,12 @@ use PrestaShop\PrestaShop\Core\Encoding\CharsetEncoding;
 /**
  * Class GetSqlRequestSettingsHandler handles query to get SqlRequest settings.
  */
-#[AsQueryHandler]
 final class GetSqlRequestSettingsHandler implements GetSqlRequestSettingsHandlerInterface
 {
-    private ConfigurationInterface $configuration;
+    /**
+     * @var ConfigurationInterface
+     */
+    private $configuration;
 
     /**
      * @param ConfigurationInterface $configuration
@@ -51,14 +52,12 @@ final class GetSqlRequestSettingsHandler implements GetSqlRequestSettingsHandler
     /**
      * {@inheritdoc}
      */
-    public function handle(GetSqlRequestSettings $query): SqlRequestSettings
+    public function handle(GetSqlRequestSettings $query)
     {
         $fileEncodingIntValue = $this->configuration->get(SqlRequestSettings::FILE_ENCODING);
-        $fileSeparatorValue = $this->configuration->get(SqlRequestSettings::FILE_SEPARATOR);
 
         return new SqlRequestSettings(
-            $this->getFileEncoding($fileEncodingIntValue),
-            $fileSeparatorValue ?? ';'
+            $this->getFileEncoding($fileEncodingIntValue)
         );
     }
 
@@ -69,7 +68,7 @@ final class GetSqlRequestSettingsHandler implements GetSqlRequestSettingsHandler
      *
      * @return string
      */
-    private function getFileEncoding(?int $rawValue): string
+    private function getFileEncoding($rawValue)
     {
         $valuesMapping = [
             1 => CharsetEncoding::UTF_8,

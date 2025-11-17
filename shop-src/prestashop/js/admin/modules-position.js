@@ -72,7 +72,7 @@ $(function(){
 			}
 		});
 
-		panel_selection.find("button").on('click', function () {
+		panel_selection.find("button").click(function () {
 			$("button[name='unhookform']").trigger("click");
 		});
 
@@ -88,16 +88,16 @@ $(function(){
 
 		var show_modules = $("#show_modules");
 		show_modules.select2();
-		show_modules.on("change", function () {
+		show_modules.bind("change", function () {
 			modulesPositionFilterHooks();
 		});
 
 		var hook_position = $("#hook_position");
-		hook_position.on("change", function () {
+		hook_position.bind("change", function () {
 			modulesPositionFilterHooks();
 		});
 
-		$('#hook_search').on('input', function () {
+		$('#hook_search').bind('input', function () {
 			modulesPositionFilterHooks();
 		});
 
@@ -161,7 +161,7 @@ $(function(){
 	//
 	// Used for the anchor module page
 	//
-	$("#hook_module_form").find("select[name='id_module']").on('change', function(){
+	$("#hook_module_form").find("select[name='id_module']").change(function(){
 
 		var $this = $(this);
 		var hook_select = $("select[name='id_hook']");
@@ -179,7 +179,7 @@ $(function(){
 				dataType: 'json',
 				data: {
 					action: 'getPossibleHookingListForModule',
-					controller: 'AdminModulesPositions',
+					tab: 'AdminModulesPositions',
 					ajax: 1,
 					module_id: $this.val(),
 					token: token

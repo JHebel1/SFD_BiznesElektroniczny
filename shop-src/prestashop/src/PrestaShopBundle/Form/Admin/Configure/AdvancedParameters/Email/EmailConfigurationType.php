@@ -32,7 +32,7 @@ use PrestaShopBundle\Form\Admin\Type\SwitchType;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class EmailConfigurationType defines email sending configuration.
@@ -88,9 +88,6 @@ class EmailConfigurationType extends TranslatorAwareType
                 'multiple' => false,
                 'choices' => $this->mailMethodChoiceProvider->getChoices(),
             ])
-            ->add('subject_prefix', SwitchType::class, [
-                'label' => $this->trans('Enable the store name as a prefix in the email\'s subject', 'Admin.Advparameters.Feature'),
-            ])
             ->add('mail_type', ChoiceType::class, [
                 'expanded' => true,
                 'multiple' => false,
@@ -98,22 +95,11 @@ class EmailConfigurationType extends TranslatorAwareType
                     $this->trans('Send email in HTML format', 'Admin.Advparameters.Feature') => MailOption::TYPE_HTML,
                     $this->trans('Send email in text format', 'Admin.Advparameters.Feature') => MailOption::TYPE_TXT,
                     $this->trans('Both', 'Admin.Advparameters.Feature') => MailOption::TYPE_BOTH,
-                    $this->trans('Both, with text format automatically generated', 'Admin.Advparameters.Feature') => MailOption::TYPE_BOTH_AUTOMATIC_TEXT,
                 ],
             ])
             ->add('log_emails', SwitchType::class, [
                 'label' => $this->trans('Log Emails', 'Admin.Advparameters.Feature'),
             ])
-            ->add('dkim_enable', SwitchType::class, [
-                'attr' => ['class' => 'js-dkim-enable'],
-                'choices' => [
-                    'Disabled' => false,
-                    'Enabled' => true,
-                ],
-                'label' => $this->trans('DKIM signing', 'Admin.Advparameters.Feature'),
-                'help' => $this->trans('Enable DKIM, fill in the fields and give it a try. If no email is sent, check logs.', 'Admin.Advparameters.Help'),
-            ])
-            ->add('smtp_config', SmtpConfigurationType::class)
-            ->add('dkim_config', DkimConfigurationType::class);
+            ->add('smtp_config', SmtpConfigurationType::class);
     }
 }

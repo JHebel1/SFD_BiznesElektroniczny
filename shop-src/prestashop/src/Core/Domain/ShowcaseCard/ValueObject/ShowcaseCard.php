@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -71,12 +72,7 @@ class ShowcaseCard
     /**
      * Card shown in Improve -> Shipping -> Carriers
      */
-    public const CARRIERS_CARD = 'carriers_card';
-
-    /**
-     * Card shown in Sell -> Catalog -> Attributes & features -> Features
-     */
-    public const FEATURES_CARD = 'features_card';
+    const CARRIERS_CARD = 'carriers_card';
 
     /**
      * List of supported card names
@@ -90,7 +86,6 @@ class ShowcaseCard
         self::ATTRIBUTES_CARD => true,
         self::MONITORING_CARD => true,
         self::CARRIERS_CARD => true,
-        self::FEATURES_CARD => true,
     ];
 
     /**

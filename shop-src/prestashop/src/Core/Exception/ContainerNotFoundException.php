@@ -26,8 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Core\Exception;
 
-use Exception;
-
-class ContainerNotFoundException extends Exception
+class ContainerNotFoundException extends \Exception
 {
 }

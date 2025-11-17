@@ -23,7 +23,7 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class CustomerFormatterCore implements FormFormatterInterface
 {
@@ -182,8 +182,7 @@ class CustomerFormatterCore implements FormFormatterInterface
                         'Shop.Forms.Labels'
                     )
                 )
-                ->setRequired($this->password_is_required)
-                ->setAutocompleteAttribute('new-password');
+                ->setRequired($this->password_is_required);
         }
 
         if ($this->ask_for_new_password) {
@@ -196,8 +195,7 @@ class CustomerFormatterCore implements FormFormatterInterface
                         [],
                         'Shop.Forms.Labels'
                     )
-                )
-                ->setAutocompleteAttribute('new-password');
+                );
         }
 
         if ($this->ask_for_birthdate) {
@@ -233,7 +231,6 @@ class CustomerFormatterCore implements FormFormatterInterface
         }
 
         // ToDo, replace the hook exec with HookFinder when the associated PR will be merged
-        // An array [module_name => module_output] will be returned
         $additionalCustomerFormFields = Hook::exec('additionalCustomerFormFields', ['fields' => &$format], null, true);
 
         if (is_array($additionalCustomerFormFields)) {

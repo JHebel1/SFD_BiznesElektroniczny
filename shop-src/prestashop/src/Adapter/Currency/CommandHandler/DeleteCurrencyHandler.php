@@ -28,7 +28,6 @@ namespace PrestaShop\PrestaShop\Adapter\Currency\CommandHandler;
 
 use Configuration;
 use Currency;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Currency\Command\DeleteCurrencyCommand;
 use PrestaShop\PrestaShop\Core\Domain\Currency\CommandHandler\DeleteCurrencyHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Currency\Exception\CannotDeleteCurrencyException;
@@ -44,7 +43,6 @@ use Shop;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class DeleteCurrencyHandler implements DeleteCurrencyHandlerInterface
 {
     /**

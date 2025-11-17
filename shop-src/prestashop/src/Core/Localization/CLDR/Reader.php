@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -26,7 +27,6 @@
 
 namespace PrestaShop\PrestaShop\Core\Localization\CLDR;
 
-use DateTime;
 use PrestaShop\PrestaShop\Core\Localization\Exception\LocalizationException;
 use PrestaShop\PrestaShop\Core\Localization\Exception\LocalizationFileNotFoundException;
 use SimpleXMLElement;
@@ -64,7 +64,7 @@ class Reader implements ReaderInterface
      * Supplemental data for all locales.
      * Contains data about parent locales, currencies, languages...
      *
-     * @var SimpleXMLElement|null
+     * @var SimpleXMLElement
      */
     protected $supplementalXml;
 
@@ -72,7 +72,7 @@ class Reader implements ReaderInterface
      * Additional data about numbering systems
      * Mainly used for digits (they depend on numbering system).
      *
-     * @var SimpleXMLElement|null
+     * @var SimpleXMLElement
      */
     protected $numberingSystemsXml;
 
@@ -102,7 +102,7 @@ class Reader implements ReaderInterface
             try {
                 $partialData = $this->getLocaleData($thisLocaleCode);
                 $finalData = $finalData->overrideWith($partialData);
-            } catch (LocalizationFileNotFoundException) {
+            } catch (LocalizationFileNotFoundException $e) {
                 // Sometimes a file can be missing.
                 // Example for Chinese : zh_CN.xml doesn't exist. There is only a zh.xml file.
                 // That's why we can't let this exception bubble up.
@@ -268,7 +268,7 @@ class Reader implements ReaderInterface
     /**
      * Maps locale data from SimplexmlElement to a LocaleData object.
      *
-     * @param SimpleXMLElement $xmlLocaleData
+     * @param SimplexmlElement $xmlLocaleData
      *                                        XML locale data
      * @param array $supplementalData
      *                                Supplemental locale data
@@ -388,9 +388,9 @@ class Reader implements ReaderInterface
         // Decimal patterns (by numbering system)
         if (isset($numbersData->decimalFormats)) {
             $decimalPatterns = $localeData->getDecimalPatterns();
-            /** @var SimpleXMLElement $format */
+            /** @var SimplexmlElement $format */
             foreach ($numbersData->decimalFormats as $format) {
-                /** @var SimpleXMLElement $format */
+                /** @var SimplexmlElement $format */
                 $numberSystem = (string) $format['numberSystem'];
                 $patternResult = $format->xpath('decimalFormatLength[not(@type)]/decimalFormat/pattern');
                 if (isset($patternResult[0])) {
@@ -401,15 +401,15 @@ class Reader implements ReaderInterface
             // We browse aliases after all regular patterns have been defined, and duplicate data for target number
             // systems.
             foreach ($numbersData->decimalFormats as $format) {
-                /** @var SimpleXMLElement $format */
+                /** @var SimplexmlElement $format */
                 $numberSystem = (string) $format['numberSystem'];
                 // If alias is set, we just copy data from another numbering system:
                 $alias = $format->alias;
                 if (isset($alias['path']) && preg_match(
-                    "#^\.\.\/decimalFormats\[@numberSystem='([^)]+)'\]$#",
-                    (string) $alias['path'],
-                    $matches
-                )
+                        "#^\.\.\/decimalFormats\[@numberSystem='([^)]+)'\]$#",
+                        (string) $alias['path'],
+                        $matches
+                    )
                 ) {
                     $aliasNumSys = $matches[1];
                     $decimalPatterns[$numberSystem] = $decimalPatterns[$aliasNumSys];
@@ -433,15 +433,15 @@ class Reader implements ReaderInterface
             // We browse aliases after all regular patterns have been defined, and duplicate data for target number
             // systems.
             foreach ($numbersData->percentFormats as $format) {
-                /** @var SimpleXMLElement $format */
+                /** @var SimplexmlElement $format */
                 $numberSystem = (string) $format['numberSystem'];
                 // If alias is set, we just copy data from another numbering system:
                 $alias = $format->alias;
                 if (isset($alias['path']) && preg_match(
-                    "#^\.\.\/percentFormats\[@numberSystem='([^)]+)'\]$#",
-                    (string) $alias['path'],
-                    $matches
-                )
+                        "#^\.\.\/percentFormats\[@numberSystem='([^)]+)'\]$#",
+                        (string) $alias['path'],
+                        $matches
+                    )
                 ) {
                     $aliasNumSys = $matches[1];
                     $percentPatterns[$numberSystem] = $percentPatterns[$aliasNumSys];
@@ -455,7 +455,7 @@ class Reader implements ReaderInterface
         if (isset($numbersData->currencyFormats)) {
             $currencyPatterns = $localeData->getCurrencyPatterns();
             foreach ($numbersData->currencyFormats as $format) {
-                /** @var SimpleXMLElement $format */
+                /** @var SimplexmlElement $format */
                 $numberSystem = (string) $format['numberSystem'];
                 $patternResult = $format->xpath(
                     'currencyFormatLength[not(@*)]/currencyFormat[@type="standard"]/pattern'
@@ -468,15 +468,15 @@ class Reader implements ReaderInterface
             // We browse aliases after all regular patterns have been defined, and duplicate data for target number
             // systems.
             foreach ($numbersData->currencyFormats as $format) {
-                /** @var SimpleXMLElement $format */
+                /** @var SimplexmlElement $format */
                 $numberSystem = (string) $format['numberSystem'];
                 // If alias is set, we just copy data from another numbering system:
                 $alias = $format->alias;
                 if (isset($alias['path']) && preg_match(
-                    "#^\.\.\/currencyFormats\[@numberSystem='([^)]+)'\]$#",
-                    (string) $alias['path'],
-                    $matches
-                )
+                        "#^\.\.\/currencyFormats\[@numberSystem='([^)]+)'\]$#",
+                        (string) $alias['path'],
+                        $matches
+                    )
                 ) {
                     $aliasNumSys = $matches[1];
                     $currencyPatterns[$numberSystem] = $currencyPatterns[$aliasNumSys];
@@ -503,7 +503,7 @@ class Reader implements ReaderInterface
                 $currencyData->setIsoCode($currencyCode);
 
                 // check if currency is still active in one territory
-                $currencyDates = $this->supplementalXml->currencyData->xpath('//region/currency[@iso4217="' . $currencyCode . '"]');
+                $currencyDates = $this->supplementalXml->supplementalData->xpath('//region/currency[@iso4217="' . $currencyCode . '"]');
                 if (!empty($currencyDates) && $this->isCurrencyActiveSomewhere($currencyDates, $currencyActiveDateThreshold)) {
                     $currencyData->setActive(true);
                 } else {
@@ -534,12 +534,12 @@ class Reader implements ReaderInterface
                 $currencyData->setDisplayNames($displayNames);
 
                 // Supplemental (fraction digits and numeric iso code)
-                $codesMapping = $this->supplementalXml->xpath(
+                $codesMapping = $this->supplementalXml->supplementalData->xpath(
                     '//codeMappings/currencyCodes[@type="' . $currencyCode . '"]'
                 );
 
                 if (!empty($codesMapping)) {
-                    /** @var SimpleXMLElement $codesMapping */
+                    /** @var SimplexmlElement $codesMapping */
                     $codesMapping = $codesMapping[0];
                     $numericIsoCode = (string) $codesMapping->attributes()->numeric;
                     if (strlen($numericIsoCode) < 3) {
@@ -548,18 +548,18 @@ class Reader implements ReaderInterface
                     $currencyData->setNumericIsoCode($numericIsoCode);
                 }
 
-                $fractionsData = $this->supplementalXml->xpath(
+                $fractionsData = $this->supplementalXml->supplementalData->xpath(
                     '//currencyData/fractions/info[@iso4217="' . $currencyCode . '"]'
                 );
 
                 if (empty($fractionsData)) {
-                    $fractionsData = $this->supplementalXml->xpath(
+                    $fractionsData = $this->supplementalXml->supplementalData->xpath(
                         '//currencyData/fractions/info[@iso4217="DEFAULT"]'
                     );
                 }
 
                 if (!empty($fractionsData)) {
-                    /** @var SimpleXMLElement $fractionsData */
+                    /** @var SimplexmlElement $fractionsData */
                     $fractionsData = $fractionsData[0];
                     $currencyData->setDecimalDigits((int) (string) $fractionsData->attributes()->digits);
                 }
@@ -603,7 +603,7 @@ class Reader implements ReaderInterface
      *
      * @return bool
      */
-    protected function shouldCurrencyBeReturned($currencyCode, SimpleXMLElement $supplementalData, $currencyActiveDateThreshold)
+    protected function shouldCurrencyBeReturned($currencyCode, SimplexmlElement $supplementalData, $currencyActiveDateThreshold)
     {
         // dont store test currency
         if ($currencyCode == self::CURRENCY_CODE_TEST) {
@@ -636,7 +636,7 @@ class Reader implements ReaderInterface
             }
 
             // date "to" given: check if currency was active in near past to propose it
-            $dateTo = DateTime::createFromFormat('Y-m-d', $currencyDate->attributes()->to);
+            $dateTo = \DateTime::createFromFormat('Y-m-d', $currencyDate->attributes()->to);
             if (false !== $dateTo && $dateTo->getTimestamp() > $currencyActiveDateThreshold) {
                 return true;
             }

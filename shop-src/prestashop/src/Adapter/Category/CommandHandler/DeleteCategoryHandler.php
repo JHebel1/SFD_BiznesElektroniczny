@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Category\CommandHandler;
 
 use Category;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Category\Command\DeleteCategoryCommand;
 use PrestaShop\PrestaShop\Core\Domain\Category\CommandHandler\DeleteCategoryHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Category\Exception\CannotDeleteRootCategoryForShopException;
@@ -37,7 +36,6 @@ use PrestaShop\PrestaShop\Core\Domain\Category\Exception\FailedToDeleteCategoryE
 /**
  * Class DeleteCategoryHandler.
  */
-#[AsCommandHandler]
 final class DeleteCategoryHandler extends AbstractDeleteCategoryHandler implements DeleteCategoryHandlerInterface
 {
     /**
@@ -64,8 +62,6 @@ final class DeleteCategoryHandler extends AbstractDeleteCategoryHandler implemen
             throw new FailedToDeleteCategoryException(sprintf('Failed to delete category with id %s', var_export($categoryIdValue, true)));
         }
 
-        $this->updateProductCategories([
-            (int) $category->id_parent => [$categoryIdValue],
-        ], $command->getDeleteMode());
+        $this->handleProductsUpdate((int) $category->id_parent, $command->getDeleteMode());
     }
 }

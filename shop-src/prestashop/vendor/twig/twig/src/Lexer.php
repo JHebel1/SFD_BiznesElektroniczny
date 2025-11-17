@@ -15,57 +15,43 @@ namespace Twig;
 use Twig\Error\SyntaxError;
 
 /**
+ * Lexes a template string.
+ *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class Lexer
+class Lexer implements \Twig_LexerInterface
 {
-    private $isInitialized = false;
+    protected $tokens;
+    protected $code;
+    protected $cursor;
+    protected $lineno;
+    protected $end;
+    protected $state;
+    protected $states;
+    protected $brackets;
+    protected $env;
+    // to be renamed to $name in 2.0 (where it is private)
+    protected $filename;
+    protected $options;
+    protected $regexes;
+    protected $position;
+    protected $positions;
+    protected $currentVarBlockLine;
 
-    private $tokens;
-    private $code;
-    private $cursor;
-    private $lineno;
-    private $end;
-    private $state;
-    private $states;
-    private $brackets;
-    private $env;
     private $source;
-    private $options;
-    private $regexes;
-    private $position;
-    private $positions;
-    private $currentVarBlockLine;
 
-    public const STATE_DATA = 0;
-    public const STATE_BLOCK = 1;
-    public const STATE_VAR = 2;
-    public const STATE_STRING = 3;
-    public const STATE_INTERPOLATION = 4;
+    const STATE_DATA = 0;
+    const STATE_BLOCK = 1;
+    const STATE_VAR = 2;
+    const STATE_STRING = 3;
+    const STATE_INTERPOLATION = 4;
 
-    public const REGEX_NAME = '/[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*/A';
-    public const REGEX_STRING = '/"([^#"\\\\]*(?:\\\\.[^#"\\\\]*)*)"|\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'/As';
-
-    public const REGEX_NUMBER = '/(?(DEFINE)
-        (?<LNUM>[0-9]+(_[0-9]+)*)               # Integers (with underscores)   123_456
-        (?<FRAC>\.(?&LNUM))                     # Fractional part               .456
-        (?<EXPONENT>[eE][+-]?(?&LNUM))          # Exponent part                 E+10
-        (?<DNUM>(?&LNUM)(?:(?&FRAC))?)          # Decimal number                123_456.456
-    )(?:(?&DNUM)(?:(?&EXPONENT))?)              #                               123_456.456E+10
-    /Ax';
-
-    public const REGEX_DQ_STRING_DELIM = '/"/A';
-    public const REGEX_DQ_STRING_PART = '/[^#"\\\\]*(?:(?:\\\\.|#(?!\{))[^#"\\\\]*)*/As';
-    public const REGEX_INLINE_COMMENT = '/#[^\n]*/A';
-    public const PUNCTUATION = '()[]{}?:.,|';
-
-    private const SPECIAL_CHARS = [
-        'f' => "\f",
-        'n' => "\n",
-        'r' => "\r",
-        't' => "\t",
-        'v' => "\v",
-    ];
+    const REGEX_NAME = '/[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*/A';
+    const REGEX_NUMBER = '/[0-9]+(?:\.[0-9]+)?([Ee][\+\-][0-9]+)?/A';
+    const REGEX_STRING = '/"([^#"\\\\]*(?:\\\\.[^#"\\\\]*)*)"|\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'/As';
+    const REGEX_DQ_STRING_DELIM = '/"/A';
+    const REGEX_DQ_STRING_PART = '/[^#"\\\\]*(?:(?:\\\\.|#(?!\{))[^#"\\\\]*)*/As';
+    const PUNCTUATION = '()[]{}?:.,|';
 
     public function __construct(Environment $env, array $options = [])
     {
@@ -80,13 +66,6 @@ class Lexer
             'whitespace_line_chars' => ' \t\0\x0B',
             'interpolation' => ['#{', '}'],
         ], $options);
-    }
-
-    private function initialize(): void
-    {
-        if ($this->isInitialized) {
-            return;
-        }
 
         // when PHP 7.3 is the min version, we will be able to remove the '#' part in preg_quote as it's part of the default
         $this->regexes = [
@@ -121,7 +100,9 @@ class Lexer
                     $this->options['whitespace_trim']. // -
                     '|'.
                     $this->options['whitespace_line_trim']. // ~
-                ')?\s*endverbatim\s*'.
+                ')?\s*'.
+                '(?:end%s)'. // endraw or endverbatim
+                '\s*'.
                 '(?:'.
                     preg_quote($this->options['whitespace_trim'].$this->options['tag_block'][1], '#').'\s*'. // -%}
                     '|'.
@@ -136,7 +117,7 @@ class Lexer
             // #}
             'lex_comment' => '{
                 (?:'.
-                    preg_quote($this->options['whitespace_trim'].$this->options['tag_comment'][1], '#').'\s*\n?'. // -#}\s*\n?
+                    preg_quote($this->options['whitespace_trim']).preg_quote($this->options['tag_comment'][1], '#').'\s*\n?'. // -#}\s*\n?
                     '|'.
                     preg_quote($this->options['whitespace_line_trim'].$this->options['tag_comment'][1], '#').'['.$this->options['whitespace_line_chars'].']*'. // ~#}[ \t\0\x0B]*
                     '|'.
@@ -146,7 +127,9 @@ class Lexer
 
             // verbatim %}
             'lex_block_raw' => '{
-                \s*verbatim\s*
+                \s*
+                (raw|verbatim)
+                \s*
                 (?:'.
                     preg_quote($this->options['whitespace_trim'].$this->options['tag_block'][1], '#').'\s*'. // -%}\s*
                     '|'.
@@ -175,16 +158,30 @@ class Lexer
             'interpolation_start' => '{'.preg_quote($this->options['interpolation'][0], '#').'\s*}A',
             'interpolation_end' => '{\s*'.preg_quote($this->options['interpolation'][1], '#').'}A',
         ];
-
-        $this->isInitialized = true;
     }
 
-    public function tokenize(Source $source): TokenStream
+    public function tokenize($code, $name = null)
     {
-        $this->initialize();
+        if (!$code instanceof Source) {
+            @trigger_error(sprintf('Passing a string as the $code argument of %s() is deprecated since version 1.27 and will be removed in 2.0. Pass a \Twig\Source instance instead.', __METHOD__), E_USER_DEPRECATED);
+            $this->source = new Source($code, $name);
+        } else {
+            $this->source = $code;
+        }
 
-        $this->source = $source;
-        $this->code = str_replace(["\r\n", "\r"], "\n", $source->getCode());
+        if (((int) ini_get('mbstring.func_overload')) & 2) {
+            @trigger_error('Support for having "mbstring.func_overload" different from 0 is deprecated version 1.29 and will be removed in 2.0.', E_USER_DEPRECATED);
+        }
+
+        if (\function_exists('mb_internal_encoding') && ((int) ini_get('mbstring.func_overload')) & 2) {
+            $mbEncoding = mb_internal_encoding();
+            mb_internal_encoding('ASCII');
+        } else {
+            $mbEncoding = null;
+        }
+
+        $this->code = str_replace(["\r\n", "\r"], "\n", $this->source->getCode());
+        $this->filename = $this->source->getName();
         $this->cursor = 0;
         $this->lineno = 1;
         $this->end = \strlen($this->code);
@@ -195,7 +192,7 @@ class Lexer
         $this->position = -1;
 
         // find all token starts in one go
-        preg_match_all($this->regexes['lex_tokens_start'], $this->code, $matches, \PREG_OFFSET_CAPTURE);
+        preg_match_all($this->regexes['lex_tokens_start'], $this->code, $matches, PREG_OFFSET_CAPTURE);
         $this->positions = $matches;
 
         while ($this->cursor < $this->end) {
@@ -226,15 +223,19 @@ class Lexer
 
         $this->pushToken(Token::EOF_TYPE);
 
-        if ($this->brackets) {
-            [$expect, $lineno] = array_pop($this->brackets);
-            throw new SyntaxError(\sprintf('Unclosed "%s".', $expect), $lineno, $this->source);
+        if (!empty($this->brackets)) {
+            list($expect, $lineno) = array_pop($this->brackets);
+            throw new SyntaxError(sprintf('Unclosed "%s".', $expect), $lineno, $this->source);
+        }
+
+        if ($mbEncoding) {
+            mb_internal_encoding($mbEncoding);
         }
 
         return new TokenStream($this->tokens, $this->source);
     }
 
-    private function lexData(): void
+    protected function lexData()
     {
         // if no matches are left we return the rest of the template as simple text token
         if ($this->position == \count($this->positions[0]) - 1) {
@@ -279,7 +280,7 @@ class Lexer
                 // raw data?
                 if (preg_match($this->regexes['lex_block_raw'], $this->code, $match, 0, $this->cursor)) {
                     $this->moveCursor($match[0]);
-                    $this->lexRawData();
+                    $this->lexRawData($match[1]);
                 // {% line \d+ %}
                 } elseif (preg_match($this->regexes['lex_block_line'], $this->code, $match, 0, $this->cursor)) {
                     $this->moveCursor($match[0]);
@@ -299,9 +300,9 @@ class Lexer
         }
     }
 
-    private function lexBlock(): void
+    protected function lexBlock()
     {
-        if (!$this->brackets && preg_match($this->regexes['lex_block'], $this->code, $match, 0, $this->cursor)) {
+        if (empty($this->brackets) && preg_match($this->regexes['lex_block'], $this->code, $match, 0, $this->cursor)) {
             $this->pushToken(Token::BLOCK_END_TYPE);
             $this->moveCursor($match[0]);
             $this->popState();
@@ -310,9 +311,9 @@ class Lexer
         }
     }
 
-    private function lexVar(): void
+    protected function lexVar()
     {
-        if (!$this->brackets && preg_match($this->regexes['lex_var'], $this->code, $match, 0, $this->cursor)) {
+        if (empty($this->brackets) && preg_match($this->regexes['lex_var'], $this->code, $match, 0, $this->cursor)) {
             $this->pushToken(Token::VAR_END_TYPE);
             $this->moveCursor($match[0]);
             $this->popState();
@@ -321,24 +322,19 @@ class Lexer
         }
     }
 
-    private function lexExpression(): void
+    protected function lexExpression()
     {
         // whitespace
         if (preg_match('/\s+/A', $this->code, $match, 0, $this->cursor)) {
             $this->moveCursor($match[0]);
 
             if ($this->cursor >= $this->end) {
-                throw new SyntaxError(\sprintf('Unclosed "%s".', self::STATE_BLOCK === $this->state ? 'block' : 'variable'), $this->currentVarBlockLine, $this->source);
+                throw new SyntaxError(sprintf('Unclosed "%s".', self::STATE_BLOCK === $this->state ? 'block' : 'variable'), $this->currentVarBlockLine, $this->source);
             }
         }
 
-        // spread operator
-        if ('.' === $this->code[$this->cursor] && ($this->cursor + 2 < $this->end) && '.' === $this->code[$this->cursor + 1] && '.' === $this->code[$this->cursor + 2]) {
-            $this->pushToken(Token::SPREAD_TYPE, '...');
-            $this->moveCursor('...');
-        }
         // arrow function
-        elseif ('=' === $this->code[$this->cursor] && ($this->cursor + 1 < $this->end) && '>' === $this->code[$this->cursor + 1]) {
+        if ('=' === $this->code[$this->cursor] && '>' === $this->code[$this->cursor + 1]) {
             $this->pushToken(Token::ARROW_TYPE, '=>');
             $this->moveCursor('=>');
         }
@@ -354,24 +350,28 @@ class Lexer
         }
         // numbers
         elseif (preg_match(self::REGEX_NUMBER, $this->code, $match, 0, $this->cursor)) {
-            $this->pushToken(Token::NUMBER_TYPE, 0 + str_replace('_', '', $match[0]));
+            $number = (float) $match[0];  // floats
+            if (ctype_digit($match[0]) && $number <= PHP_INT_MAX) {
+                $number = (int) $match[0]; // integers lower than the maximum
+            }
+            $this->pushToken(Token::NUMBER_TYPE, $number);
             $this->moveCursor($match[0]);
         }
         // punctuation
-        elseif (str_contains(self::PUNCTUATION, $this->code[$this->cursor])) {
+        elseif (false !== strpos(self::PUNCTUATION, $this->code[$this->cursor])) {
             // opening bracket
-            if (str_contains('([{', $this->code[$this->cursor])) {
+            if (false !== strpos('([{', $this->code[$this->cursor])) {
                 $this->brackets[] = [$this->code[$this->cursor], $this->lineno];
             }
             // closing bracket
-            elseif (str_contains(')]}', $this->code[$this->cursor])) {
-                if (!$this->brackets) {
-                    throw new SyntaxError(\sprintf('Unexpected "%s".', $this->code[$this->cursor]), $this->lineno, $this->source);
+            elseif (false !== strpos(')]}', $this->code[$this->cursor])) {
+                if (empty($this->brackets)) {
+                    throw new SyntaxError(sprintf('Unexpected "%s".', $this->code[$this->cursor]), $this->lineno, $this->source);
                 }
 
-                [$expect, $lineno] = array_pop($this->brackets);
+                list($expect, $lineno) = array_pop($this->brackets);
                 if ($this->code[$this->cursor] != strtr($expect, '([{', ')]}')) {
-                    throw new SyntaxError(\sprintf('Unclosed "%s".', $expect), $lineno, $this->source);
+                    throw new SyntaxError(sprintf('Unclosed "%s".', $expect), $lineno, $this->source);
                 }
             }
 
@@ -380,7 +380,7 @@ class Lexer
         }
         // strings
         elseif (preg_match(self::REGEX_STRING, $this->code, $match, 0, $this->cursor)) {
-            $this->pushToken(Token::STRING_TYPE, $this->stripcslashes(substr($match[0], 1, -1), substr($match[0], 0, 1)));
+            $this->pushToken(Token::STRING_TYPE, stripcslashes(substr($match[0], 1, -1)));
             $this->moveCursor($match[0]);
         }
         // opening double quoted string
@@ -389,77 +389,20 @@ class Lexer
             $this->pushState(self::STATE_STRING);
             $this->moveCursor($match[0]);
         }
-        // inline comment
-        elseif (preg_match(self::REGEX_INLINE_COMMENT, $this->code, $match, 0, $this->cursor)) {
-            $this->moveCursor($match[0]);
-        }
         // unlexable
         else {
-            throw new SyntaxError(\sprintf('Unexpected character "%s".', $this->code[$this->cursor]), $this->lineno, $this->source);
+            throw new SyntaxError(sprintf('Unexpected character "%s".', $this->code[$this->cursor]), $this->lineno, $this->source);
         }
     }
 
-    private function stripcslashes(string $str, string $quoteType): string
+    protected function lexRawData($tag)
     {
-        $result = '';
-        $length = \strlen($str);
-
-        $i = 0;
-        while ($i < $length) {
-            if (false === $pos = strpos($str, '\\', $i)) {
-                $result .= substr($str, $i);
-                break;
-            }
-
-            $result .= substr($str, $i, $pos - $i);
-            $i = $pos + 1;
-
-            if ($i >= $length) {
-                $result .= '\\';
-                break;
-            }
-
-            $nextChar = $str[$i];
-
-            if (isset(self::SPECIAL_CHARS[$nextChar])) {
-                $result .= self::SPECIAL_CHARS[$nextChar];
-            } elseif ('\\' === $nextChar) {
-                $result .= $nextChar;
-            } elseif ("'" === $nextChar || '"' === $nextChar) {
-                if ($nextChar !== $quoteType) {
-                    trigger_deprecation('twig/twig', '3.12', 'Character "%s" should not be escaped; the "\" character is ignored in Twig 3 but will not be in Twig 4. Please remove the extra "\" character at position %d in "%s" at line %d.', $nextChar, $i + 1, $this->source->getName(), $this->lineno);
-                }
-                $result .= $nextChar;
-            } elseif ('#' === $nextChar && $i + 1 < $length && '{' === $str[$i + 1]) {
-                $result .= '#{';
-                ++$i;
-            } elseif ('x' === $nextChar && $i + 1 < $length && ctype_xdigit($str[$i + 1])) {
-                $hex = $str[++$i];
-                if ($i + 1 < $length && ctype_xdigit($str[$i + 1])) {
-                    $hex .= $str[++$i];
-                }
-                $result .= \chr(hexdec($hex));
-            } elseif (ctype_digit($nextChar) && $nextChar < '8') {
-                $octal = $nextChar;
-                while ($i + 1 < $length && ctype_digit($str[$i + 1]) && $str[$i + 1] < '8' && \strlen($octal) < 3) {
-                    $octal .= $str[++$i];
-                }
-                $result .= \chr(octdec($octal));
-            } else {
-                trigger_deprecation('twig/twig', '3.12', 'Character "%s" should not be escaped; the "\" character is ignored in Twig 3 but will not be in Twig 4. Please remove the extra "\" character at position %d in "%s" at line %d.', $nextChar, $i + 1, $this->source->getName(), $this->lineno);
-                $result .= $nextChar;
-            }
-
-            ++$i;
+        if ('raw' === $tag) {
+            @trigger_error(sprintf('Twig Tag "raw" is deprecated since version 1.21. Use "verbatim" instead in %s at line %d.', $this->filename, $this->lineno), E_USER_DEPRECATED);
         }
 
-        return $result;
-    }
-
-    private function lexRawData(): void
-    {
-        if (!preg_match($this->regexes['lex_raw_data'], $this->code, $match, \PREG_OFFSET_CAPTURE, $this->cursor)) {
-            throw new SyntaxError('Unexpected end of file: Unclosed "verbatim" block.', $this->lineno, $this->source);
+        if (!preg_match(str_replace('%s', $tag, $this->regexes['lex_raw_data']), $this->code, $match, PREG_OFFSET_CAPTURE, $this->cursor)) {
+            throw new SyntaxError(sprintf('Unexpected end of file: Unclosed "%s" block.', $tag), $this->lineno, $this->source);
         }
 
         $text = substr($this->code, $this->cursor, $match[0][1] - $this->cursor);
@@ -480,40 +423,40 @@ class Lexer
         $this->pushToken(Token::TEXT_TYPE, $text);
     }
 
-    private function lexComment(): void
+    protected function lexComment()
     {
-        if (!preg_match($this->regexes['lex_comment'], $this->code, $match, \PREG_OFFSET_CAPTURE, $this->cursor)) {
+        if (!preg_match($this->regexes['lex_comment'], $this->code, $match, PREG_OFFSET_CAPTURE, $this->cursor)) {
             throw new SyntaxError('Unclosed comment.', $this->lineno, $this->source);
         }
 
         $this->moveCursor(substr($this->code, $this->cursor, $match[0][1] - $this->cursor).$match[0][0]);
     }
 
-    private function lexString(): void
+    protected function lexString()
     {
         if (preg_match($this->regexes['interpolation_start'], $this->code, $match, 0, $this->cursor)) {
             $this->brackets[] = [$this->options['interpolation'][0], $this->lineno];
             $this->pushToken(Token::INTERPOLATION_START_TYPE);
             $this->moveCursor($match[0]);
             $this->pushState(self::STATE_INTERPOLATION);
-        } elseif (preg_match(self::REGEX_DQ_STRING_PART, $this->code, $match, 0, $this->cursor) && '' !== $match[0]) {
-            $this->pushToken(Token::STRING_TYPE, $this->stripcslashes($match[0], '"'));
+        } elseif (preg_match(self::REGEX_DQ_STRING_PART, $this->code, $match, 0, $this->cursor) && \strlen($match[0]) > 0) {
+            $this->pushToken(Token::STRING_TYPE, stripcslashes($match[0]));
             $this->moveCursor($match[0]);
         } elseif (preg_match(self::REGEX_DQ_STRING_DELIM, $this->code, $match, 0, $this->cursor)) {
-            [$expect, $lineno] = array_pop($this->brackets);
+            list($expect, $lineno) = array_pop($this->brackets);
             if ('"' != $this->code[$this->cursor]) {
-                throw new SyntaxError(\sprintf('Unclosed "%s".', $expect), $lineno, $this->source);
+                throw new SyntaxError(sprintf('Unclosed "%s".', $expect), $lineno, $this->source);
             }
 
             $this->popState();
             ++$this->cursor;
         } else {
             // unlexable
-            throw new SyntaxError(\sprintf('Unexpected character "%s".', $this->code[$this->cursor]), $this->lineno, $this->source);
+            throw new SyntaxError(sprintf('Unexpected character "%s".', $this->code[$this->cursor]), $this->lineno, $this->source);
         }
     }
 
-    private function lexInterpolation(): void
+    protected function lexInterpolation()
     {
         $bracket = end($this->brackets);
         if ($this->options['interpolation'][0] === $bracket[0] && preg_match($this->regexes['interpolation_end'], $this->code, $match, 0, $this->cursor)) {
@@ -526,7 +469,7 @@ class Lexer
         }
     }
 
-    private function pushToken($type, $value = ''): void
+    protected function pushToken($type, $value = '')
     {
         // do not push empty text tokens
         if (Token::TEXT_TYPE === $type && '' === $value) {
@@ -536,13 +479,13 @@ class Lexer
         $this->tokens[] = new Token($type, $value, $this->lineno);
     }
 
-    private function moveCursor($text): void
+    protected function moveCursor($text)
     {
         $this->cursor += \strlen($text);
         $this->lineno += substr_count($text, "\n");
     }
 
-    private function getOperatorRegex(): string
+    protected function getOperatorRegex()
     {
         $operators = array_merge(
             ['='],
@@ -576,13 +519,13 @@ class Lexer
         return '/'.implode('|', $regex).'/A';
     }
 
-    private function pushState($state): void
+    protected function pushState($state)
     {
         $this->states[] = $this->state;
         $this->state = $state;
     }
 
-    private function popState(): void
+    protected function popState()
     {
         if (0 === \count($this->states)) {
             throw new \LogicException('Cannot pop state without a previous state.');
@@ -591,3 +534,5 @@ class Lexer
         $this->state = array_pop($this->states);
     }
 }
+
+class_alias('Twig\Lexer', 'Twig_Lexer');

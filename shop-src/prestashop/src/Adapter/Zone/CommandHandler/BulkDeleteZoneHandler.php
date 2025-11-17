@@ -28,7 +28,6 @@ declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Adapter\Zone\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Zone\Command\BulkDeleteZoneCommand;
 use PrestaShop\PrestaShop\Core\Domain\Zone\CommandHandler\BulkDeleteZoneHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Zone\Exception\DeleteZoneException;
@@ -38,7 +37,6 @@ use Zone;
 /**
  * Handles command that bulk delete zones
  */
-#[AsCommandHandler]
 final class BulkDeleteZoneHandler implements BulkDeleteZoneHandlerInterface
 {
     /**

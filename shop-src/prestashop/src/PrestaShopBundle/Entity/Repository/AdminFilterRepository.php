@@ -76,10 +76,10 @@ class AdminFilterRepository extends EntityRepository
      * @param string $controller
      * @param string $action
      *
-     * @return bool Returns false if entity was not found
-     *
      * @throws ORMInvalidArgumentException
      * @throws OptimisticLockException
+     *
+     * @return bool Returns false if entity was not found
      */
     public function removeByEmployeeAndRouteParams($employeeId, $shopId, $controller, $action)
     {
@@ -112,17 +112,6 @@ class AdminFilterRepository extends EntityRepository
         unset($currentFilters['filters']);
         $adminFilter->setFilter(json_encode($currentFilters));
 
-        $this->getEntityManager()->persist($adminFilter);
-        $this->getEntityManager()->flush();
-    }
-
-    /**
-     * Updates and persists modification to a filter (that was previously modified).
-     *
-     * @param AdminFilter $adminFilter
-     */
-    public function updateFilter(AdminFilter $adminFilter): void
-    {
         $this->getEntityManager()->persist($adminFilter);
         $this->getEntityManager()->flush();
     }

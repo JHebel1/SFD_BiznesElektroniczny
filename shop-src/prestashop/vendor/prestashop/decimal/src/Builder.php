@@ -8,20 +8,24 @@
 
 namespace PrestaShop\Decimal;
 
+use PrestaShop\Decimal\DecimalNumber;
+
+
 /**
  * Builds Number instances
  */
 class Builder
 {
+
     /**
      * Pattern for most numbers
      */
-    public const NUMBER_PATTERN = "/^(?<sign>[-+])?(?<integerPart>\d+)?(?:\.(?<fractionalPart>\d+)(?<exponentPart>[eE](?<exponentSign>[-+])(?<exponent>\d+))?)?$/";
+    const NUMBER_PATTERN = "/^(?<sign>[-+])?(?<integerPart>\d+)?(?:\.(?<fractionalPart>\d+)(?<exponentPart>[eE](?<exponentSign>[-+])(?<exponent>\d+))?)?$/";
 
     /**
      * Pattern for integer numbers in scientific notation (rare but supported by spec)
      */
-    public const INT_EXPONENTIAL_PATTERN = "/^(?<sign>[-+])?(?<integerPart>\d+)(?<exponentPart>[eE](?<exponentSign>[-+])(?<exponent>\d+))$/";
+    const INT_EXPONENTIAL_PATTERN = "/^(?<sign>[-+])?(?<integerPart>\d+)(?<exponentPart>[eE](?<exponentSign>[-+])(?<exponent>\d+))$/";
 
     /**
      * Builds a Number from a string
@@ -33,7 +37,9 @@ class Builder
     public static function parseNumber($number)
     {
         if (!self::itLooksLikeANumber($number, $numberParts)) {
-            throw new \InvalidArgumentException(sprintf('"%s" cannot be interpreted as a number', print_r($number, true)));
+            throw new \InvalidArgumentException(
+                sprintf('"%s" cannot be interpreted as a number', print_r($number, true))
+            );
         }
 
         $integerPart = '';
@@ -83,12 +89,13 @@ class Builder
      */
     private static function itLooksLikeANumber($number, &$numberParts)
     {
-        return
+        return (
             strlen((string) $number) > 0
             && (
                 preg_match(self::NUMBER_PATTERN, $number, $numberParts)
                 || preg_match(self::INT_EXPONENTIAL_PATTERN, $number, $numberParts)
             )
-        ;
+        );
     }
+
 }

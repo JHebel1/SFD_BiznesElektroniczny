@@ -40,7 +40,6 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Helps to render messages block in orders view page.
@@ -61,12 +60,10 @@ class OrderMessageType extends AbstractType
 
     public function __construct(
         FormChoiceProviderInterface $orderMessageNameChoiceProvider,
-        ConfigurableFormChoiceProviderInterface $orderMessageChoiceProvider,
-        TranslatorInterface $translator
+        ConfigurableFormChoiceProviderInterface $orderMessageChoiceProvider
     ) {
         $this->orderMessageNameChoiceProvider = $orderMessageNameChoiceProvider;
         $this->orderMessageChoiceProvider = $orderMessageChoiceProvider;
-        $this->translator = $translator;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)

@@ -25,13 +25,9 @@
  */
 class IdentityControllerCore extends FrontController
 {
-    /** @var bool */
     public $auth = true;
-    /** @var string */
     public $php_self = 'identity';
-    /** @var string */
     public $authRedirection = 'identity';
-    /** @var bool */
     public $ssl = true;
 
     public $passwordRequired = true;
@@ -41,7 +37,7 @@ class IdentityControllerCore extends FrontController
      *
      * @see FrontController::initContent()
      */
-    public function initContent(): void
+    public function initContent()
     {
         $should_redirect = false;
 
@@ -80,7 +76,7 @@ class IdentityControllerCore extends FrontController
         $this->setTemplate('customer/identity');
     }
 
-    public function getBreadcrumbLinks(): array
+    public function getBreadcrumbLinks()
     {
         $breadcrumb = parent::getBreadcrumbLinks();
 

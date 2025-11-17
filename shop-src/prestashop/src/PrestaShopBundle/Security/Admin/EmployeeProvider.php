@@ -26,11 +26,11 @@
 
 namespace PrestaShopBundle\Security\Admin;
 
-use PrestaShopBundle\Entity\Employee\Employee;
-use PrestaShopBundle\Entity\Employee\Employee as DoctrineEmployee;
-use PrestaShopBundle\Entity\Repository\EmployeeRepository;
+use Access;
+use PrestaShop\PrestaShop\Adapter\LegacyContext;
+use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
-use Symfony\Component\Security\Core\Exception\UserNotFoundException;
+use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
@@ -39,61 +39,72 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
  */
 class EmployeeProvider implements UserProviderInterface
 {
-    /**
-     * @deprecated Since v9.0 use Employee::ROLE_EMPLOYEE instead
-     */
-    public const ROLE_EMPLOYEE = Employee::ROLE_EMPLOYEE;
+    public const ROLE_EMPLOYEE = 'ROLE_EMPLOYEE';
+
+    private $legacyContext;
 
     /**
-     * @var array<string, Employee>
+     * @var CacheItemPoolInterface
      */
-    private array $employees = [];
+    private $cache;
 
-    public function __construct(
-        private readonly EmployeeRepository $employeeRepository,
-    ) {
+    public function __construct(LegacyContext $context, CacheItemPoolInterface $cache)
+    {
+        $this->legacyContext = $context->getContext();
+        $this->cache = $cache;
     }
 
     /**
      * Fetch the Employee entity that matches the given username.
-     * Cache system doesn't support "@" character, so we rely on a sha1 expression.
+     * Cache system doesn't supports "@" character, so we rely on a sha1 expression.
      *
-     * @param string $identifier
+     * @param string $username
      *
-     * @return UserInterface
+     * @return Employee
      *
-     * @throws UserNotFoundException
+     * @throws UsernameNotFoundException
      */
-    public function loadUserByIdentifier(string $identifier): UserInterface
+    public function loadUserByUsername($username)
     {
-        if (isset($this->employees[$identifier])) {
-            return $this->employees[$identifier];
+        $cacheKey = sha1($username);
+        $cachedEmployee = $this->cache->getItem("app.employees_${cacheKey}");
+
+        if ($cachedEmployee->isHit()) {
+            return $cachedEmployee->get();
         }
 
-        $this->employees[$identifier] = $this->loadEmployee($identifier, false);
+        if (
+            null !== $this->legacyContext->employee
+            && $this->legacyContext->employee->email === $username
+        ) {
+            $employee = new Employee($this->legacyContext->employee);
+            $employee->setRoles(
+                array_merge([self::ROLE_EMPLOYEE], Access::getRoles($this->legacyContext->employee->id_profile))
+            );
 
-        return $this->employees[$identifier];
+            $cachedEmployee->set($employee);
+            $this->cache->save($cachedEmployee);
+
+            return $cachedEmployee->get();
+        }
+
+        throw new UsernameNotFoundException(sprintf('Username "%s" does not exist.', $username));
     }
 
     /**
-     * Reload an Employee based on the serialized one and returns a fresh instance.
+     * Reload an Employee and returns a fresh instance.
      *
-     * @param UserInterface $user
+     * @param UserInterface $employee
      *
-     * @return UserInterface
+     * @return Employee
      */
-    public function refreshUser(UserInterface $user)
+    public function refreshUser(UserInterface $employee)
     {
-        if (!$user instanceof DoctrineEmployee) {
-            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', $user::class));
+        if (!$employee instanceof Employee) {
+            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', get_class($employee)));
         }
 
-        // Always reload the employee regardless of the cache
-        $freshEmployee = $this->loadEmployee($user->getUserIdentifier(), true);
-        // Update the cache so that loadUserByIdentifier is updated
-        $this->employees[$user->getUserIdentifier()] = $freshEmployee;
-
-        return $freshEmployee;
+        return $this->loadUserByUsername($employee->getUsername());
     }
 
     /**
@@ -105,17 +116,6 @@ class EmployeeProvider implements UserProviderInterface
      */
     public function supportsClass($class)
     {
-        return $class === DoctrineEmployee::class;
-    }
-
-    protected function loadEmployee(string $email, bool $refresh): DoctrineEmployee
-    {
-        /** @var DoctrineEmployee|null $doctrineEmployee */
-        $doctrineEmployee = $this->employeeRepository->loadEmployeeByIdentifier($email, $refresh);
-        if (empty($doctrineEmployee) || !$doctrineEmployee->isActive()) {
-            throw new UserNotFoundException(sprintf('Identifier "%s" does not exist.', $email));
-        }
-
-        return $doctrineEmployee;
+        return $class === 'PrestaShopBundle\Security\Admin\Employee';
     }
 }

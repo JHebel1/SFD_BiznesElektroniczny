@@ -28,7 +28,6 @@ declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Adapter\Zone\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Zone\Command\ToggleZoneStatusCommand;
 use PrestaShop\PrestaShop\Core\Domain\Zone\CommandHandler\ToggleZoneStatusHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Zone\Exception\CannotToggleZoneStatusException;
@@ -37,7 +36,6 @@ use PrestaShop\PrestaShop\Core\Domain\Zone\Exception\ZoneNotFoundException;
 use PrestaShopException;
 use Zone;
 
-#[AsCommandHandler]
 final class ToggleZoneStatusHandler implements ToggleZoneStatusHandlerInterface
 {
     /**
@@ -57,7 +55,7 @@ final class ToggleZoneStatusHandler implements ToggleZoneStatusHandlerInterface
             if (false === $zone->toggleStatus()) {
                 throw new CannotToggleZoneStatusException(sprintf('Unable to toggle status of zone with id "%d"', $command->getZoneId()->getValue()));
             }
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new ZoneException(sprintf('An error occurred when toggling status for zone with id "%d"', $command->getZoneId()->getValue()));
         }
     }

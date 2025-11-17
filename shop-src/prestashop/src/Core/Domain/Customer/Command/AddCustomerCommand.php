@@ -129,11 +129,6 @@ class AddCustomerCommand
     private $riskId;
 
     /**
-     * @var bool
-     */
-    private $isGuest;
-
-    /**
      * @param string $firstName
      * @param string $lastName
      * @param string $email
@@ -145,7 +140,6 @@ class AddCustomerCommand
      * @param bool $isEnabled
      * @param bool $isPartnerOffersSubscribed
      * @param string|null $birthday
-     * @param bool $isGuest
      */
     public function __construct(
         $firstName,
@@ -158,8 +152,7 @@ class AddCustomerCommand
         $genderId = null,
         $isEnabled = true,
         $isPartnerOffersSubscribed = false,
-        $birthday = null,
-        $isGuest = false
+        $birthday = null
     ) {
         $this->firstName = new FirstName($firstName);
         $this->lastName = new LastName($lastName);
@@ -172,7 +165,6 @@ class AddCustomerCommand
         $this->isEnabled = $isEnabled;
         $this->isPartnerOffersSubscribed = $isPartnerOffersSubscribed;
         $this->birthday = null !== $birthday ? new Birthday($birthday) : Birthday::createEmpty();
-        $this->isGuest = $isGuest;
     }
 
     /**
@@ -401,13 +393,5 @@ class AddCustomerCommand
         $this->riskId = $riskId;
 
         return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isGuest(): bool
-    {
-        return $this->isGuest;
     }
 }

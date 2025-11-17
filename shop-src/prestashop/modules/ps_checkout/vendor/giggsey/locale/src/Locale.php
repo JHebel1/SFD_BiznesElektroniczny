@@ -121,6 +121,7 @@ class Locale
     /**
      * Load a list of all countries supported by a particular Locale
      *
+     * @param string $locale
      * @return string[] Associative array of Country Code => Country Name
      * @throws \RuntimeException On an invalid region
      */
@@ -130,7 +131,7 @@ class Locale
         $regionList = require $dataDir . '_list.php';
 
         if (!isset($regionList[$locale])) {
-            throw new \RuntimeException('Locale is not supported');
+            throw new \RuntimeException("Locale is not supported");
         }
 
         /*

@@ -63,6 +63,11 @@ class ModuleCatalogueLayersProvider implements CatalogueLayersProviderInterface
     private $defaultCatalogueFinder;
 
     /**
+     * @var DefaultCatalogueFinder
+     */
+    private $builtInDefaultTranslatedCatalogueFinder;
+
+    /**
      * @var FileTranslatedCatalogueFinder
      */
     private $fileTranslatedCatalogueFinder;
@@ -157,19 +162,12 @@ class ModuleCatalogueLayersProvider implements CatalogueLayersProviderInterface
         // For non native modules, the catalogue is built from templates
 
         // First we search in translation directory in case the module is native
+        // If no translation file is found, we extract the catalogue from the module's templates
+
         try {
             $defaultCatalogue = $this->getDefaultCatalogueFinder()->getCatalogue($locale);
-        } catch (TranslationFilesNotFoundException) {
-            $defaultCatalogue = new MessageCatalogue($locale);
-        }
-
-        // Then we extract the catalogue from the module's templates and add it to the initial default catalogue, this way
-        // even native modules will display wordings that may not be present in the XLF files
-        $extractedCatalogue = $this->getDefaultCatalogueExtractedFromTemplates($locale);
-
-        // We merge both catalogues
-        foreach ($extractedCatalogue->getDomains() as $domain) {
-            $defaultCatalogue->add($extractedCatalogue->all($domain), $domain);
+        } catch (TranslationFilesNotFoundException $e) {
+            $defaultCatalogue = $this->getDefaultCatalogueExtractedFromTemplates($locale);
         }
 
         return $defaultCatalogue;
@@ -184,13 +182,13 @@ class ModuleCatalogueLayersProvider implements CatalogueLayersProviderInterface
     {
         try { // First we search in the module's translation directory
             return $this->getModuleBuiltInFileTranslatedCatalogueFinder()->getCatalogue($locale);
-        } catch (TranslationFilesNotFoundException) {
+        } catch (TranslationFilesNotFoundException $exception) {
             // If no translation file was found in the module, No Exception
             // we search in the Core's files
         }
         try {
             return $this->getCoreFileTranslatedCatalogueFinder()->getCatalogue($locale);
-        } catch (TranslationFilesNotFoundException) {
+        } catch (TranslationFilesNotFoundException $exception) {
             // And finally if no translation was found in the Core files, we search in the legacy files
             return $this->buildTranslationCatalogueFromLegacyFiles($locale);
         }
@@ -296,14 +294,14 @@ class ModuleCatalogueLayersProvider implements CatalogueLayersProviderInterface
                 $this->getBuiltInModuleDirectory(),
                 $locale
             );
-        } catch (UnsupportedLocaleException) {
+        } catch (UnsupportedLocaleException $exception) {
             // this happens when there is no translation file found for the desired locale
             return $catalogueFromPhpAndSmartyFiles;
         }
 
         foreach ($catalogueFromPhpAndSmartyFiles->all() as $currentDomain => $items) {
             foreach (array_keys($items) as $translationKey) {
-                $legacyKey = md5((string) $translationKey);
+                $legacyKey = md5($translationKey);
 
                 if ($catalogueFromLegacyTranslationFiles->has($legacyKey, $currentDomain)) {
                     $legacyFilesCatalogue->set(
@@ -366,7 +364,7 @@ class ModuleCatalogueLayersProvider implements CatalogueLayersProviderInterface
             /** @var MessageCatalogue $additionalDefaultCatalogue */
             $additionalDefaultCatalogue = $this->legacyModuleExtractor->extract($this->moduleName, $locale);
             $defaultCatalogue = $this->convertDomainsAndFilterCatalogue($additionalDefaultCatalogue);
-        } catch (UnsupportedLocaleException) {
+        } catch (UnsupportedLocaleException $exception) {
             // Do nothing as support of legacy files is deprecated
         }
 

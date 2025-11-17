@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * This file is part of the FOSJsRoutingBundle package.
  *
@@ -21,8 +19,9 @@ class RouteCollectionDenormalizer implements DenormalizerInterface
 {
     /**
      * {@inheritDoc}
+     * @return mixed
      */
-    public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): RouteCollection
+    public function denormalize($data, $class, $format = null, array $context = array())
     {
         $collection = new RouteCollection();
 
@@ -45,29 +44,24 @@ class RouteCollectionDenormalizer implements DenormalizerInterface
     /**
      * {@inheritDoc}
      */
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
+    public function supportsDenormalization($data, $type, $format = null): bool
     {
         if (!is_array($data)) {
             return false;
         }
-
+        
         if (count($data) < 1) {
             return true;
         }
 
         $values = current($data);
 
-        foreach (['path', 'defaults', 'requirements', 'options', 'host', 'schemes', 'methods', 'condition'] as $key) {
+        foreach (array('path', 'defaults', 'requirements', 'options', 'host', 'schemes', 'methods', 'condition') as $key) {
             if (!isset($values[$key])) {
                 return false;
             }
         }
 
         return true;
-    }
-
-    public function getSupportedTypes(?string $format): array
-    {
-        return ['*' => false];
     }
 }

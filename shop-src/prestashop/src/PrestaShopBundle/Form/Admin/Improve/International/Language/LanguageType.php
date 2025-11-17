@@ -29,16 +29,15 @@ namespace PrestaShopBundle\Form\Admin\Improve\International\Language;
 use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\TypedRegex;
 use PrestaShopBundle\Form\Admin\Type\ShopChoiceTreeType;
 use PrestaShopBundle\Form\Admin\Type\SwitchType;
-use PrestaShopBundle\Form\Admin\Type\TextPreviewType;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Validator\Constraints\Image;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Builds language's add/edit form
@@ -105,7 +104,7 @@ class LanguageType extends TranslatorAwareType
                     'maxLength' => 5,
                 ],
                 'label' => $this->trans('Language code', 'Admin.International.Feature'),
-                'help' => $this->trans('IETF language tag (e.g. en-us, pt-br) in lower case.', 'Admin.International.Help'),
+                'help' => $this->trans('IETF language tag (e.g. en-US, pt-BR).', 'Admin.International.Help'),
                 'constraints' => [
                     new NotBlank([
                         'message' => $this->trans('This field cannot be empty.', 'Admin.Notifications.Error'),
@@ -114,10 +113,6 @@ class LanguageType extends TranslatorAwareType
                         'type' => 'language_code',
                     ]),
                 ],
-            ])
-            ->add('locale', TextPreviewType::class, [
-                'label' => $this->trans('Locale', 'Admin.International.Feature'),
-                'help' => $this->trans('IETF language tag (e.g. en-US, pt-BR).', 'Admin.International.Help'),
             ])
             ->add('short_date_format', TextType::class, [
                 'label' => $this->trans('Date format', 'Admin.International.Feature'),
@@ -191,7 +186,7 @@ class LanguageType extends TranslatorAwareType
 
         if ($this->isMultistoreFeatureActive) {
             $builder->add('shop_association', ShopChoiceTreeType::class, [
-                'label' => $this->trans('Store association', 'Admin.Global'),
+                'label' => $this->trans('Shop association', 'Admin.Global'),
                 'required' => false,
                 'constraints' => [
                     new NotBlank([

@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Category\QueryHandler;
 
 use Category;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Category\Exception\CategoryNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Category\Query\GetCategoryIsEnabled;
 use PrestaShop\PrestaShop\Core\Domain\Category\QueryHandler\GetCategoryIsEnabledHandlerInterface;
@@ -35,7 +34,6 @@ use PrestaShop\PrestaShop\Core\Domain\Category\QueryHandler\GetCategoryIsEnabled
 /**
  * @internal
  */
-#[AsQueryHandler]
 final class GetCategoryIsEnabledHandler implements GetCategoryIsEnabledHandlerInterface
 {
     /**

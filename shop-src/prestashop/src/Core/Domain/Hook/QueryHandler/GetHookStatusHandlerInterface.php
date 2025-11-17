@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Core\Domain\Hook\QueryHandler;
 
 use PrestaShop\PrestaShop\Core\Domain\Hook\Query\GetHookStatus;
-use PrestaShop\PrestaShop\Core\Domain\Hook\QueryResult\HookStatus;
 
 /**
  * Interface for service that handles getting hook status.
@@ -37,7 +36,7 @@ interface GetHookStatusHandlerInterface
     /**
      * @param GetHookStatus $query
      *
-     * @return HookStatus
+     * @return bool
      */
     public function handle(GetHookStatus $query);
 }

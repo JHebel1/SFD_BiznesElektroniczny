@@ -115,7 +115,7 @@ class Formatter
         $isNegative = $decimalNumber->isNegative();
         $decimalNumber = $decimalNumber->toPositive();
 
-        [$majorDigits, $minorDigits] = $this->extractMajorMinorDigits($decimalNumber);
+        list($majorDigits, $minorDigits) = $this->extractMajorMinorDigits($decimalNumber);
         $majorDigits = $this->splitMajorGroups($majorDigits);
         $minorDigits = $this->adjustMinorDigitsZeroes($minorDigits);
 
@@ -146,12 +146,13 @@ class Formatter
     {
         $decimalNumber = new DecimalNumber((string) $number);
         $precision = $this->numberSpecification->getMaxFractionDigits();
-
-        return (new Rounding())->compute(
+        $roundedNumber = (new Rounding())->compute(
             $decimalNumber,
             $precision,
             $this->roundingMode
         );
+
+        return $roundedNumber;
     }
 
     /**
@@ -193,18 +194,18 @@ class Formatter
             // Reverse the major digits, since they are grouped from the right.
             $majorDigits = array_reverse(str_split($majorDigits));
             // Group the major digits.
-            $groups = $groupsDigits = [];
+            $groups = [];
             $groups[] = array_splice($majorDigits, 0, $this->numberSpecification->getPrimaryGroupSize());
             while (!empty($majorDigits)) {
                 $groups[] = array_splice($majorDigits, 0, $this->numberSpecification->getSecondaryGroupSize());
             }
             // Reverse back the digits and the groups
             $groups = array_reverse($groups);
-            foreach ($groups as $group) {
-                $groupsDigits[] = implode('', array_reverse($group));
+            foreach ($groups as &$group) {
+                $group = implode('', array_reverse($group));
             }
             // Reconstruct the major digits.
-            $majorDigits = implode(self::GROUP_SEPARATOR_PLACEHOLDER, $groupsDigits);
+            $majorDigits = implode(self::GROUP_SEPARATOR_PLACEHOLDER, $groups);
         }
 
         return $majorDigits;

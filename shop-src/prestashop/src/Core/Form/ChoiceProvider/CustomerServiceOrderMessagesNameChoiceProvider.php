@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Core\Form\ChoiceProvider;
 
-use PrestaShop\PrestaShop\Core\Form\FormChoiceFormatter;
 use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 
 /**
@@ -49,10 +48,12 @@ final class CustomerServiceOrderMessagesNameChoiceProvider implements FormChoice
      */
     public function getChoices(): array
     {
-        return FormChoiceFormatter::formatFormChoices(
-            $this->orderMessages,
-            'id_order_message',
-            'name'
-        );
+        $result = [];
+
+        foreach ($this->orderMessages as $orderMessage) {
+            $result[$orderMessage['name']] = $orderMessage['id_order_message'];
+        }
+
+        return $result;
     }
 }

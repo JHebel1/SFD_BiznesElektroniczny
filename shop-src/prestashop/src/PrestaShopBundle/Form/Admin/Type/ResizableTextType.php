@@ -26,11 +26,54 @@
 
 namespace PrestaShopBundle\Form\Admin\Type;
 
-use PrestaShopBundle\Form\Extension\ResizableTextTypeExtension;
+use Symfony\Component\Form\AbstractTypeExtension;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Form\FormView;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Class ResizableTextType adds new sizing options to TextType.
  */
-class ResizableTextType extends ResizableTextTypeExtension
+class ResizableTextType extends AbstractTypeExtension
 {
+    /**
+     * {@inheritdoc}
+     */
+    public function getExtendedType()
+    {
+        return TextType::class;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver
+            ->setDefined('size')
+            ->setAllowedValues(
+                'size',
+                [
+                    'small',
+                ]
+            )
+        ;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function buildView(FormView $view, FormInterface $form, array $options)
+    {
+        if (isset($options['size'])) {
+            $sizeClass = 'size-' . $options['size'];
+
+            if (!isset($view->vars['attr']['class'])) {
+                $view->vars['attr']['class'] = '';
+            }
+
+            $view->vars['attr']['class'] = trim($view->vars['attr']['class'] . ' ' . $sizeClass);
+        }
+    }
 }

@@ -27,8 +27,6 @@
 namespace PrestaShop\PrestaShop\Core\Foundation\IoC;
 
 use ReflectionClass;
-use ReflectionException;
-use ReflectionNamedType;
 
 class Container
 {
@@ -92,7 +90,7 @@ class Container
 
         try {
             $refl = new ReflectionClass($className);
-        } catch (ReflectionException) {
+        } catch (\ReflectionException $re) {
             throw new Exception(sprintf('This doesn\'t seem to be a class name: `%s`.', $className));
         }
 
@@ -106,8 +104,9 @@ class Container
 
         if ($classConstructor) {
             foreach ($classConstructor->getParameters() as $param) {
-                if ($param->getType() instanceof ReflectionNamedType && !$param->getType()->isBuiltin()) {
-                    $args[] = $this->doMake($param->getType()->getName(), $alreadySeen);
+                $paramClass = $param->getClass();
+                if ($paramClass) {
+                    $args[] = $this->doMake($param->getClass()->getName(), $alreadySeen);
                 } elseif ($param->isDefaultValueAvailable()) {
                     $args[] = $param->getDefaultValue();
                 } else {

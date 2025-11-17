@@ -29,7 +29,6 @@ namespace PrestaShop\PrestaShop\Adapter\Supplier\CommandHandler;
 
 use Address;
 use PrestaShop\PrestaShop\Adapter\Supplier\AbstractSupplierHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Supplier\Command\AddSupplierCommand;
 use PrestaShop\PrestaShop\Core\Domain\Supplier\CommandHandler\AddSupplierHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Supplier\Exception\SupplierException;
@@ -41,7 +40,6 @@ use Supplier;
 /**
  * Handles command which adds new supplier using legacy object model
  */
-#[AsCommandHandler]
 final class AddSupplierHandler extends AbstractSupplierHandler implements AddSupplierHandlerInterface
 {
     /**
@@ -69,7 +67,7 @@ final class AddSupplierHandler extends AbstractSupplierHandler implements AddSup
             $this->addShopAssociation($supplier, $command);
             $address->id_supplier = $supplier->id;
             $address->update();
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new SupplierException(sprintf('Failed to add new supplier "%s"', $command->getName()));
         }
 
@@ -104,6 +102,7 @@ final class AddSupplierHandler extends AbstractSupplierHandler implements AddSup
         $supplier->description = $command->getLocalizedDescriptions();
         $supplier->meta_description = $command->getLocalizedMetaDescriptions();
         $supplier->meta_title = $command->getLocalizedMetaTitles();
+        $supplier->meta_keywords = $command->getLocalizedMetaKeywords();
         $supplier->date_add = $currentDateTime;
         $supplier->date_upd = $currentDateTime;
         $supplier->active = $command->isEnabled();

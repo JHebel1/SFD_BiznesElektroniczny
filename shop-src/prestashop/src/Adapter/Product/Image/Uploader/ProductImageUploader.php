@@ -119,7 +119,7 @@ class ProductImageUploader extends AbstractImageUploader
         $this->createDestinationDirectory($imageId, $productId);
         $destinationPath = $this->productImagePathFactory->getPath($imageId);
         $this->uploadFromTemp($filePath, $destinationPath);
-        $this->imageGenerator->generateImagesByTypes($destinationPath, $this->productImageRepository->getProductImageTypes(), $imageId->getValue());
+        $this->imageGenerator->generateImagesByTypes($destinationPath, $this->productImageRepository->getProductImageTypes());
 
         $this->hookDispatcher->dispatchWithParameters(
             'actionWatermark',
@@ -158,7 +158,7 @@ class ProductImageUploader extends AbstractImageUploader
 
         try {
             $this->fileSystem->mkdir($imageFolder, PsFileSystem::DEFAULT_MODE_FOLDER);
-        } catch (IOException) {
+        } catch (IOException $e) {
             throw new ImageUploadException(sprintf(
                 'Error occurred when trying to create directory for product #%d image',
                 $productId

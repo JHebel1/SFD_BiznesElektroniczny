@@ -1,6 +1,7 @@
 <?php
-
 /**
+ *
+ *
  * @author joshuag
  * @created: 04/08/2015 09:03
  * @project libphonenumber-for-php
@@ -17,7 +18,7 @@ class MultiFileMetadataSourceImpl implements MetadataSourceInterface
      * A mapping from a region code to the PhoneMetadata for that region.
      * @var PhoneMetadata[]
      */
-    protected $regionToMetadataMap = [];
+    protected $regionToMetadataMap = array();
 
     /**
      * A mapping from a country calling code for a non-geographical entity to the PhoneMetadata for
@@ -25,7 +26,7 @@ class MultiFileMetadataSourceImpl implements MetadataSourceInterface
      * Toll Free Service) and 808 (International Shared Cost Service).
      * @var PhoneMetadata[]
      */
-    protected $countryCodeToNonGeographicalMetadataMap = [];
+    protected $countryCodeToNonGeographicalMetadataMap = array();
 
     /**
      * The prefix of the metadata files from which region data is loaded.
@@ -41,6 +42,7 @@ class MultiFileMetadataSourceImpl implements MetadataSourceInterface
     protected $metadataLoader;
 
     /**
+     * @param MetadataLoaderInterface $metadataLoader
      * @param string|null $currentFilePrefix
      */
     public function __construct(MetadataLoaderInterface $metadataLoader, $currentFilePrefix = null)
@@ -54,7 +56,7 @@ class MultiFileMetadataSourceImpl implements MetadataSourceInterface
     }
 
     /**
-     *
+     * @inheritdoc
      */
     public function getMetadataForRegion($regionCode)
     {
@@ -70,7 +72,7 @@ class MultiFileMetadataSourceImpl implements MetadataSourceInterface
     }
 
     /**
-     *
+     * @inheritdoc
      */
     public function getMetadataForNonGeographicalRegion($countryCallingCode)
     {
@@ -85,6 +87,7 @@ class MultiFileMetadataSourceImpl implements MetadataSourceInterface
      * @param string $filePrefix
      * @param string $regionCode
      * @param int $countryCallingCode
+     * @param MetadataLoaderInterface $metadataLoader
      * @throws \RuntimeException
      */
     public function loadMetadataFromFile($filePrefix, $regionCode, $countryCallingCode, MetadataLoaderInterface $metadataLoader)

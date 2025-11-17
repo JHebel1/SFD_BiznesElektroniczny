@@ -28,7 +28,6 @@ namespace PrestaShop\PrestaShop\Adapter\Cart\CommandHandler;
 
 use Cart;
 use PrestaShop\PrestaShop\Adapter\Cart\AbstractCartHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Command\UpdateCartAddressesCommand;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Command\UpdateCartCarrierCommand;
 use PrestaShop\PrestaShop\Core\Domain\Cart\CommandHandler\UpdateCartAddressesHandlerInterface;
@@ -38,7 +37,6 @@ use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartException;
 /**
  * @internal
  */
-#[AsCommandHandler]
 final class UpdateCartAddressesHandler extends AbstractCartHandler implements UpdateCartAddressesHandlerInterface
 {
     /**

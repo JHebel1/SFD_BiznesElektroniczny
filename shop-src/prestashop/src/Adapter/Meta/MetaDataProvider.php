@@ -138,6 +138,6 @@ class MetaDataProvider implements MetaDataProviderInterface
      */
     private function isModuleFile($fileName)
     {
-        return str_starts_with($fileName, 'module-');
+        return 0 === strncmp($fileName, 'module-', 7);
     }
 }

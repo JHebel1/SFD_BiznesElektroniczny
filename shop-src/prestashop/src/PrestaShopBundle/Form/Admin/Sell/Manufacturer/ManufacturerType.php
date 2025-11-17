@@ -37,9 +37,9 @@ use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Defines form for manufacturer create/edit actions (Sell > Catalog > Brands & Suppliers)
@@ -71,8 +71,8 @@ class ManufacturerType extends TranslatorAwareType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $invalidCharactersForCatalogLabel = $this->trans('Invalid characters:', 'Admin.Global') . '<>{}';
-        $invalidCharactersForNameLabel = $this->trans('Invalid characters:', 'Admin.Global') . '<>{}';
+        $invalidCharactersForCatalogLabel = $this->trans('Invalid characters:', 'Admin.Global') . '<>;=#{}';
+        $invalidCharactersForNameLabel = $this->trans('Invalid characters:', 'Admin.Global') . '<>={}';
 
         $builder
             ->add('name', TextType::class, [
@@ -102,7 +102,6 @@ class ManufacturerType extends TranslatorAwareType
                 'type' => FormattedTextareaType::class,
                 'required' => false,
                 'options' => [
-                    'limit' => FormattedTextareaType::LIMIT_MEDIUMTEXT_UTF8_MB4,
                     'constraints' => [
                         new CleanHtml([
                             'message' => $this->trans(
@@ -118,7 +117,6 @@ class ManufacturerType extends TranslatorAwareType
                 'type' => FormattedTextareaType::class,
                 'required' => false,
                 'options' => [
-                    'limit' => FormattedTextareaType::LIMIT_MEDIUMTEXT_UTF8_MB4,
                     'constraints' => [
                         new CleanHtml([
                             'message' => $this->trans(
@@ -176,6 +174,24 @@ class ManufacturerType extends TranslatorAwareType
                     ],
                 ],
             ])
+            ->add('meta_keyword', TranslatableType::class, [
+                'label' => $this->trans('Meta keywords', 'Admin.Global'),
+                'help' => $this->trans('To add tags, click in the field, write something, and then press the "Enter" key.', 'Admin.Shopparameters.Help')
+                 . '<br>' . $invalidCharactersForNameLabel,
+                'type' => TextType::class,
+                'required' => false,
+                'options' => [
+                    'attr' => [
+                        'class' => 'js-taggable-field',
+                        'placeholder' => $this->trans('Add tag', 'Admin.Actions'),
+                    ],
+                    'constraints' => [
+                        new TypedRegex([
+                            'type' => 'generic_name',
+                        ]),
+                    ],
+                ],
+            ])
             ->add('is_enabled', SwitchType::class, [
                 'label' => $this->trans('Enabled', 'Admin.Global'),
                 'required' => false,
@@ -183,7 +199,7 @@ class ManufacturerType extends TranslatorAwareType
 
         if ($this->isMultistoreEnabled) {
             $builder->add('shop_association', ShopChoiceTreeType::class, [
-                'label' => $this->trans('Store association', 'Admin.Global'),
+                'label' => $this->trans('Shop association', 'Admin.Global'),
                 'required' => false,
                 'constraints' => [
                     new NotBlank([

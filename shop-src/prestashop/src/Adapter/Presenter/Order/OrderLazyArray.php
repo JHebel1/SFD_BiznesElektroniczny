@@ -39,10 +39,8 @@ use Order;
 use OrderReturn;
 use PrestaShop\PrestaShop\Adapter\Presenter\AbstractLazyArray;
 use PrestaShop\PrestaShop\Adapter\Presenter\Cart\CartPresenter;
-use PrestaShop\PrestaShop\Adapter\Presenter\LazyArrayAttribute;
 use PrestaShop\PrestaShop\Adapter\Presenter\Object\ObjectPresenter;
 use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
-use PrestaShop\PrestaShop\Core\Util\ColorBrightnessCalculator;
 use PrestaShopBundle\Translation\TranslatorComponent;
 use PrestaShopException;
 use ProductDownload;
@@ -92,9 +90,10 @@ class OrderLazyArray extends AbstractLazyArray
     }
 
     /**
+     * @arrayAccess
+     *
      * @return mixed
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getTotals()
     {
         $amounts = $this->getAmounts();
@@ -103,47 +102,52 @@ class OrderLazyArray extends AbstractLazyArray
     }
 
     /**
+     * @arrayAccess
+     *
      * @return int
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getIdAddressInvoice()
     {
         return $this->order->id_address_invoice;
     }
 
     /**
+     * @arrayAccess
+     *
      * @return int
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getIdAddressDelivery()
     {
         return $this->order->id_address_delivery;
     }
 
     /**
+     * @arrayAccess
+     *
      * @return mixed
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getSubtotals()
     {
         return $this->subTotals;
     }
 
     /**
+     * @arrayAccess
+     *
      * @return int
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getProductsCount()
     {
         return count($this->getProducts());
     }
 
     /**
+     * @arrayAccess
+     *
      * @return mixed
      *
      * @throws PrestaShopException
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getShipping()
     {
         $details = $this->getDetails();
@@ -152,9 +156,10 @@ class OrderLazyArray extends AbstractLazyArray
     }
 
     /**
+     * @arrayAccess
+     *
      * @return array
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getProducts()
     {
         $order = $this->order;
@@ -189,7 +194,7 @@ class OrderLazyArray extends AbstractLazyArray
                 $product_download = new ProductDownload($id_product_download);
                 if ($product_download->display_filename != '') {
                     $orderProduct['download_link'] =
-                        $product_download->getTextLink($orderProduct['download_hash'])
+                        $product_download->getTextLink(false, $orderProduct['download_hash'])
                         . '&id_order=' . (int) $order->id
                         . '&secure_key=' . $order->secure_key;
                 }
@@ -220,9 +225,10 @@ class OrderLazyArray extends AbstractLazyArray
     }
 
     /**
+     * @arrayAccess
+     *
      * @return array
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getAmounts()
     {
         $order = $this->order;
@@ -272,18 +278,20 @@ class OrderLazyArray extends AbstractLazyArray
     }
 
     /**
+     * @arrayAccess
+     *
      * @return OrderDetailLazyArray
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getDetails()
     {
         return new OrderDetailLazyArray($this->order);
     }
 
     /**
+     * @arrayAccess
+     *
      * @return array
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getHistory()
     {
         $order = $this->order;
@@ -299,8 +307,8 @@ class OrderLazyArray extends AbstractLazyArray
                 $historyId = 'current';
             }
             $orderHistory[$historyId] = $history;
-            $orderHistory[$historyId]['history_date'] = Tools::displayDate($history['date_add'], true);
-            $orderHistory[$historyId]['contrast'] = (new ColorBrightnessCalculator())->isBright($history['color']) ? 'dark' : 'bright';
+            $orderHistory[$historyId]['history_date'] = Tools::displayDate($history['date_add'], null, false);
+            $orderHistory[$historyId]['contrast'] = (Tools::getBrightness($history['color']) > 128) ? 'dark' : 'bright';
         }
 
         if (!isset($orderHistory['current'])) {
@@ -311,9 +319,10 @@ class OrderLazyArray extends AbstractLazyArray
     }
 
     /**
+     * @arrayAccess
+     *
      * @return array
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getMessages()
     {
         $order = $this->order;
@@ -323,7 +332,8 @@ class OrderLazyArray extends AbstractLazyArray
 
         foreach ($customerMessages as $cmId => $customerMessage) {
             $messages[$cmId] = $customerMessage;
-            $messages[$cmId]['message_date'] = Tools::displayDate($customerMessage['date_add'], true);
+            $messages[$cmId]['message'] = nl2br($customerMessage['message']);
+            $messages[$cmId]['message_date'] = Tools::displayDate($customerMessage['date_add'], null, true);
             if (isset($customerMessage['elastname']) && $customerMessage['elastname']) {
                 $messages[$cmId]['name'] = $customerMessage['efirstname'] . ' ' . $customerMessage['elastname'];
             } elseif ($customerMessage['clastname']) {
@@ -337,9 +347,10 @@ class OrderLazyArray extends AbstractLazyArray
     }
 
     /**
+     * @arrayAccess
+     *
      * @return array
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getCarrier()
     {
         $order = $this->order;
@@ -353,9 +364,10 @@ class OrderLazyArray extends AbstractLazyArray
     }
 
     /**
+     * @arrayAccess
+     *
      * @return array
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getAddresses()
     {
         $order = $this->order;
@@ -381,25 +393,27 @@ class OrderLazyArray extends AbstractLazyArray
     }
 
     /**
+     * @arrayAccess
+     *
      * @return string
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getFollowUp()
     {
         $order = $this->order;
 
         $carrier = $this->getCarrier();
-        if (!empty($carrier['url']) && !empty($order->getShippingNumber())) {
-            return str_replace('@', $order->getShippingNumber(), $carrier['url']);
+        if (!empty($carrier['url']) && !empty($order->shipping_number)) {
+            return str_replace('@', $order->shipping_number, $carrier['url']);
         }
 
         return '';
     }
 
     /**
+     * @arrayAccess
+     *
      * @return array
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getLabels()
     {
         return [

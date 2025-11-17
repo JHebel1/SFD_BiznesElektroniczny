@@ -17,45 +17,41 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-declare(strict_types=1);
 
 namespace PrestaShop\Module\Mbo\Tab;
 
 use Doctrine\Common\Cache\CacheProvider;
-use PrestaShop\Module\Mbo\Service\ExternalContentProvider\ExternalContentProviderInterface;
+use PrestaShop\Module\Mbo\ExternalContentProvider\ExternalContentProviderInterface;
 use PrestaShop\PrestaShop\Adapter\LegacyContext;
 use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 
-/**
- * Get tabs used to group modules from Addons
- */
 class TabCollectionProvider implements TabCollectionProviderInterface
 {
-    public const CACHE_KEY = 'recommendedModules';
+    const CACHE_KEY = 'recommendedModules';
 
-    public const CACHE_LIFETIME_SECONDS = 604800;
+    const CACHE_LIFETIME_SECONDS = 604800;
 
-    public const API_URL = 'https://api.prestashop.com/xml/tab_modules_list_17.xml';
+    const API_URL = 'https://api.prestashop.com/xml/tab_modules_list_17.xml';
 
     /**
      * @var LegacyContext
      */
-    protected $context;
+    private $context;
 
     /**
      * @var ExternalContentProviderInterface
      */
-    protected $externalContentProvider;
+    private $externalContentProvider;
 
     /**
      * @var TabCollectionFactoryInterface
      */
-    protected $tabCollectionFactory;
+    private $tabCollectionFactory;
 
     /**
      * @var CacheProvider|null
      */
-    protected $cacheProvider;
+    private $cacheProvider;
 
     /**
      * @param LegacyContext $context
@@ -67,7 +63,7 @@ class TabCollectionProvider implements TabCollectionProviderInterface
         LegacyContext $context,
         ExternalContentProviderInterface $externalContentProvider,
         TabCollectionFactoryInterface $tabCollectionFactory,
-        ?CacheProvider $cacheProvider = null,
+        CacheProvider $cacheProvider = null
     ) {
         $this->context = $context;
         $this->externalContentProvider = $externalContentProvider;
@@ -78,7 +74,7 @@ class TabCollectionProvider implements TabCollectionProviderInterface
     /**
      * {@inheritdoc}
      */
-    public function getTabCollection(): TabCollectionInterface
+    public function getTabCollection()
     {
         if ($this->isTabCollectionCached()) {
             return $this->cacheProvider->fetch($this->getCacheKey());
@@ -99,7 +95,7 @@ class TabCollectionProvider implements TabCollectionProviderInterface
         return $tabCollection;
     }
 
-    protected function getCacheKey(): string
+    private function getCacheKey()
     {
         return static::CACHE_KEY . '-' . $this->context->getEmployeeLanguageIso();
     }
@@ -109,20 +105,10 @@ class TabCollectionProvider implements TabCollectionProviderInterface
      *
      * @return bool
      */
-    public function isTabCollectionCached(): bool
+    public function isTabCollectionCached()
     {
         return $this->cacheProvider
             && $this->cacheProvider->contains($this->getCacheKey());
-    }
-
-    /**
-     * @return void
-     */
-    public function clearCache(): void
-    {
-        if ($this->isTabCollectionCached()) {
-            $this->cacheProvider->delete($this->getCacheKey());
-        }
     }
 
     /**
@@ -132,7 +118,7 @@ class TabCollectionProvider implements TabCollectionProviderInterface
      *
      * @throws ServiceUnavailableHttpException
      */
-    protected function getTabCollectionFromApi(): TabCollectionInterface
+    private function getTabCollectionFromApi()
     {
         $apiResponse = $this->externalContentProvider->getContent(self::API_URL);
         $tabCollectionDecoderXml = new TabCollectionDecoderXml($apiResponse);

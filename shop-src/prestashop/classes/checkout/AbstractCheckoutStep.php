@@ -23,7 +23,7 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 abstract class AbstractCheckoutStepCore implements CheckoutStepInterface
 {
@@ -86,13 +86,6 @@ abstract class AbstractCheckoutStepCore implements CheckoutStepInterface
             'step_is_current' => (int) $this->isCurrent(),
         ];
 
-        Hook::exec('actionCheckoutStepRenderTemplate', [
-            'template' => &$template,
-            'params' => &$params,
-            'extraParams' => &$extraParams,
-            'defaultParams' => &$defaultParams,
-        ]);
-
         $scope = $this->smarty->createData(
             $this->smarty
         );
@@ -148,11 +141,6 @@ abstract class AbstractCheckoutStepCore implements CheckoutStepInterface
         return $this->step_is_reachable;
     }
 
-    /**
-     * @param bool $step_is_complete
-     *
-     * @return self
-     */
     public function setComplete($step_is_complete)
     {
         $this->step_is_complete = $step_is_complete;

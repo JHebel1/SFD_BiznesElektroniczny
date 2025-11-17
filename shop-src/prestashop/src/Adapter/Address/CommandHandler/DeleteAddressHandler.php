@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Address\CommandHandler;
 
 use PrestaShop\PrestaShop\Adapter\Address\AbstractAddressHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Address\Command\DeleteAddressCommand;
 use PrestaShop\PrestaShop\Core\Domain\Address\CommandHandler\DeleteAddressHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Address\Exception\DeleteAddressException;
@@ -35,7 +34,6 @@ use PrestaShop\PrestaShop\Core\Domain\Address\Exception\DeleteAddressException;
 /**
  * Handles command which deletes address
  */
-#[AsCommandHandler]
 final class DeleteAddressHandler extends AbstractAddressHandler implements DeleteAddressHandlerInterface
 {
     /**

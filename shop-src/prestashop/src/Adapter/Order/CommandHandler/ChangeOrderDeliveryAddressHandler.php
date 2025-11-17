@@ -37,7 +37,6 @@ use PrestaShop\PrestaShop\Adapter\ContextStateManager;
 use PrestaShop\PrestaShop\Adapter\Order\OrderAmountUpdater;
 use PrestaShop\PrestaShop\Adapter\Order\OrderDetailUpdater;
 use PrestaShop\PrestaShop\Adapter\Order\OrderProductQuantityUpdater;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Order\Command\ChangeOrderDeliveryAddressCommand;
 use PrestaShop\PrestaShop\Core\Domain\Order\CommandHandler\ChangeOrderDeliveryAddressHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Order\Exception\OrderException;
@@ -46,7 +45,6 @@ use Validate;
 /**
  * @internal
  */
-#[AsCommandHandler]
 final class ChangeOrderDeliveryAddressHandler extends AbstractOrderCommandHandler implements ChangeOrderDeliveryAddressHandlerInterface
 {
     /**
@@ -179,7 +177,7 @@ final class ChangeOrderDeliveryAddressHandler extends AbstractOrderCommandHandle
                 && (int) $product['id_product_attribute'] === $combinationId
             ) {
                 $orderDetail = new OrderDetail();
-                $orderDetail->createList($order, $cart, $order->getCurrentState(), [$product]);
+                $orderDetail->createList($order, $cart, $order->getCurrentOrderState(), [$product]);
 
                 return $orderDetail;
             }

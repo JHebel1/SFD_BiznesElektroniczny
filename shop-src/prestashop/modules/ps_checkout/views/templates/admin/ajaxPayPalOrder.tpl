@@ -20,11 +20,11 @@
   {if !$orderPayPal}
     <div class="checkout-modal-container">
       <div class="checkout-modal">
-        {if $psCheckoutCart->getPaypalStatus() === 'CANCELED'}
+        {if $psPayPalOrder->getStatus() === 'CANCELED'}
           <div role="alert" aria-live="polite" aria-atomic="true" class="alert alert-info">
             <p>{l s='Transaction details are not available' mod='ps_checkout'} {l s='This PayPal Order has been canceled.' mod='ps_checkout'}</p>
           </div>
-        {elseif $psCheckoutCart->getPaypalStatus() === 'REVERSED'}
+        {elseif $psPayPalOrder->getStatus() === 'REVERSED'}
           <div role="alert" aria-live="polite" aria-atomic="true" class="alert alert-info">
             <p>{l s='Transaction details are not available' mod='ps_checkout'} {l s='This PayPal Order has been reversed.' mod='ps_checkout'}</p>
           </div>
@@ -61,15 +61,15 @@
           <dd data-test="total-value">{$orderPayPal.total}</dd>
           <dt data-grid-area="balance">
             {l s='Balance' mod='ps_checkout'}
-            <i class="material-icons" title="{l s='Total amount you will receive on your bank account: the order amount, minus transaction fees, minus potential refunds' mod='ps_checkout'}">info</i>
+            <i class="balance-info-icon" title="{l s='Total amount you will receive on your bank account: the order amount, minus transaction fees, minus potential refunds' mod='ps_checkout'}"></i>
           </dt>
           <dd data-test="balance-value">{$orderPayPal.balance}</dd>
           <dt data-grid-area="environment">
             {l s='Environment' mod='ps_checkout'}
-            <i class="material-icons" title="{l s='The environment in which the transaction was made: Test or Production' mod='ps_checkout'}">info</i>
+            <i class="environment-info-icon" title="{l s='The environment in which the transaction was made: Test or Production' mod='ps_checkout'}"></i>
           </dt>
           <dd data-grid-area="environment-value">
-            <span data-test="payment-env-value" class="badge rounded badge-paypal-environment-{if $isProductionEnv}live{else}sandbox{/if}" data-value="{$psCheckoutCart->getEnvironment()|escape:'html':'UTF-8'}">
+            <span data-test="payment-env-value" class="badge rounded badge-paypal-environment-{if $isProductionEnv}live{else}sandbox{/if}" data-value="{$psPayPalOrder->getEnvironment()|escape:'html':'UTF-8'}">
               {if $isProductionEnv}
                 {l s='Production' mod='ps_checkout'}
               {else}
@@ -78,8 +78,8 @@
             </span>
           </dd>
           <dt data-grid-area="payment">{l s='Payment mode' mod='ps_checkout'}</dt>
-          <dd data-test="payment-mode-value">{$orderPaymentDisplayName|escape:'html':'UTF-8'} <img src="{$orderPayPal.paymentSourceLogo}" alt="{$orderPaymentDisplayName|escape:'html':'UTF-8'}" title="{$orderPaymentDisplayName|escape:'html':'UTF-8'}" height="20"></dd>
-          {if $psCheckoutCart->paypal_funding === 'card'}
+          <dd data-test="payment-mode-value">{$orderPayPal.paymentSourceName|escape:'html':'UTF-8'} <img src="{$orderPayPal.paymentSourceLogo}" alt="{$orderPayPal.paymentSourceName|escape:'html':'UTF-8'}" title="{$orderPayPal.paymentSourceName|escape:'html':'UTF-8'}" height="20"></dd>
+          {if $psPayPalOrder->getFundingSource() === 'card'}
             <dt data-grid-area="card-sca">{l s='3D Secure' mod='ps_checkout'}</dt>
             <dd data-grid-area="card-sca-value">
               {if $orderPayPal.is3DSNotRequired}
@@ -114,7 +114,7 @@
             </dd>
           {/if}
         </dl>
-        {if $psCheckoutCart->paypal_funding === 'card' && !$orderPayPal.isLiabilityShifted}
+        {if $psPayPalOrder->getFundingSource() === 'card' && !$orderPayPal.isLiabilityShifted}
           <div class="liability-explanation">
             {if $orderPayPal.is3DSNotRequired}
               {l s='Your 3D Secure settings for this transaction were set to "Strong Customer Authentication (SCA) when required", but the current transaction does not require it as per the regulation.' mod='ps_checkout'}
@@ -122,7 +122,7 @@
             {l s='The bank issuer declined the liability shift. We advice you not to honor the order immediately, wait a few days in case of chargeback and contact the consumer to ensure authenticity of the transaction. For this type of cases we also recommend to consider Chargeback protection.' mod='ps_checkout'}
           </div>
         {/if}
-        {if $psCheckoutCart->paypal_funding === 'card' && $orderPayPal.isLiabilityShifted}
+        {if $psPayPalOrder->getFundingSource() === 'card' && $orderPayPal.isLiabilityShifted}
           <div class="liability-explanation">
             {l s='The bank issuer accepted the liability shift. You can safely honor the order.' mod='ps_checkout'}
           </div>
@@ -148,7 +148,7 @@
               aria-controls="{$orderPayPalTransaction.id}-tab"
               class="tab"
             >
-              <strong class="tab__btn-title"> {$orderPayPalTransaction.type.translated|escape:'html':'UTF-8'} </strong>
+              <strong class="tab__btn-title">{$orderPayPalTransaction.type.translated|escape:'html':'UTF-8'}</strong>
               <span class="tab__btn-infos">
                   <span class="tab__btn-time">{dateFormat date=$orderPayPalTransaction.date full=true}</span>
                   <strong class="tab__btn-amount">
@@ -175,33 +175,32 @@
               {if $counter neq 1}hidden="hidden"{/if}
             >
               <div>
-                <div>
-                  <h3 class="tabpanel__title">{l s='Transaction details' mod='ps_checkout'}</h3>
-                  <dl class="tabpanel__infos">
-                    <dt>{l s='Reference' mod='ps_checkout'}</dt>
-                    <dd>{$orderPayPalTransaction.id}</dd>
-                    <dt>{l s='Status' mod='ps_checkout'}</dt>
+                <h3 class="tabpanel__title">{l s='Transaction details' mod='ps_checkout'}</h3>
+                <dl class="tabpanel__infos">
+                  <dt>{l s='Reference' mod='ps_checkout'}</dt>
+                  <dd>{$orderPayPalTransaction.id}</dd>
+                  <dt>{l s='Status' mod='ps_checkout'}</dt>
+                  <dd>
+                    <span class="badge rounded badge-{$orderPayPalTransaction.status.class|escape:'html':'UTF-8'}">
+                      {$orderPayPalTransaction.status.translated|escape:'html':'UTF-8'}
+                    </span>
+                  </dd>
+                  <dt>{l s='Amount (Tax incl.)' mod='ps_checkout'}</dt>
+                  <dd>{$orderPayPalTransaction.amount} {$orderPayPalTransaction.currency}</dd>
+                  {if !empty($orderPayPalTransaction.seller_protection)}
+                    <dt>
+                      {l s='Seller protection' mod='ps_checkout'}
+                      <i class="seller-protection-info-icon" title="{$orderPayPalTransaction.seller_protection.help|escape:'html':'UTF-8'}"></i>
+                    </dt>
                     <dd>
-                      <span class="badge rounded badge-{$orderPayPalTransaction.status.class|escape:'html':'UTF-8'}">
-                        {$orderPayPalTransaction.status.translated|escape:'html':'UTF-8'}
-                      </span>
+                    <span class="badge rounded badge-{$orderPayPalTransaction.seller_protection.class|escape:'html':'UTF-8'}">
+                      {$orderPayPalTransaction.seller_protection.translated|escape:'html':'UTF-8'}
+                    </span>
                     </dd>
-                    <dt>{l s='Amount (Tax incl.)' mod='ps_checkout'}</dt>
-                    <dd>{$orderPayPalTransaction.amount} {$orderPayPalTransaction.currency}</dd>
-                    {if !empty($orderPayPalTransaction.seller_protection)}
-                      <dt>
-                        {l s='Seller protection' mod='ps_checkout'}
-                        <i class="material-icons" title="{$orderPayPalTransaction.seller_protection.help|escape:'html':'UTF-8'}">info</i>
-                      </dt>
-                      <dd>
-                      <span class="badge rounded badge-{$orderPayPalTransaction.seller_protection.class|escape:'html':'UTF-8'}">
-                        {$orderPayPalTransaction.seller_protection.translated|escape:'html':'UTF-8'}
-                      </span>
-                      </dd>
-                    {/if}
-                  </dl>
-                </div>
-                  {if $orderPayPalTransaction.gross_amount || $orderPayPalTransaction.paypal_fee || $orderPayPalTransaction.net_amount}
+                  {/if}
+                </dl>
+              </div>
+              {if $orderPayPalTransaction.gross_amount || $orderPayPalTransaction.paypal_fee || $orderPayPalTransaction.net_amount}
                 <div>
                   <h3 class="tabpanel__title">{l s='Transaction amounts' mod='ps_checkout'}</h3>
                   <dl class="tabpanel__infos">
@@ -219,19 +218,18 @@
                       {/if}
                   </dl>
                 </div>
-                  {/if}
-                <a href="https://www.paypal.com/activity/payment/{$orderPayPalTransaction.id|escape:'html':'UTF-8'}" target="_blank" class="tabpanel__cta">
-                  {l s='See on PayPal' mod='ps_checkout'}
-                </a>
-                  {if $orderPayPalTransaction.isRefundable}
-                    <div class="panel__cta">
-                        {l s='Any change on the order?' mod='ps_checkout'}
-                      <a class="refund" data-transaction-id="{$orderPayPalTransaction.id|escape:'html':'UTF-8'}">
-                          {l s='Refund' mod='ps_checkout'}
-                      </a>
-                    </div>
-                  {/if}
-              </div>
+              {/if}
+              <a href="https://www.paypal.com/activity/payment/{$orderPayPalTransaction.id|escape:'html':'UTF-8'}" target="_blank" class="tabpanel__cta">
+                {l s='See on PayPal' mod='ps_checkout'}
+              </a>
+              {if $orderPayPalTransaction.isRefundable}
+                <div class="panel__cta">
+                  {l s='Any change on the order?' mod='ps_checkout'}
+                  <a class="refund" data-transaction-id="{$orderPayPalTransaction.id|escape:'html':'UTF-8'}">
+                    {l s='Refund' mod='ps_checkout'}
+                  </a>
+                </div>
+              {/if}
             </div>
 
             {if $orderPayPalTransaction.isRefundable}
@@ -241,21 +239,20 @@
                     <form action="{$orderPayPalBaseUrl|escape:'html':'UTF-8'}" method="POST" class="form-horizontal ps-checkout-refund-form">
                       <div class="modal-header">
                         <h5 class="modal-title">
-                            <img src="{$moduleLogoUri}" width="20" height="20" alt="logo"> {l s='Refund transaction totally or partially' mod='ps_checkout'}
+                          <img src="{$moduleLogoUri}" width="20" height="20" alt="logo"> {l s='Refund transaction totally or partially' mod='ps_checkout'}
                         </h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="{l s='Cancel' mod='ps_checkout'}">
                           <span aria-hidden="true">×</span>
                         </button>
                       </div>
                       <div class="modal-body mb-2">
-                        <div class="modal-notifications">
-                        </div>
+                        <div class="modal-notifications"></div>
                         <div class="modal-content-container">
                           <div class="form-group mb-0">
                             <div class="row">
                               <div class="col-md-12">
                                 <p class="mb-2">
-                                    <b>{l s='Order details' mod='ps_checkout'}</b>
+                                  <b>{l s='Order details' mod='ps_checkout'}</b>
                                 </p>
                               </div>
                             </div>
@@ -279,9 +276,7 @@
                                 </p>
                               </div>
                             </div>
-                            <div class="row separator">
-
-                            </div>
+                            <div class="row separator"></div>
                             <div class="row">
                               <div class="col-md-6">
                                 <label class="form-control-label" for="{$orderPayPalRefundAmountIdentifier|escape:'html':'UTF-8'}">
@@ -309,14 +304,14 @@
                                 <p class="text-muted">
                                   {l s='Maximum [AMOUNT_MAX] [CURRENCY] (tax included)' sprintf=['[AMOUNT_MAX]' => $orderPayPalTransaction.maxAmountRefundable|escape:'html':'UTF-8'|string_format:"%.2f", '[CURRENCY]' => $orderPayPalTransaction.currency|escape:'html':'UTF-8'] mod='ps_checkout'}
                                   <a href="#">
-                                      {l s='Learn more' mod='ps_checkout'}
+                                    {l s='Learn more' mod='ps_checkout'}
                                   </a>
                                 </p>
                               </div>
                             </div>
                           </div>
                           <p class="text-muted">
-                              {l s='Your transaction refund request will be sent to PayPal. After that, you’ll need to manually process the refund action in the PrestaShop order: choose the type of refund (standard or partial) in order to generate credit slip.' mod='ps_checkout'}
+                            {l s='Your transaction refund request will be sent to PayPal. After that, you’ll need to manually process the refund action in the PrestaShop order: choose the type of refund (standard or partial) in order to generate credit slip.' mod='ps_checkout'}
                           </p>
                         </div>
                         <div class="modal-loader text-center">
@@ -325,13 +320,13 @@
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-outline-primary" data-dismiss="modal">
-                            {l s='Cancel' mod='ps_checkout'}
+                          {l s='Cancel' mod='ps_checkout'}
                         </button>
                         <button type="button" class="btn btn-primary refund-submit" disabled>
-                            {l s='Refund' mod='ps_checkout'} <span class="refund-value" data-transaction-currency="{$orderPayPalTransaction.currency|escape:'html':'UTF-8'}"></span>
+                          {l s='Refund' mod='ps_checkout'} <span class="refund-value" data-transaction-currency="{$orderPayPalTransaction.currency|escape:'html':'UTF-8'}"></span>
                         </button>
                         <button type="submit" class="btn btn-primary refund-confirm" hidden="hidden">
-                            {l s='Confirm refund' mod='ps_checkout'}
+                          {l s='Confirm refund' mod='ps_checkout'}
                         </button>
                       </div>
                     </form>

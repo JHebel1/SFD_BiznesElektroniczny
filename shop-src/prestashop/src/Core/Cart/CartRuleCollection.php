@@ -26,10 +26,7 @@
 
 namespace PrestaShop\PrestaShop\Core\Cart;
 
-use Iterator;
-use ReturnTypeWillChange;
-
-class CartRuleCollection implements Iterator
+class CartRuleCollection implements \Iterator
 {
     /**
      * @var CartRuleData[]
@@ -42,7 +39,7 @@ class CartRuleCollection implements Iterator
         $this->cartRules[] = $cartRule;
     }
 
-    public function rewind(): void
+    public function rewind()
     {
         $this->iteratorPosition = 0;
     }
@@ -50,24 +47,22 @@ class CartRuleCollection implements Iterator
     /**
      * @return CartRuleData
      */
-    #[ReturnTypeWillChange]
     public function current()
     {
         return $this->cartRules[$this->getKey($this->iteratorPosition)];
     }
 
-    #[ReturnTypeWillChange]
     public function key()
     {
         return $this->getKey($this->iteratorPosition);
     }
 
-    public function next(): void
+    public function next()
     {
         ++$this->iteratorPosition;
     }
 
-    public function valid(): bool
+    public function valid()
     {
         return $this->getKey($this->iteratorPosition) !== null
                && array_key_exists(

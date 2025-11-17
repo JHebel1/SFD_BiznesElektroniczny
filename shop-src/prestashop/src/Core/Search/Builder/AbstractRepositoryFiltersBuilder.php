@@ -77,7 +77,7 @@ abstract class AbstractRepositoryFiltersBuilder extends AbstractFiltersBuilder
         $defaultController = $defaultAction = '';
         if (isset($config['request']) && $config['request'] instanceof Request) {
             $request = $config['request'];
-            [$defaultController, $defaultAction] = ControllerAction::fromString($request->get('_controller'));
+            list($defaultController, $defaultAction) = ControllerAction::fromString($request->get('_controller'));
         }
 
         $this->controller = isset($config['controller']) ? $config['controller'] : $defaultController;

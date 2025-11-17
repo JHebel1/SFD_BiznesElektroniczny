@@ -27,14 +27,14 @@
 /**
  * StockManagerInterface : defines a way to manage stock.
  *
- * @deprecated since 9.0 and will be removed in 10.0, stock is now managed by new logic
+ * @since 1.5.0
  */
 interface StockManagerInterface
 {
     /**
      * Checks if the StockManager is available.
      *
-     * @return bool
+     * @return StockManagerInterface
      */
     public static function isAvailable();
 
@@ -45,7 +45,7 @@ interface StockManagerInterface
      * @param int $id_product_attribute
      * @param Warehouse $warehouse
      * @param int $quantity
-     * @param int|null $id_stock_movement_reason
+     * @param int $id_stock_movement_reason
      * @param float $price_te
      * @param bool $is_usable
      * @param int $id_supply_order optionnal

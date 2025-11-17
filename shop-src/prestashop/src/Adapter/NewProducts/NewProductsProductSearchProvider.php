@@ -31,9 +31,9 @@ use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchProviderInterface;
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchQuery;
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchResult;
 use PrestaShop\PrestaShop\Core\Product\Search\SortOrder;
-use PrestaShop\PrestaShop\Core\Product\Search\SortOrdersCollection;
+use PrestaShop\PrestaShop\Core\Product\Search\SortOrderFactory;
 use Product;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Used to query the latest products, see NewProductsController in Front Office.
@@ -46,15 +46,15 @@ class NewProductsProductSearchProvider implements ProductSearchProviderInterface
     private $translator;
 
     /**
-     * @var SortOrdersCollection
+     * @var SortOrderFactory
      */
-    private $sortOrdersCollection;
+    private $sortOrderFactory;
 
     public function __construct(
         TranslatorInterface $translator
     ) {
         $this->translator = $translator;
-        $this->sortOrdersCollection = new SortOrdersCollection($this->translator);
+        $this->sortOrderFactory = new SortOrderFactory($this->translator);
     }
 
     /**
@@ -62,24 +62,21 @@ class NewProductsProductSearchProvider implements ProductSearchProviderInterface
      * @param ProductSearchQuery $query
      * @param string $type
      *
-     * @return array|int
+     * @return array
      */
     private function getProductsOrCount(
         ProductSearchContext $context,
         ProductSearchQuery $query,
         $type = 'products'
     ) {
-        $isTypeProducts = $type === 'products';
-        $result = Product::getNewProducts(
+        return Product::getNewProducts(
             $context->getIdLang(),
             $query->getPage(),
             $query->getResultsPerPage(),
-            !$isTypeProducts,
+            $type !== 'products',
             $query->getSortOrder()->toLegacyOrderBy(),
             $query->getSortOrder()->toLegacyOrderWay()
         );
-
-        return $isTypeProducts ? $result : (int) $result;
     }
 
     /**
@@ -101,18 +98,27 @@ class NewProductsProductSearchProvider implements ProductSearchProviderInterface
                 ->setProducts($products)
                 ->setTotalProductsCount($count);
 
-            // We use default set of sort orders + option to sort by date
             $result->setAvailableSortOrders(
-                array_merge(
-                    [
-                        (new SortOrder('product', 'date_add', 'desc'))->setLabel(
-                            $this->translator->trans('Date added, newest to oldest', [], 'Shop.Theme.Catalog')
-                        ),
-                        (new SortOrder('product', 'date_add', 'asc'))->setLabel(
-                            $this->translator->trans('Date added, oldest to newest', [], 'Shop.Theme.Catalog')
-                        ),
-                    ],
-                    $this->sortOrdersCollection->getDefaults())
+                [
+                    (new SortOrder('product', 'date_add', 'desc'))->setLabel(
+                        $this->translator->trans('Date added, newest to oldest', [], 'Shop.Theme.Catalog')
+                    ),
+                    (new SortOrder('product', 'date_add', 'asc'))->setLabel(
+                        $this->translator->trans('Date added, oldest to newest', [], 'Shop.Theme.Catalog')
+                    ),
+                    (new SortOrder('product', 'name', 'asc'))->setLabel(
+                        $this->translator->trans('Name, A to Z', [], 'Shop.Theme.Catalog')
+                    ),
+                    (new SortOrder('product', 'name', 'desc'))->setLabel(
+                        $this->translator->trans('Name, Z to A', [], 'Shop.Theme.Catalog')
+                    ),
+                    (new SortOrder('product', 'price', 'asc'))->setLabel(
+                        $this->translator->trans('Price, low to high', [], 'Shop.Theme.Catalog')
+                    ),
+                    (new SortOrder('product', 'price', 'desc'))->setLabel(
+                        $this->translator->trans('Price, high to low', [], 'Shop.Theme.Catalog')
+                    ),
+                ]
             );
         }
 

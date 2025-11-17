@@ -1,4 +1,4 @@
-{# **
+{#**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
  *
@@ -21,10 +21,22 @@
  * @author    PrestaShop SA and Contributors <contact@prestashop.com>
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
- * #}
+ *#}
 
 {% if not orderForViewing.virtual %}
-    <table class="table" id="shipping-grid-table">
+
+    {% if orderForViewing.shipping.giftMessage %}
+      <div class="row col-lg-12">
+        <label>
+          {{ 'Gift message:'|trans({}, 'Admin.Global') }}
+        </label>
+        <div id="gift-message" class="col-lg-9">
+           {{ orderForViewing.shipping.giftMessage }}
+        </div>
+      </div>
+    {% endif %}
+
+    <table class="table">
     <thead>
       <tr>
         <th>{{ 'Date'|trans({}, 'Admin.Global') }}</th>
@@ -39,12 +51,12 @@
     <tbody>
       {% for carrier in orderForViewing.shipping.carriers %}
         <tr>
-          <td class="date">{{ carrier.date|date_format_lite }}</td>
+          <td>{{ carrier.date|date_format_lite }}</td>
           <td>&nbsp;</td>
-          <td class="carrier-name">{{ carrier.name }}</td>
-          <td class="carrier-weight">{{ carrier.weight }}</td>
-          <td class="carrier-price">{{ carrier.price }}</td>
-          <td class="carrier-tracking-number">
+          <td>{{ carrier.name }}</td>
+          <td>{{ carrier.weight }}</td>
+          <td>{{ carrier.price }}</td>
+          <td>
             {% if carrier.trackingNumber %}
               {% if carrier.trackingUrl %}
                 <a href="{{ carrier.trackingUrl }}" target="_blank" rel="noopener noreferrer nofollow">{{ carrier.trackingNumber }}</a>

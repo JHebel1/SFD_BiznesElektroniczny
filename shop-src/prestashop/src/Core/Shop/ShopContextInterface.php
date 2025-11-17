@@ -37,9 +37,4 @@ interface ShopContextInterface
      * @return string
      */
     public function getShopName();
-
-    /**
-     * @return int[]
-     */
-    public function getContextShopIds(): array;
 }

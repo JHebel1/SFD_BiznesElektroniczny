@@ -62,7 +62,7 @@ final class SampleFileProvider implements SampleFileProviderInterface
 
         try {
             $sampleFile = new File($path . $sampleFileName . '.csv');
-        } catch (FileNotFoundException) {
+        } catch (FileNotFoundException $e) {
             return null;
         }
 

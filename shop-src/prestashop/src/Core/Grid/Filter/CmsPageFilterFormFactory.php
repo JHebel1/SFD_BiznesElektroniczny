@@ -83,7 +83,7 @@ final class CmsPageFilterFormFactory implements GridFilterFormFactoryInterface
         foreach ($cmsPageCategoryFilterForm as $categoryFormItem) {
             $newCmsPageCategoryFormBuilder->add(
                 $categoryFormItem->getName(),
-                $categoryFormItem->getConfig()->getType()->getInnerType()::class,
+                get_class($categoryFormItem->getConfig()->getType()->getInnerType()),
                 $categoryFormItem->getConfig()->getOptions()
             );
         }

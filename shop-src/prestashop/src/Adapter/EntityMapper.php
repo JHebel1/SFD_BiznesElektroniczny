@@ -30,10 +30,13 @@ use Cache;
 use Db;
 use DbQuery;
 use ObjectModel;
-use ObjectModelCore;
-use PrestaShopDatabaseException;
 use Shop;
 
+/**
+ * Not used in PrestaShop core, only in tests.
+ *
+ * @deprecated since 1.7.5, to be removed in 1.8
+ */
 class EntityMapper
 {
     /**
@@ -41,18 +44,18 @@ class EntityMapper
      *
      * @param int $id
      * @param int $id_lang
-     * @param ObjectModelCore $entity
+     * @param ObjectModel $entity
      * @param array<string,string|array> $entity_defs
      * @param int $id_shop
      * @param bool $should_cache_objects
      *
-     * @throws PrestaShopDatabaseException
+     * @throws \PrestaShopDatabaseException
      */
     public function load($id, $id_lang, $entity, $entity_defs, $id_shop, $should_cache_objects)
     {
         // Load object from database if object id is present
         $cache_id = 'objectmodel_' . $entity_defs['classname'] . '_' . (int) $id . '_' . (int) $id_shop . '_' . (int) $id_lang;
-        if (!$should_cache_objects || !Cache::isStored($cache_id)) {
+        if (!$should_cache_objects || !\Cache::isStored($cache_id)) {
             $sql = new DbQuery();
             $sql->from($entity_defs['table'], 'a');
             $sql->where('a.`' . bqSQL($entity_defs['primary']) . '` = ' . (int) $id);
@@ -97,18 +100,7 @@ class EntityMapper
                 foreach ($object_datas as $key => $value) {
                     if (array_key_exists($key, $entity_defs['fields'])
                         || array_key_exists($key, $objectVars)) {
-                        if (isset($entity_defs['fields'][$key]['type']) && in_array($entity_defs['fields'][$key]['type'], [
-                            ObjectModel::TYPE_BOOL,
-                        ])) {
-                            if (is_array($value)) {
-                                array_walk($value, function (&$v) { $v = strval($v); });
-                                $entity->{$key} = $value;
-                            } else {
-                                $entity->{$key} = strval($value);
-                            }
-                        } else {
-                            $entity->{$key} = $value;
-                        }
+                        $entity->{$key} = $value;
                     } else {
                         unset($object_datas[$key]);
                     }

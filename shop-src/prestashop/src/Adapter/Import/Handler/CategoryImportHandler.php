@@ -44,7 +44,7 @@ use PrestaShop\PrestaShop\Core\Import\Exception\SkippedIterationException;
 use PrestaShop\PrestaShop\Core\Import\File\DataRow\DataRowInterface;
 use Psr\Log\LoggerInterface;
 use Shop;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class CategoryImportHandler holds legacy logic of category import.
@@ -165,12 +165,12 @@ final class CategoryImportHandler extends AbstractImportHandler
         parent::importRow($importConfig, $runtimeConfig, $dataRow);
 
         $entityFields = $runtimeConfig->getEntityFields();
-        $categoryId = (int) $this->fetchDataValueByKey($dataRow, $entityFields, 'id');
+        $categoryId = $this->fetchDataValueByKey($dataRow, $entityFields, 'id');
 
         $this->checkCategoryId($categoryId);
 
         if ($categoryId && ($importConfig->forceIds() || ObjectModel::existsInDatabase($categoryId, 'category'))) {
-            $category = new Category($categoryId);
+            $category = new Category((int) $categoryId);
         } else {
             $category = new Category();
         }
@@ -248,8 +248,8 @@ final class CategoryImportHandler extends AbstractImportHandler
             // Validation for parenting itself
             if ($isValidation && $category->parent == $category->id) {
                 $this->error($this->translator->trans(
-                    'The category ID must be unique. It can\'t be the same as the one for the parent category (ID: %1$s).',
-                    [$categoryId ?: null],
+                'The category ID must be unique. It can\'t be the same as the one for the parent category (ID: %1$s).',
+                    $categoryId ?: null,
                     'Admin.Advparameters.Notification'
                 ));
 
@@ -419,7 +419,7 @@ final class CategoryImportHandler extends AbstractImportHandler
                 $this->error(
                     sprintf(
                         $this->translator->trans(
-                            'A category cannot be its own parent. The parent category ID is either missing or unknown (ID: %1$s).',
+                'A category cannot be its own parent. The parent category ID is either missing or unknown (ID: %1$s).',
                             [],
                             'Admin.Advparameters.Notification'
                         ),
@@ -434,10 +434,10 @@ final class CategoryImportHandler extends AbstractImportHandler
             $category->doNotRegenerateNTree = true;
 
             // If id category AND id category already in base, trying to update
-            if ($category->id
-                && $category->categoryExists($category->id)
-                && !in_array($category->id, $this->coreCategories)
-                && !$runtimeConfig->shouldValidateData()
+            if ($category->id &&
+                $category->categoryExists($category->id) &&
+                !in_array($category->id, $this->coreCategories) &&
+                !$runtimeConfig->shouldValidateData()
             ) {
                 $result = $category->update();
             }
@@ -474,7 +474,7 @@ final class CategoryImportHandler extends AbstractImportHandler
             throw new SkippedIterationException();
         }
 
-        // copying images of categories
+        //copying images of categories
         if (!empty($category->image)) {
             $copyResult = $this->imageCopier->copyImg(
                 $category->id,
@@ -500,8 +500,8 @@ final class CategoryImportHandler extends AbstractImportHandler
                     '%1$s (ID: %2$s) cannot be %3$s',
                     [
                         !empty($categoryName) ? $this->tools->sanitize($categoryName) : 'No Name',
-                        !empty($categoryId) ? $this->tools->sanitize((string) $categoryId) : 'No ID',
-                        'saved',
+                        !empty($categoryId) ? $this->tools->sanitize($categoryId) : 'No ID',
+                        $runtimeConfig->shouldValidateData() ? 'validated' : 'saved',
                     ],
                     'Admin.Advparameters.Notification'
                 )
@@ -528,18 +528,14 @@ final class CategoryImportHandler extends AbstractImportHandler
                 }
 
                 // Get shops for each attributes
-                $multipleValueSeparator = $importConfig->getMultipleValueSeparator();
-                if (empty($multipleValueSeparator)) {
-                    return;
-                }
-                $shopData = explode($multipleValueSeparator, $shopData);
+                $shopData = explode($importConfig->getMultipleValueSeparator(), $shopData);
 
                 foreach ($shopData as $shop) {
                     if (!empty($shop)) {
                         if (!is_numeric($shop)) {
                             $category->addShop(Shop::getIdByName($shop));
                         } else {
-                            $category->addShop((int) $shop);
+                            $category->addShop($shop);
                         }
                     }
                 }

@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Supplier\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Supplier\Command\BulkDisableSupplierCommand;
 use PrestaShop\PrestaShop\Core\Domain\Supplier\CommandHandler\BulkDisableSupplierHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Supplier\Exception\CannotUpdateSupplierStatusException;
@@ -38,7 +37,6 @@ use Supplier;
 /**
  * Class BulkDisableSupplierHandler is responsible for disabling multiple suppliers.
  */
-#[AsCommandHandler]
 final class BulkDisableSupplierHandler implements BulkDisableSupplierHandlerInterface
 {
     /**

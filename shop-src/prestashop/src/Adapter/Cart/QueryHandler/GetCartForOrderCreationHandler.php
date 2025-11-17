@@ -38,7 +38,6 @@ use Message;
 use PrestaShop\Decimal\DecimalNumber;
 use PrestaShop\PrestaShop\Adapter\Cart\AbstractCartHandler;
 use PrestaShop\PrestaShop\Adapter\ContextStateManager;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Query\GetCartForOrderCreation;
 use PrestaShop\PrestaShop\Core\Domain\Cart\QueryHandler\GetCartForOrderCreationHandlerInterface;
@@ -55,12 +54,12 @@ use PrestaShop\PrestaShop\Core\Localization\LocaleInterface;
 use PrestaShopException;
 use Product;
 use Shop;
+use Symfony\Component\Translation\TranslatorInterface;
 use Tools;
 
 /**
  * Handles GetCartForOrderCreation query using legacy object models
  */
-#[AsQueryHandler]
 final class GetCartForOrderCreationHandler extends AbstractCartHandler implements GetCartForOrderCreationHandlerInterface
 {
     /**
@@ -84,29 +83,29 @@ final class GetCartForOrderCreationHandler extends AbstractCartHandler implement
     private $contextStateManager;
 
     /**
-     * @var int
+     * @var TranslatorInterface
      */
-    private $defaultCarrierId;
+    private $translator;
 
     /**
      * @param LocaleInterface $locale
      * @param int $contextLangId
      * @param Link $contextLink
      * @param ContextStateManager $contextStateManager
-     * @param int $defaultCarrierId
+     * @param TranslatorInterface $translator
      */
     public function __construct(
         LocaleInterface $locale,
         int $contextLangId,
         Link $contextLink,
         ContextStateManager $contextStateManager,
-        int $defaultCarrierId
+        TranslatorInterface $translator
     ) {
         $this->locale = $locale;
         $this->contextLangId = $contextLangId;
         $this->contextLink = $contextLink;
         $this->contextStateManager = $contextStateManager;
-        $this->defaultCarrierId = $defaultCarrierId;
+        $this->translator = $translator;
     }
 
     /**
@@ -240,7 +239,7 @@ final class GetCartForOrderCreationHandler extends AbstractCartHandler implement
 
                 if (isset($cartRules[$giftRuleId])) {
                     // it is possible that one cart rule can have a gift product, but also have other conditions,
-                    // so we need to sum their reduction values
+                    //so we need to sum their reduction values
                     /** @var CartForOrderCreation\CartRule $cartRule */
                     $cartRule = $cartRules[$giftRuleId];
                     $finalValue = $finalValue->plus(new DecimalNumber($cartRule->getValue()));
@@ -273,7 +272,7 @@ final class GetCartForOrderCreationHandler extends AbstractCartHandler implement
         foreach ($legacySummary['products'] as $product) {
             $productKey = $this->generateUniqueProductKey($product);
 
-            // decrease product quantity for each identical product which is marked as gift
+            //decrease product quantity for each identical product which is marked as gift
             if (isset($mergedGifts[$productKey])) {
                 $identicalGiftedProduct = $mergedGifts[$productKey];
                 $product['quantity'] -= $identicalGiftedProduct['quantity'];
@@ -323,7 +322,7 @@ final class GetCartForOrderCreationHandler extends AbstractCartHandler implement
                 $mergedGifts[$productKey] = $giftProduct;
                 $mergedGifts[$productKey]['quantity'] = 1;
             } else {
-                // increase existing gift quantity by 1
+                //increase existing gift quantity by 1
                 ++$mergedGifts[$productKey]['quantity'];
             }
         }
@@ -360,8 +359,8 @@ final class GetCartForOrderCreationHandler extends AbstractCartHandler implement
         $deliveryOptionsByAddress = $cart->getDeliveryOptionList();
         $deliveryAddress = (int) $cart->id_address_delivery;
 
-        // Check if there is any delivery options available for cart delivery address
-        if (!array_key_exists($deliveryAddress, $deliveryOptionsByAddress) && !$cart->isVirtualCart()) {
+        //Check if there is any delivery options available for cart delivery address
+        if (!array_key_exists($deliveryAddress, $deliveryOptionsByAddress)) {
             return null;
         }
 
@@ -373,11 +372,10 @@ final class GetCartForOrderCreationHandler extends AbstractCartHandler implement
             $isFreeShipping && $hideDiscounts ? '0' : (string) $legacySummary['total_shipping'],
             $isFreeShipping,
             $this->fetchCartDeliveryOptions($deliveryOptionsByAddress, $deliveryAddress),
-            (int) $carrier->id ?: $this->defaultCarrierId ?: null,
+            (int) $carrier->id ?: null,
             (bool) $cart->gift,
             (bool) $cart->recyclable,
-            $cart->gift_message,
-            $cart->isVirtualCart()
+            $cart->gift_message
         );
     }
 
@@ -392,9 +390,6 @@ final class GetCartForOrderCreationHandler extends AbstractCartHandler implement
     private function fetchCartDeliveryOptions(array $deliveryOptionsByAddress, int $deliveryAddressId)
     {
         $deliveryOptions = [];
-        if (empty($deliveryOptionsByAddress)) {
-            return $deliveryOptions;
-        }
         // legacy multishipping feature allowed to split cart shipping to multiple addresses.
         // now when the multishipping feature is removed
         // the list of carriers should be shared across whole cart for single delivery address
@@ -410,7 +405,7 @@ final class GetCartForOrderCreationHandler extends AbstractCartHandler implement
             }
         }
 
-        // make sure array is not associative
+        //make sure array is not associative
         return array_values($deliveryOptions);
     }
 
@@ -445,7 +440,7 @@ final class GetCartForOrderCreationHandler extends AbstractCartHandler implement
             $orderMessage,
             $this->contextLink->getPageLink(
                 'order',
-                null,
+                false,
                 (int) $cart->getAssociatedLanguage()->getId(),
                 http_build_query([
                     'step' => 3,
@@ -488,7 +483,7 @@ final class GetCartForOrderCreationHandler extends AbstractCartHandler implement
             return null;
         }
 
-        return new Customization($customizationId, $productCustomizedFieldsData);
+        return new CartForOrderCreation\Customization($customizationId, $productCustomizedFieldsData);
     }
 
     /**
@@ -550,9 +545,9 @@ final class GetCartForOrderCreationHandler extends AbstractCartHandler implement
             $product['name'],
             isset($product['attributes_small']) ? $product['attributes_small'] : '',
             $product['reference'],
-            (string) Tools::ps_round($product['price'], $currency->precision),
+            Tools::ps_round($product['price'], $currency->precision),
             $product['quantity'],
-            (string) Tools::ps_round($product['total'], $currency->precision),
+            Tools::ps_round($product['total'], $currency->precision),
             $this->contextLink->getImageLink($product['link_rewrite'], $product['id_image'], 'small_default'),
             $this->getProductCustomizedData($cart, $product),
             Product::getQuantity(

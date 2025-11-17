@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -65,8 +66,8 @@ class LegacyFileReader
             throw UnsupportedLocaleException::fileNotFound($filePath, $locale);
         }
 
-        // Load a global array $_MODULE (use include instead of include_once or the method will only work once)
-        include $filePath;
+        // Load a global array $_MODULE
+        include_once $filePath;
 
         return $_MODULE;
     }

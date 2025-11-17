@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Cart\CommandHandler;
 
 use PrestaShop\PrestaShop\Adapter\Cart\AbstractCartHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Command\AddCustomizationCommand;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Command\AddProductToCartCommand;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Command\UpdateProductQuantityInCartCommand;
@@ -39,7 +38,6 @@ use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartConstraintException;
 /**
  * Handles add product to cart command
  */
-#[AsCommandHandler]
 final class AddProductToCartHandler extends AbstractCartHandler implements AddProductToCartHandlerInterface
 {
     /**

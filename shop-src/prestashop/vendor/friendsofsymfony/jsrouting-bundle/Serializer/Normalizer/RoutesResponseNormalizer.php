@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * This file is part of the FOSJsRoutingBundle package.
  *
@@ -17,36 +15,32 @@ use FOS\JsRoutingBundle\Response\RoutesResponse;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 /**
- * Class RoutesResponseNormalizer.
+ * Class RoutesResponseNormalizer
  */
 class RoutesResponseNormalizer implements NormalizerInterface
 {
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
+     * @return array|string|int|float|bool|\ArrayObject|null
      */
-    public function normalize(mixed $object, ?string $format = null, array $context = []): array
+    public function normalize($data, $format = null, array $context = array())
     {
-        return [
-            'base_url' => $object->getBaseUrl(),
-            'routes' => $object->getRoutes(),
-            'prefix' => $object->getPrefix(),
-            'host' => $object->getHost(),
-            'port' => $object->getPort(),
-            'scheme' => $object->getScheme(),
-            'locale' => $object->getLocale(),
-        ];
+        return array(
+            'base_url' => $data->getBaseUrl(),
+            'routes'   => $data->getRoutes(),
+            'prefix'   => $data->getPrefix(),
+            'host'     => $data->getHost(),
+            'port'     => $data->getPort(),
+            'scheme'   => $data->getScheme(),
+            'locale'   => $data->getLocale(),
+        );
     }
 
     /**
      * {@inheritDoc}
      */
-    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
+    public function supportsNormalization($data, $format = null): bool
     {
         return $data instanceof RoutesResponse;
-    }
-
-    public function getSupportedTypes(?string $format): array
-    {
-        return [RoutesResponse::class => true];
     }
 }

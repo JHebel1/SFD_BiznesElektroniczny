@@ -39,12 +39,6 @@ abstract class ModuleGraphCore extends Module
     /** @var ModuleGraphEngine graph engine */
     protected $_render;
 
-    /** @var int */
-    protected $_id_lang;
-
-    /** @var string */
-    protected $_csv;
-
     abstract protected function getData($layers);
 
     public function setEmployee($id_employee)
@@ -261,10 +255,10 @@ abstract class ModuleGraphCore extends Module
     public function create($render, $type, $width, $height, $layers)
     {
         if (!Validate::isModuleName($render)) {
-            throw new PrestaShopException('Invalid graph module name.');
+            die(Tools::displayError());
         }
         if (!Tools::file_exists_cache($file = _PS_ROOT_DIR_ . '/modules/' . $render . '/' . $render . '.php')) {
-            throw new PrestaShopException('Main graph module file does not exist.');
+            die(Tools::displayError());
         }
         require_once $file;
         $this->_render = new $render($type);
@@ -295,7 +289,7 @@ abstract class ModuleGraphCore extends Module
             return Context::getContext()->getTranslator()->trans('No graph engine selected', [], 'Admin.Modules.Notification');
         }
         if (!Validate::isModuleName($render)) {
-            throw new PrestaShopException('Invalid graph module name.');
+            die(Tools::displayError());
         }
         if (!file_exists(_PS_ROOT_DIR_ . '/modules/' . $render . '/' . $render . '.php')) {
             return Context::getContext()->getTranslator()->trans('Graph engine selected is unavailable.', [], 'Admin.Modules.Notification');
@@ -331,7 +325,7 @@ abstract class ModuleGraphCore extends Module
         return call_user_func([$render, 'hookGraphEngine'], $params, $drawer);
     }
 
-    protected static function getEmployee($employee = null, ?Context $context = null)
+    protected static function getEmployee($employee = null, Context $context = null)
     {
         if (!Validate::isLoadedObject($employee)) {
             if (!$context) {

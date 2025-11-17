@@ -60,31 +60,16 @@ class HookRepository
         return (int) $id_hook;
     }
 
-    /**
-     * Creates a new hook if not already existing and returns the hook id.
-     *
-     * @param string $hook_name The name of the hook
-     * @param string $title The title for the hook
-     * @param string $description The description for the hook
-     * @param int $position if the modules in the hook can be positioned
-     *
-     * @return int Hook ID
-     */
     public function createHook($hook_name, $title = '', $description = '', $position = 1)
     {
-        $id_hook = $this->getIdByName($hook_name);
-        if ($id_hook > 0) {
-            return $id_hook;
-        }
-
         $this->db->insert('hook', [
             'name' => $this->db->escape($hook_name),
             'title' => $this->db->escape($title),
             'description' => $this->db->escape($description),
             'position' => $this->db->escape($position),
-        ], false, true, Db::INSERT);
+        ], false, true, Db::REPLACE);
 
-        return $this->db->Insert_ID();
+        return $this->getIdByName($hook_name);
     }
 
     private function getIdModule($module_name)
@@ -147,7 +132,7 @@ class HookRepository
             $this->unHookModulesFromHook($hook_name);
 
             $position = 0;
-            foreach ($module_names as $module) {
+            foreach ($module_names as $key => $module) {
                 if (is_array($module)) {
                     $module_name = key($module);
                     $extra_data = current($module);

@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\OrderMessage\CommandHandler;
 
 use PrestaShop\PrestaShop\Adapter\OrderMessage\AbstractOrderMessageHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\Command\DeleteOrderMessageCommand;
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\CommandHandler\DeleteOrderMessageHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\Exception\OrderMessageException;
@@ -38,7 +37,6 @@ use PrestaShopException;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class DeleteOrderMessageHandler extends AbstractOrderMessageHandler implements DeleteOrderMessageHandlerInterface
 {
     /**
@@ -52,7 +50,7 @@ final class DeleteOrderMessageHandler extends AbstractOrderMessageHandler implem
             if (false === $orderMessage->delete()) {
                 throw new OrderMessageException(sprintf('Failed to delete Order message with id "%d"', $orderMessage->id), OrderMessageException::FAILED_DELETE);
             }
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new OrderMessageException(sprintf('Failed to delete Order message with id "%s"', $orderMessage->id));
         }
     }

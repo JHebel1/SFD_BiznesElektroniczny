@@ -25,62 +25,42 @@
  */
 use Defuse\Crypto\Key;
 use PrestaShop\PrestaShop\Core\Exception\CoreException;
-use PrestaShop\PrestaShop\Core\Http\CookieOptions;
 use PrestaShop\PrestaShop\Core\Session\SessionInterface;
 
 /**
- * @property bool $detect_language
- * @property int $id_customer
- * @property int $id_employee
- * @property int $id_lang
- * @property int $id_guest
- * @property int|null $id_connections
- * @property bool $is_guest
- * @property bool $logged
  * @property string $passwd
- * @property int $session_id
- * @property string $session_token
- * @property string $shopContext
- * @property int $last_activity
  */
 class CookieCore
 {
-    /**
-     * @deprecated since 9.0 use CookieOptions constants instead.
-     */
-    public const SAMESITE_NONE = CookieOptions::SAMESITE_NONE;
-    /**
-     * @deprecated since 9.0 use CookieOptions constants instead.
-     */
-    public const SAMESITE_LAX = CookieOptions::SAMESITE_LAX;
-    /**
-     * @deprecated since 9.0 use CookieOptions constants instead.
-     */
-    public const SAMESITE_STRICT = CookieOptions::SAMESITE_STRICT;
-    /**
-     * @deprecated since 9.0 use CookieOptions constants instead.
-     */
-    public const SAMESITE_AVAILABLE_VALUES = CookieOptions::SAMESITE_AVAILABLE_VALUES;
+    const SAMESITE_NONE = 'None';
+    const SAMESITE_LAX = 'Lax';
+    const SAMESITE_STRICT = 'Strict';
+
+    const SAMESITE_AVAILABLE_VALUES = [
+        self::SAMESITE_NONE => self::SAMESITE_NONE,
+        self::SAMESITE_LAX => self::SAMESITE_LAX,
+        self::SAMESITE_STRICT => self::SAMESITE_STRICT,
+    ];
 
     /** @var array Contain cookie content in a key => value format */
     protected $_content = [];
 
-    /** @var string Crypted cookie name for setcookie() */
+    /** @var array Crypted cookie name for setcookie() */
     protected $_name;
 
-    /** @var int expiration date for setcookie() */
+    /** @var array expiration date for setcookie() */
     protected $_expire;
 
-    /** @var bool|string Website domain for setcookie() */
+    /** @var array Website domain for setcookie() */
     protected $_domain;
 
     /** @var string|bool SameSite for setcookie() */
     protected $_sameSite;
 
-    /** @var string Path for setcookie() */
+    /** @var array Path for setcookie() */
     protected $_path;
 
-    /** @var PhpEncryption cipher tool instance */
+    /** @var array cipher tool instance */
     protected $cipherTool;
 
     protected $_modified = false;
@@ -94,14 +74,11 @@ class CookieCore
     /** @var bool */
     protected $_secure = false;
 
-    /** @var SessionInterface|null */
-    protected $session = null;
-
     /**
      * Get data if the cookie exists and else initialize an new one.
      *
-     * @param string $name Cookie name before encrypting
-     * @param string $path
+     * @param $name string Cookie name before encrypting
+     * @param $path string
      */
     public function __construct($name, $path = '', $expire = null, $shared_urls = null, $standalone = false, $secure = false)
     {
@@ -121,7 +98,7 @@ class CookieCore
         $this->_salt = $this->_standalone ? str_pad('', 32, md5('ps' . __FILE__)) : _COOKIE_IV_;
 
         if ($this->_standalone) {
-            $asciiSafeString = Defuse\Crypto\Encoding::saveBytesToChecksummedAsciiSafeString(Key::KEY_CURRENT_VERSION, str_pad($name, Key::KEY_BYTE_SIZE, md5(__FILE__)));
+            $asciiSafeString = \Defuse\Crypto\Encoding::saveBytesToChecksummedAsciiSafeString(Key::KEY_CURRENT_VERSION, str_pad($name, Key::KEY_BYTE_SIZE, md5(__FILE__)));
             $this->cipherTool = new PhpEncryption($asciiSafeString);
         } else {
             $this->cipherTool = new PhpEncryption(_NEW_COOKIE_KEY_);
@@ -137,20 +114,11 @@ class CookieCore
         $this->_allow_writing = false;
     }
 
-    /**
-     * @param array|null $shared_urls
-     *
-     * @return bool|string
-     */
     protected function getDomain($shared_urls = null)
     {
-        $httpHost = Tools::getHttpHost(false, false);
-        if (!$httpHost) {
-            return false;
-        }
-
         $r = '!(?:(\w+)://)?(?:(\w+)\:(\w+)@)?([^/:]+)?(?:\:(\d*))?([^#?]+)?(?:\?([^#]+))?(?:#(.+$))?!i';
-        if (!preg_match($r, $httpHost, $out)) {
+
+        if (!preg_match($r, Tools::getHttpHost(false, false), $out) || !isset($out[4])) {
             return false;
         }
 
@@ -159,7 +127,7 @@ class CookieCore
             '{2}((25[0-5]|2[0-4][0-9]|[1]{1}[0-9]{2}|[1-9]{1}[0-9]|[0-9]){1}))$/', $out[4])) {
             return false;
         }
-        if (!strstr($httpHost, '.')) {
+        if (!strstr(Tools::getHttpHost(false, false), '.')) {
             return false;
         }
 
@@ -190,7 +158,7 @@ class CookieCore
      */
     public function setExpire($expire)
     {
-        $this->_expire = (int) $expire;
+        $this->_expire = (int) ($expire);
     }
 
     /**
@@ -228,10 +196,10 @@ class CookieCore
     public function __set($key, $value)
     {
         if (is_array($value)) {
-            throw new PrestaShopException('Cookie value can\'t be an array.');
+            die(Tools::displayError());
         }
         if (preg_match('/¤|\|/', $key . $value)) {
-            throw new PrestaShopException('Forbidden chars in cookie');
+            throw new Exception('Forbidden chars in cookie');
         }
         if (!$this->_modified && (!array_key_exists($key, $this->_content) || $this->_content[$key] != $value)) {
             $this->_modified = true;
@@ -250,6 +218,45 @@ class CookieCore
             $this->_modified = true;
         }
         unset($this->_content[$key]);
+    }
+
+    /**
+     * Check customer informations saved into cookie and return customer validity.
+     *
+     * @deprecated as of version 1.5 use Customer::isLogged() instead
+     *
+     * @return bool customer validity
+     */
+    public function isLogged($withGuest = false)
+    {
+        Tools::displayAsDeprecated('Use Customer::isLogged() instead');
+        if (!$withGuest && $this->is_guest == 1) {
+            return false;
+        }
+
+        /* Customer is valid only if it can be load and if cookie password is the same as database one */
+        if ($this->logged == 1 && $this->id_customer && Validate::isUnsignedId($this->id_customer) && Customer::checkPassword((int) ($this->id_customer), $this->passwd)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check employee informations saved into cookie and return employee validity.
+     *
+     * @deprecated as of version 1.5 use Employee::isLoggedBack() instead
+     *
+     * @return bool employee validity
+     */
+    public function isLoggedBack()
+    {
+        Tools::displayAsDeprecated('Use Employee::isLoggedBack() instead');
+        /* Employee is valid only if it can be load and if cookie password is the same as database one */
+        return $this->id_employee
+            && Validate::isUnsignedId($this->id_employee)
+            && Employee::checkPassword((int) $this->id_employee, $this->passwd)
+            && (!isset($this->_content['remote_addr']) || $this->_content['remote_addr'] == ip2long(Tools::getRemoteAddr()) || !Configuration::get('PS_COOKIE_CHECKIP'));
     }
 
     /**
@@ -308,7 +315,7 @@ class CookieCore
         if (isset($_COOKIE[$this->_name])) {
             /* Decrypt cookie content */
             $content = $this->cipherTool->decrypt($_COOKIE[$this->_name]);
-            // printf("\$content = %s<br />", $content);
+            //printf("\$content = %s<br />", $content);
 
             /* Get cookie checksum */
             $tmpTab = explode('¤', $content);
@@ -316,7 +323,7 @@ class CookieCore
             array_pop($tmpTab);
             $content_for_checksum = implode('¤', $tmpTab) . '¤';
             $checksum = hash('sha256', $this->_salt . $content_for_checksum);
-            // printf("\$checksum = %s<br />", $checksum);
+            //printf("\$checksum = %s<br />", $checksum);
 
             /* Unserialize cookie content */
             $tmpTab = explode('¤', $content);
@@ -338,9 +345,9 @@ class CookieCore
             $this->_content['date_add'] = date('Y-m-d H:i:s');
         }
 
-        // checks if the language exists, if not choose the default language
+        //checks if the language exists, if not choose the default language
         if (!$this->_standalone && !Language::getLanguage((int) $this->id_lang)) {
-            $this->id_lang = (int) Configuration::get('PS_LANG_DEFAULT');
+            $this->id_lang = Configuration::get('PS_LANG_DEFAULT');
             // set detect_language to force going through Tools::setCookieLanguage to figure out browser lang
             $this->detect_language = true;
         }
@@ -352,9 +359,30 @@ class CookieCore
      * @param string|null $cookie Cookie content
      *
      * @return bool Indicates whether the Cookie was successfully set
+     *
+     * @deprecated 1.7.0
+     */
+    protected function _setcookie($cookie = null)
+    {
+        return $this->encryptAndSetCookie($cookie);
+    }
+
+    /**
+     * Encrypt and set the Cookie.
+     *
+     * @param string|null $cookie Cookie content
+     *
+     * @return bool Indicates whether the Cookie was successfully set
+     *
+     * @since 1.7.0
      */
     protected function encryptAndSetCookie($cookie = null)
     {
+        // Check if the content fits in the Cookie
+        $length = (ini_get('mbstring.func_overload') & 2) ? mb_strlen($cookie, ini_get('default_charset')) : strlen($cookie);
+        if ($length >= 1048576) {
+            return false;
+        }
         if ($cookie) {
             $content = $this->cipherTool->encrypt($cookie);
             $time = $this->_expire;
@@ -364,18 +392,19 @@ class CookieCore
         }
 
         /*
-         * We need to check if the new cookie will be compliant with RFC 2965, maximum of 4096 bytes
-         * per cookie. Major browsers follow this very closely and will refuse to save this cookie.
-         *
-         * If we exceed this value, some module is saving something to cookie that it shouldn't save,
-         * and overflowing the cookie. It's absolutely critical that this does not happen because
-         * it breaks for example all cart functionality.
-         *
-         * We are using strlen because it calculates the byte count, we don't care about character
-         * count in case of multi-byte characters.
+         * The alternative signature supporting an options array is only available since
+         * PHP 7.3.0, before there is no support for SameSite attribute.
          */
-        if (strlen($this->_name . $content) > 4096) {
-            throw new PrestaShopException('Error during setting a cookie. Combined size of name and value cannot exceed 4096 characters. Larger cookie is not compliant with RFC 2965 and will not be accepted by the browser.');
+        if (PHP_VERSION_ID < 70300) {
+            return setcookie(
+                $this->_name,
+                $content,
+                $time,
+                $this->_path,
+                $this->_domain . '; SameSite=' . $this->_sameSite,
+                $this->_secure,
+                true
+            );
         }
 
         return setcookie(
@@ -384,10 +413,10 @@ class CookieCore
             [
                 'expires' => $time,
                 'path' => $this->_path,
-                'domain' => (string) $this->_domain,
+                'domain' => $this->_domain,
                 'secure' => $this->_secure,
                 'httponly' => true,
-                'samesite' => in_array((string) $this->_sameSite, CookieOptions::SAMESITE_AVAILABLE_VALUES) ? (string) $this->_sameSite : CookieOptions::SAMESITE_NONE,
+                'samesite' => $this->_sameSite,
             ]
         );
     }
@@ -425,7 +454,6 @@ class CookieCore
         }
         $cookie .= 'checksum|' . $newChecksum;
         $this->_modified = false;
-
         /* Cookies are encrypted for evident security reasons */
         return $this->encryptAndSetCookie($cookie);
     }
@@ -471,6 +499,8 @@ class CookieCore
 
     /**
      * Check if the cookie exists.
+     *
+     * @since 1.5.0
      *
      * @return bool
      */
@@ -553,21 +583,16 @@ class CookieCore
      */
     public function getSession($sessionId)
     {
-        if ($this->session !== null) {
-            return $this->session;
-        }
-
         if (isset($this->id_employee)) {
-            $this->session = new EmployeeSession($sessionId);
+            $session = new EmployeeSession($sessionId);
         } elseif (isset($this->id_customer)) {
-            $this->session = new CustomerSession($sessionId);
+            $session = new CustomerSession($sessionId);
         }
 
-        if (isset($this->session) && Validate::isLoadedObject($this->session)) {
-            // Update session date_upd
-            $this->session->save();
+        if (isset($session) && !empty($session->getId())) {
+            return $session;
         }
 
-        return $this->session;
+        return null;
     }
 }

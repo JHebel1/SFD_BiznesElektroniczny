@@ -17,31 +17,45 @@ use Twig\Error\SyntaxError;
 /**
  * Represents a token stream.
  *
+ * @final
+ *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-final class TokenStream
+class TokenStream
 {
-    private $current = 0;
+    protected $tokens;
+    protected $current = 0;
+    protected $filename;
 
-    public function __construct(
-        private array $tokens,
-        private ?Source $source = null,
-    ) {
-        if (null === $this->source) {
-            trigger_deprecation('twig/twig', '3.16', \sprintf('Not passing a "%s" object to "%s" constructor is deprecated.', Source::class, __CLASS__));
+    private $source;
 
-            $this->source = new Source('', '');
+    /**
+     * @param array       $tokens An array of tokens
+     * @param string|null $name   The name of the template which tokens are associated with
+     * @param string|null $source The source code associated with the tokens
+     */
+    public function __construct(array $tokens, $name = null, $source = null)
+    {
+        if (!$name instanceof Source) {
+            if (null !== $name || null !== $source) {
+                @trigger_error(sprintf('Passing a string as the $name argument of %s() is deprecated since version 1.27. Pass a \Twig\Source instance instead.', __METHOD__), E_USER_DEPRECATED);
+            }
+            $this->source = new Source($source, $name);
+        } else {
+            $this->source = $name;
         }
+
+        $this->tokens = $tokens;
+
+        // deprecated, not used anymore, to be removed in 2.0
+        $this->filename = $this->source->getName();
     }
 
-    public function __toString(): string
+    public function __toString()
     {
         return implode("\n", $this->tokens);
     }
 
-    /**
-     * @return void
-     */
     public function injectTokens(array $tokens)
     {
         $this->tokens = array_merge(\array_slice($this->tokens, 0, $this->current), $tokens, \array_slice($this->tokens, $this->current));
@@ -49,8 +63,10 @@ final class TokenStream
 
     /**
      * Sets the pointer to the next token and returns the old one.
+     *
+     * @return Token
      */
-    public function next(): Token
+    public function next()
     {
         if (!isset($this->tokens[++$this->current])) {
             throw new SyntaxError('Unexpected end of template.', $this->tokens[$this->current - 1]->getLine(), $this->source);
@@ -66,22 +82,26 @@ final class TokenStream
      */
     public function nextIf($primary, $secondary = null)
     {
-        return $this->tokens[$this->current]->test($primary, $secondary) ? $this->next() : null;
+        if ($this->tokens[$this->current]->test($primary, $secondary)) {
+            return $this->next();
+        }
     }
 
     /**
      * Tests a token and returns it or throws a syntax error.
+     *
+     * @return Token
      */
-    public function expect($type, $value = null, ?string $message = null): Token
+    public function expect($type, $value = null, $message = null)
     {
         $token = $this->tokens[$this->current];
         if (!$token->test($type, $value)) {
             $line = $token->getLine();
-            throw new SyntaxError(\sprintf('%sUnexpected token "%s"%s ("%s" expected%s).',
+            throw new SyntaxError(sprintf('%sUnexpected token "%s"%s ("%s" expected%s).',
                 $message ? $message.'. ' : '',
-                $token->toEnglish(),
-                $token->getValue() ? \sprintf(' of value "%s"', $token->getValue()) : '',
-                Token::typeToEnglish($type), $value ? \sprintf(' with value "%s"', $value) : ''),
+                Token::typeToEnglish($token->getType()),
+                $token->getValue() ? sprintf(' of value "%s"', $token->getValue()) : '',
+                Token::typeToEnglish($type), $value ? sprintf(' with value "%s"', $value) : ''),
                 $line,
                 $this->source
             );
@@ -93,8 +113,12 @@ final class TokenStream
 
     /**
      * Looks at the next token.
+     *
+     * @param int $number
+     *
+     * @return Token
      */
-    public function look(int $number = 1): Token
+    public function look($number = 1)
     {
         if (!isset($this->tokens[$this->current + $number])) {
             throw new SyntaxError('Unexpected end of template.', $this->tokens[$this->current + $number - 1]->getLine(), $this->source);
@@ -105,27 +129,73 @@ final class TokenStream
 
     /**
      * Tests the current token.
+     *
+     * @return bool
      */
-    public function test($primary, $secondary = null): bool
+    public function test($primary, $secondary = null)
     {
         return $this->tokens[$this->current]->test($primary, $secondary);
     }
 
     /**
      * Checks if end of stream was reached.
+     *
+     * @return bool
      */
-    public function isEOF(): bool
+    public function isEOF()
     {
-        return $this->tokens[$this->current]->test(Token::EOF_TYPE);
+        return Token::EOF_TYPE === $this->tokens[$this->current]->getType();
     }
 
-    public function getCurrent(): Token
+    /**
+     * @return Token
+     */
+    public function getCurrent()
     {
         return $this->tokens[$this->current];
     }
 
-    public function getSourceContext(): Source
+    /**
+     * Gets the name associated with this stream (null if not defined).
+     *
+     * @return string|null
+     *
+     * @deprecated since 1.27 (to be removed in 2.0)
+     */
+    public function getFilename()
+    {
+        @trigger_error(sprintf('The %s() method is deprecated since version 1.27 and will be removed in 2.0. Use getSourceContext() instead.', __METHOD__), E_USER_DEPRECATED);
+
+        return $this->source->getName();
+    }
+
+    /**
+     * Gets the source code associated with this stream.
+     *
+     * @return string
+     *
+     * @internal Don't use this as it might be empty depending on the environment configuration
+     *
+     * @deprecated since 1.27 (to be removed in 2.0)
+     */
+    public function getSource()
+    {
+        @trigger_error(sprintf('The %s() method is deprecated since version 1.27 and will be removed in 2.0. Use getSourceContext() instead.', __METHOD__), E_USER_DEPRECATED);
+
+        return $this->source->getCode();
+    }
+
+    /**
+     * Gets the source associated with this stream.
+     *
+     * @return Source
+     *
+     * @internal
+     */
+    public function getSourceContext()
     {
         return $this->source;
     }
 }
+
+class_alias('Twig\TokenStream', 'Twig_TokenStream');

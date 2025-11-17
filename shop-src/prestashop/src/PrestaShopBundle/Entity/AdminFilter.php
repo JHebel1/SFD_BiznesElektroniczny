@@ -32,121 +32,205 @@ use Doctrine\ORM\Mapping as ORM;
  * AdminFilter.
  *
  * @ORM\Table(uniqueConstraints={@ORM\UniqueConstraint(name="admin_filter_search_id_idx", columns={"employee", "shop", "controller", "action", "filter_id"})})
- *
  * @ORM\Entity(repositoryClass="PrestaShopBundle\Entity\Repository\AdminFilterRepository")
  */
 class AdminFilter
 {
     /**
+     * @var int
+     *
      * @ORM\Id
-     *
      * @ORM\Column(name="id", type="integer")
-     *
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private int $id;
+    private $id;
 
     /**
+     * @var int
+     *
      * @ORM\Column(name="employee", type="integer")
      */
-    private int $employee;
+    private $employee;
 
     /**
+     * @var int
+     *
      * @ORM\Column(name="shop", type="integer")
      */
-    private int $shop;
+    private $shop;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="controller", type="string", length=60)
      */
-    private string $controller;
+    private $controller;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="action", type="string", length=100)
      */
-    private string $action;
+    private $action;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="filter", type="text")
      */
-    private string $filter;
+    private $filter;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="filter_id", type="string", length=191)
      */
-    private string $filterId = '';
+    private $filterId = '';
 
-    public function getId(): int
+    /**
+     * Get id.
+     *
+     * @return int
+     */
+    public function getId()
     {
         return $this->id;
     }
 
-    public function setEmployee(int $employee): static
+    /**
+     * Set employee.
+     *
+     * @param int $employee
+     *
+     * @return AdminFilter
+     */
+    public function setEmployee($employee)
     {
         $this->employee = $employee;
 
         return $this;
     }
 
-    public function getEmployee(): int
+    /**
+     * Get employee.
+     *
+     * @return int
+     */
+    public function getEmployee()
     {
         return $this->employee;
     }
 
-    public function setShop(int $shop): static
+    /**
+     * Set shop.
+     *
+     * @param int $shop
+     *
+     * @return AdminFilter
+     */
+    public function setShop($shop)
     {
         $this->shop = $shop;
 
         return $this;
     }
 
-    public function getShop(): int
+    /**
+     * Get shop.
+     *
+     * @return int
+     */
+    public function getShop()
     {
         return $this->shop;
     }
 
-    public function setController(string $controller): static
+    /**
+     * Set controller.
+     *
+     * @param string $controller
+     *
+     * @return AdminFilter
+     */
+    public function setController($controller)
     {
         $this->controller = $controller;
 
         return $this;
     }
 
-    public function getController(): string
+    /**
+     * Get controller.
+     *
+     * @return string
+     */
+    public function getController()
     {
         return $this->controller;
     }
 
-    public function setAction(string $action): static
+    /**
+     * Set action.
+     *
+     * @param string $action
+     *
+     * @return AdminFilter
+     */
+    public function setAction($action)
     {
         $this->action = $action;
 
         return $this;
     }
 
-    public function getAction(): string
+    /**
+     * Get action.
+     *
+     * @return string
+     */
+    public function getAction()
     {
         return $this->action;
     }
 
-    public function setFilter(string $filter): static
+    /**
+     * Set filter.
+     *
+     * @param string $filter
+     *
+     * @return AdminFilter
+     */
+    public function setFilter($filter)
     {
         $this->filter = $filter;
 
         return $this;
     }
 
-    public function getFilter(): string
+    /**
+     * Get filter.
+     *
+     * @return string
+     */
+    public function getFilter()
     {
         return $this->filter;
     }
 
-    public function getFilterId(): string
+    /**
+     * @return string
+     */
+    public function getFilterId()
     {
         return $this->filterId;
     }
 
-    public function setFilterId(string $filterId): static
+    /**
+     * @param string $filterId
+     *
+     * @return AdminFilter
+     */
+    public function setFilterId($filterId)
     {
         $this->filterId = $filterId;
 
@@ -157,8 +241,10 @@ class AdminFilter
      * Gets an array with each filter key needed by Product catalog page.
      *
      * Values are filled with empty strings.
+     *
+     * @return array
      */
-    public static function getProductCatalogEmptyFilter(): array
+    public static function getProductCatalogEmptyFilter()
     {
         return [
             'filter_category' => '',
@@ -179,9 +265,12 @@ class AdminFilter
     /**
      * Gets an array with filters needed by Product catalog page.
      *
-     * The data is decoded and filled with empty strings if there is no value on each entry.
+     * The data is decoded and filled with empty strings if there is no value on each entry
+     * .
+     *
+     * @return array
      */
-    public function getProductCatalogFilter(): array
+    public function getProductCatalogFilter()
     {
         $decoded = json_decode($this->getFilter(), true);
 
@@ -195,8 +284,12 @@ class AdminFilter
      * Set the filters for Product catalog page into $this->filter.
      *
      * Filters input data to keep only Product catalog filters, and encode it.
+     *
+     * @param array $filter
+     *
+     * @return AdminFilter tis object for fluent chaining
      */
-    public function setProductCatalogFilter(array $filter): static
+    public function setProductCatalogFilter($filter)
     {
         $filter = array_intersect_key(
             $filter,
@@ -209,18 +302,22 @@ class AdminFilter
 
     /**
      * Sanitize filter parameters.
+     *
+     * @param array $filter
+     *
+     * @return mixed
      */
-    public static function sanitizeFilterParameters(array $filter): mixed
+    public static function sanitizeFilterParameters(array $filter)
     {
         $filterMinMax = function ($filter) {
             return function ($subject) use ($filter) {
                 $operator = null;
 
-                if (str_contains($subject, '<=')) {
+                if (false !== strpos($subject, '<=')) {
                     $operator = '<=';
                 }
 
-                if (str_contains($subject, '>=')) {
+                if (false !== strpos($subject, '>=')) {
                     $operator = '>=';
                 }
 
@@ -249,28 +346,15 @@ class AdminFilter
             };
         };
 
-        $entNoquotesHtmlspecialchars = function (string $subject): string {
-            return htmlspecialchars($subject, ENT_NOQUOTES);
-        };
-
         return filter_var_array($filter, [
             'filter_category' => FILTER_SANITIZE_NUMBER_INT,
             'filter_column_id_product' => [
                 'filter' => FILTER_CALLBACK,
                 'options' => $filterMinMax(FILTER_SANITIZE_NUMBER_INT),
             ],
-            'filter_column_name' => [
-                'filter' => FILTER_CALLBACK,
-                'options' => $entNoquotesHtmlspecialchars,
-            ],
-            'filter_column_reference' => [
-                'filter' => FILTER_CALLBACK,
-                'options' => 'htmlspecialchars',
-            ],
-            'filter_column_name_category' => [
-                'filter' => FILTER_CALLBACK,
-                'options' => 'htmlspecialchars',
-            ],
+            'filter_column_name' => FILTER_SANITIZE_STRING,
+            'filter_column_reference' => FILTER_SANITIZE_STRING,
+            'filter_column_name_category' => FILTER_SANITIZE_STRING,
             'filter_column_price' => [
                 'filter' => FILTER_CALLBACK,
                 'options' => $filterMinMax(FILTER_SANITIZE_NUMBER_FLOAT),
@@ -282,14 +366,8 @@ class AdminFilter
             'filter_column_active' => FILTER_SANITIZE_NUMBER_INT,
             'last_offset' => FILTER_SANITIZE_NUMBER_INT,
             'last_limit' => FILTER_SANITIZE_NUMBER_INT,
-            'last_orderBy' => [
-                'filter' => FILTER_CALLBACK,
-                'options' => 'htmlspecialchars',
-            ],
-            'last_sortOrder' => [
-                'filter' => FILTER_CALLBACK,
-                'options' => 'htmlspecialchars',
-            ],
+            'last_orderBy' => FILTER_SANITIZE_STRING,
+            'last_sortOrder' => FILTER_SANITIZE_STRING,
         ]);
     }
 }

@@ -28,7 +28,6 @@ declare(strict_types=1);
 namespace PrestaShop\PrestaShop\Adapter\OrderReturnState\CommandHandler;
 
 use OrderReturnState;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\OrderReturnState\Command\AddOrderReturnStateCommand;
 use PrestaShop\PrestaShop\Core\Domain\OrderReturnState\CommandHandler\AddOrderReturnStateHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\OrderReturnState\Exception\OrderReturnStateException;
@@ -39,7 +38,6 @@ use PrestaShop\PrestaShop\Core\Domain\OrderReturnState\ValueObject\OrderReturnSt
  *
  * @internal
  */
-#[AsCommandHandler]
 final class AddOrderReturnStateHandler extends AbstractOrderReturnStateHandler implements AddOrderReturnStateHandlerInterface
 {
     /**

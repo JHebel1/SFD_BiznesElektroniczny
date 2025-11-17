@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Core\Domain\CartRule\Query;
 
+use PrestaShop\PrestaShop\Core\Domain\CartRule\Exception\CartRuleConstraintException;
 use PrestaShop\PrestaShop\Core\Domain\CartRule\ValueObject\CartRuleId;
 
 /**
@@ -35,10 +36,26 @@ use PrestaShop\PrestaShop\Core\Domain\CartRule\ValueObject\CartRuleId;
  */
 class GetCartRuleForEditing
 {
-    public readonly CartRuleId $cartRuleId;
+    /**
+     * @var CartRuleId
+     */
+    private $cartRuleId;
 
+    /**
+     * @param int $cartRuleId
+     *
+     * @throws CartRuleConstraintException
+     */
     public function __construct(int $cartRuleId)
     {
         $this->cartRuleId = new CartRuleId($cartRuleId);
+    }
+
+    /**
+     * @return CartRuleId $cartRuleId
+     */
+    public function getCartRuleId(): CartRuleId
+    {
+        return $this->cartRuleId;
     }
 }

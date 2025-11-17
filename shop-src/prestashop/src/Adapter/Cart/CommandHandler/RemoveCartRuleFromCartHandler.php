@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Cart\CommandHandler;
 
 use PrestaShop\PrestaShop\Adapter\Cart\AbstractCartHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Command\RemoveCartRuleFromCartCommand;
 use PrestaShop\PrestaShop\Core\Domain\Cart\CommandHandler\RemoveCartRuleFromCartHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartException;
@@ -35,7 +34,6 @@ use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartException;
 /**
  * @internal
  */
-#[AsCommandHandler]
 final class RemoveCartRuleFromCartHandler extends AbstractCartHandler implements RemoveCartRuleFromCartHandlerInterface
 {
     /**

@@ -16,8 +16,7 @@
         };
     }
 }(this, function () {
-    var exports = {};
     <%= contents %>
 
-    return { Router: exports.Router, Routing: exports.Routing };
+    return { Router: Router, Routing: Routing };
 }));

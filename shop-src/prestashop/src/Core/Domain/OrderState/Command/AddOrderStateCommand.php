@@ -23,7 +23,6 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
-
 declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Core\Domain\OrderState\Command;
@@ -83,26 +82,6 @@ class AddOrderStateCommand
      * @var array
      */
     private $localizedTemplates;
-
-    /**
-     * @var string|null
-     */
-    protected $pathName;
-
-    /**
-     * @var int|null
-     */
-    protected $fileSize;
-
-    /**
-     * @var string|null
-     */
-    protected $mimeType;
-
-    /**
-     * @var string|null
-     */
-    protected $originalName;
 
     /**
      * @param string[] $localizedNames
@@ -248,55 +227,5 @@ class AddOrderStateCommand
     public function getLocalizedTemplates()
     {
         return $this->localizedTemplates;
-    }
-
-    /**
-     * @param string $pathName
-     * @param int $fileSize
-     * @param string $mimeType
-     * @param string $originalName
-     */
-    public function setFileInformation(
-        string $pathName,
-        int $fileSize,
-        string $mimeType,
-        string $originalName
-    ): void {
-        $this->pathName = $pathName;
-        $this->fileSize = $fileSize;
-        $this->mimeType = $mimeType;
-        $this->originalName = $originalName;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getFilePathName(): ?string
-    {
-        return $this->pathName;
-    }
-
-    /**
-     * @return int|null
-     */
-    public function getFileSize(): ?int
-    {
-        return $this->fileSize;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getMimeType(): ?string
-    {
-        return $this->mimeType;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getOriginalName(): ?string
-    {
-        return $this->originalName;
     }
 }

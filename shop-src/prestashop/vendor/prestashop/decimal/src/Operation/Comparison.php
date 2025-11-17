@@ -15,13 +15,14 @@ use PrestaShop\Decimal\DecimalNumber;
  */
 class Comparison
 {
+
     /**
      * Compares two decimal numbers.
      *
      * @param DecimalNumber $a
      * @param DecimalNumber $b
      *
-     * @return int returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal
+     * @return int Returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal.
      */
     public function compare(DecimalNumber $a, DecimalNumber $b)
     {
@@ -38,7 +39,7 @@ class Comparison
      * @param DecimalNumber $a
      * @param DecimalNumber $b
      *
-     * @return int returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal
+     * @return int Returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal.
      */
     public function compareUsingBcMath(DecimalNumber $a, DecimalNumber $b)
     {
@@ -51,7 +52,7 @@ class Comparison
      * @param DecimalNumber $a
      * @param DecimalNumber $b
      *
-     * @return int returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal
+     * @return int Returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal.
      */
     public function compareWithoutBcMath(DecimalNumber $a, DecimalNumber $b)
     {
@@ -77,7 +78,7 @@ class Comparison
      * @param DecimalNumber $a
      * @param DecimalNumber $b
      *
-     * @return int returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal
+     * @return int Returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal.
      */
     private function positiveCompare(DecimalNumber $a, DecimalNumber $b)
     {
@@ -128,12 +129,12 @@ class Comparison
      * @param mixed $a
      * @param mixed $b
      *
-     * @return int returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal
+     * @return int Returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal.
      */
     private function compareNumeric($a, $b)
     {
         if ($a < $b) {
-            return -1;
+            return  -1;
         }
 
         if ($a > $b) {
@@ -149,7 +150,7 @@ class Comparison
      * @param string $a
      * @param string $b
      *
-     * @return int returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal
+     * @return int Returns 1 if $a > $b, -1 if $a < $b, and 0 if they are equal.
      */
     private function compareBinary($a, $b)
     {

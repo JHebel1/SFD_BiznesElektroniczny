@@ -27,8 +27,6 @@
 namespace PrestaShop\PrestaShop\Core\Domain\Category\Command;
 
 use PrestaShop\PrestaShop\Core\Domain\Category\Exception\CategoryConstraintException;
-use PrestaShop\PrestaShop\Core\Domain\Category\ValueObject\RedirectOption;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Class AddRootCategoryCommand adds new root category.
@@ -51,11 +49,6 @@ class AddRootCategoryCommand
     private $localizedDescriptions;
 
     /**
-     * @var string[]|null
-     */
-    private $localizedAdditionalDescriptions;
-
-    /**
      * @var bool
      */
     private $isActive;
@@ -71,6 +64,11 @@ class AddRootCategoryCommand
     private $localizedMetaDescriptions;
 
     /**
+     * @var string[]
+     */
+    private $localizedMetaKeywords;
+
+    /**
      * @var int[]
      */
     private $associatedGroupIds;
@@ -79,18 +77,6 @@ class AddRootCategoryCommand
      * @var int[]
      */
     private $associatedShopIds;
-
-    /**
-     * @var UploadedFile|null
-     */
-    private $coverImage;
-
-    /**
-     * @var UploadedFile|null
-     */
-    private $thumbnailImage;
-
-    private ?RedirectOption $redirectOption = null;
 
     /**
      * @param string[] $name
@@ -180,26 +166,6 @@ class AddRootCategoryCommand
     }
 
     /**
-     * @return string[]|null
-     */
-    public function getLocalizedAdditionalDescriptions(): ?array
-    {
-        return $this->localizedAdditionalDescriptions;
-    }
-
-    /**
-     * @param string[] $localizedAdditionalDescriptions
-     *
-     * @return $this
-     */
-    public function setLocalizedAdditionalDescriptions(array $localizedAdditionalDescriptions): self
-    {
-        $this->localizedAdditionalDescriptions = $localizedAdditionalDescriptions;
-
-        return $this;
-    }
-
-    /**
      * @return bool
      */
     public function isActive()
@@ -266,6 +232,26 @@ class AddRootCategoryCommand
     }
 
     /**
+     * @return string[]
+     */
+    public function getLocalizedMetaKeywords()
+    {
+        return $this->localizedMetaKeywords;
+    }
+
+    /**
+     * @param string[] $localizedMetaKeywords
+     *
+     * @return $this
+     */
+    public function setLocalizedMetaKeywords(array $localizedMetaKeywords)
+    {
+        $this->localizedMetaKeywords = $localizedMetaKeywords;
+
+        return $this;
+    }
+
+    /**
      * @return int[]
      */
     public function getAssociatedGroupIds()
@@ -303,47 +289,5 @@ class AddRootCategoryCommand
         $this->associatedShopIds = $associatedShopIds;
 
         return $this;
-    }
-
-    /**
-     * @return UploadedFile|null
-     */
-    public function getCoverImage(): ?UploadedFile
-    {
-        return $this->coverImage;
-    }
-
-    /**
-     * @param UploadedFile|null $coverImage
-     */
-    public function setCoverImage(?UploadedFile $coverImage): void
-    {
-        $this->coverImage = $coverImage;
-    }
-
-    /**
-     * @return UploadedFile|null
-     */
-    public function getThumbnailImage(): ?UploadedFile
-    {
-        return $this->thumbnailImage;
-    }
-
-    /**
-     * @param UploadedFile|null $thumbnailImage
-     */
-    public function setThumbnailImage(?UploadedFile $thumbnailImage): void
-    {
-        $this->thumbnailImage = $thumbnailImage;
-    }
-
-    public function getRedirectOption(): ?RedirectOption
-    {
-        return $this->redirectOption;
-    }
-
-    public function setRedirectOption(?RedirectOption $redirectOption): void
-    {
-        $this->redirectOption = $redirectOption;
     }
 }

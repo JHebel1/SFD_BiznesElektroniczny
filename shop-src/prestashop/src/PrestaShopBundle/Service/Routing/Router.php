@@ -27,9 +27,9 @@
 namespace PrestaShopBundle\Service\Routing;
 
 use PrestaShop\PrestaShop\Core\Feature\TokenInUrls;
-use PrestaShopBundle\Routing\AnonymousRouteProvider;
-use PrestaShopBundle\Security\Admin\UserTokenManager;
+use PrestaShopBundle\Service\DataProvider\UserProvider;
 use Symfony\Bundle\FrameworkBundle\Routing\Router as BaseRouter;
+use Symfony\Component\Security\Csrf\CsrfTokenManager;
 
 /**
  * We extends Symfony Router in order to add a token to each url.
@@ -38,35 +38,53 @@ use Symfony\Bundle\FrameworkBundle\Routing\Router as BaseRouter;
  */
 class Router extends BaseRouter
 {
-    private UserTokenManager $userTokenManager;
+    /**
+     * @var UserProvider
+     */
+    private $userProvider;
 
-    private AnonymousRouteProvider $anonymousRouteProvider;
+    /**
+     * @var CsrfTokenManager
+     */
+    private $tokenManager;
+
+    /**
+     * @var array
+     */
+    private $tokens = [];
 
     /**
      * {@inheritdoc}
      */
-    public function generate($name, $parameters = [], $referenceType = self::ABSOLUTE_PATH): string
+    public function generate($name, $parameters = [], $referenceType = self::ABSOLUTE_PATH)
     {
-        $url = parent::generate($name, $parameters, $referenceType);
-        if (TokenInUrls::isDisabled() || $this->anonymousRouteProvider->isRouteAnonymous($name)) {
-            return $url;
+        $username = $this->userProvider->getUsername();
+        // Do not generate token each time we want to generate a route for a user
+        if (!isset($this->tokens[$username])) {
+            $this->tokens[$username] = $this->tokenManager->getToken($username)->getValue();
         }
 
-        return self::generateTokenizedUrl($url, $this->userTokenManager->getSymfonyToken());
+        $url = parent::generate($name, $parameters, $referenceType);
+
+        return self::generateTokenizedUrl($url, $this->tokens[$username]);
     }
 
-    public function setUserTokenManager(UserTokenManager $userTokenManager): void
+    public function setTokenManager(CsrfTokenManager $tokenManager)
     {
-        $this->userTokenManager = $userTokenManager;
+        $this->tokenManager = $tokenManager;
     }
 
-    public function setAnonymousRouteProvider(AnonymousRouteProvider $anonymousRouteProvider): void
+    public function setUserProvider(UserProvider $userProvider)
     {
-        $this->anonymousRouteProvider = $anonymousRouteProvider;
+        $this->userProvider = $userProvider;
     }
 
     public static function generateTokenizedUrl($url, $token)
     {
+        if (TokenInUrls::isDisabled()) {
+            return $url;
+        }
+
         $components = parse_url($url);
         $baseUrl = (isset($components['path']) ? $components['path'] : '');
         $queryParams = [];
@@ -78,21 +96,6 @@ class Router extends BaseRouter
 
         $queryParams['_token'] = $token;
 
-        $url = $baseUrl . '?' . http_build_query($queryParams, '', '&');
-        if (isset($components['fragment']) && $components['fragment'] !== '') {
-            /* This copy-paste from Symfony's UrlGenerator */
-            $url .= '#' . strtr(rawurlencode($components['fragment']), ['%2F' => '/', '%3F' => '?']);
-        }
-
-        // Keep absolute urls absolute
-        if (!empty($components['scheme']) && !empty($components['host'])) {
-            $baseHost = $components['scheme'] . '://' . $components['host'];
-            if (!empty($components['port'])) {
-                $baseHost .= ':' . $components['port'];
-            }
-            $url = $baseHost . $url;
-        }
-
-        return $url;
+        return $baseUrl . '?' . http_build_query($queryParams, '', '&');
     }
 }

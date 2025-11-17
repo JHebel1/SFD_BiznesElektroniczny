@@ -27,7 +27,7 @@
 /**
  * Holds Stock.
  *
- * @deprecated since 9.0 and will be removed in 10.0
+ * @since 1.5.0
  */
 class WarehouseCore extends ObjectModel
 {
@@ -50,7 +50,7 @@ class WarehouseCore extends ObjectModel
     public $id_currency;
 
     /** @var bool True if warehouse has been deleted (hence, no deletion in DB) */
-    public $deleted = false;
+    public $deleted = 0;
 
     /**
      * Describes the way a Warehouse is managed.
@@ -307,24 +307,22 @@ class WarehouseCore extends ObjectModel
     public static function getProductWarehouseList($id_product, $id_product_attribute = 0, $id_shop = null)
     {
         // if it's a pack, returns warehouses if and only if some products use the advanced stock management
+        $share_stock = false;
         if ($id_shop === null) {
             if (Shop::getContext() == Shop::CONTEXT_GROUP) {
                 $shop_group = Shop::getContextShopGroup();
-                $shop_group_id = (int) $shop_group->id;
             } else {
                 $shop_group = Context::getContext()->shop->getGroup();
-                $shop_group_id = (int) $shop_group->id;
                 $id_shop = (int) Context::getContext()->shop->id;
             }
             $share_stock = $shop_group->share_stock;
         } else {
-            $shop_group = Shop::getGroupFromShop($id_shop, false);
+            $shop_group = Shop::getGroupFromShop($id_shop);
             $share_stock = $shop_group['share_stock'];
-            $shop_group_id = (int) $shop_group['id'];
         }
 
-        if ($share_stock && $shop_group_id) {
-            $ids_shop = Shop::getShops(true, $shop_group_id, true);
+        if ($share_stock) {
+            $ids_shop = Shop::getShops(true, (int) $shop_group->id, true);
         } else {
             $ids_shop = [(int) $id_shop];
         }
@@ -399,15 +397,17 @@ class WarehouseCore extends ObjectModel
      */
     public function getNumberOfProducts()
     {
-        $query = 'SELECT COUNT(t.id_stock) FROM
-            (
-                SELECT s.id_stock
-                FROM ' . _DB_PREFIX_ . 'stock s
-                WHERE s.id_warehouse = ' . (int) $this->id . '
-                GROUP BY s.id_product, s.id_product_attribute
-             ) as t';
+        $query = '
+			SELECT COUNT(t.id_stock)
+			FROM
+				(
+					SELECT s.id_stock
+				 	FROM ' . _DB_PREFIX_ . 'stock s
+				 	WHERE s.id_warehouse = ' . (int) $this->id . '
+				 	GROUP BY s.id_product, s.id_product_attribute
+				 ) as t';
 
-        return (int) Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($query);
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($query);
     }
 
     /**
@@ -430,7 +430,7 @@ class WarehouseCore extends ObjectModel
     /**
      * Gets the value of the stock in the current warehouse.
      *
-     * @return float Value of the stock
+     * @return int Value of the stock
      */
     public function getStockValue()
     {
@@ -439,7 +439,7 @@ class WarehouseCore extends ObjectModel
         $query->from('stock', 's');
         $query->where('s.`id_warehouse` = ' . (int) $this->id);
 
-        return (float) Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($query);
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($query);
     }
 
     /**
@@ -524,6 +524,8 @@ class WarehouseCore extends ObjectModel
 
         // warehouses of the pack
         $pack_warehouses = WarehouseProductLocation::getCollection((int) $id_product);
+        // products in the pack
+        $products = Pack::getItems((int) $id_product, Configuration::get('PS_LANG_DEFAULT'));
 
         // array with all warehouses id to check
         $list = [];
@@ -534,26 +536,34 @@ class WarehouseCore extends ObjectModel
             $list['pack_warehouses'][] = (int) $pack_warehouse->id_warehouse;
         }
 
+        // for each products in the pack
+        foreach ($products as $product) {
+            if ($product->advanced_stock_management) {
+                // gets the warehouses of one product
+                $product_warehouses = Warehouse::getProductWarehouseList((int) $product->id, (int) $product->cache_default_attribute, (int) $id_shop);
+                $list[(int) $product->id] = [];
+                // fills array with warehouses for this product
+                foreach ($product_warehouses as $product_warehouse) {
+                    $list[(int) $product->id][] = $product_warehouse['id_warehouse'];
+                }
+            }
+        }
+
         $res = false;
         // returns final list
-        if (!empty($list)) {
+        if (count($list) > 1) {
             $res = call_user_func_array('array_intersect', $list);
         }
 
         return $res;
     }
 
-    /**
-     * @deprecated Since 9.0 and will be removed in 10.0
-     */
     public function resetStockAvailable()
     {
-        @trigger_error(sprintf(
-            '%s is deprecated since 9.0 and will be removed in 10.0.',
-            __METHOD__
-        ), E_USER_DEPRECATED);
-
-        return true;
+        $products = WarehouseProductLocation::getProducts((int) $this->id);
+        foreach ($products as $product) {
+            StockAvailable::synchronize((int) $product['id_product']);
+        }
     }
 
     /*********************************\
@@ -565,7 +575,7 @@ class WarehouseCore extends ObjectModel
     /**
      * Webservice : gets the value of the warehouse.
      *
-     * @return float
+     * @return int
      */
     public function getWsStockValue()
     {

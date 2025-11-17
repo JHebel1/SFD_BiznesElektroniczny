@@ -1,4 +1,4 @@
-{# **
+{#**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
  *
@@ -21,18 +21,18 @@
  * @author    PrestaShop SA and Contributors <contact@prestashop.com>
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
- * #}
+ *#}
 
-{% form_theme zoneForm '@PrestaShop/Admin/TwigTemplateForm/prestashop_ui_kit.html.twig' %}
+{% form_theme zoneForm 'PrestaShopBundle:Admin/TwigTemplateForm:prestashop_ui_kit.html.twig' %}
 
 {{ form_start(zoneForm) }}
   <div class="card">
-    <h3 class="card-header">
-      {{ 'Zone'|trans({}, 'Admin.International.Feature') }}
-    </h3>
+    <div class="card-header">
+      {{ 'Zones'|trans({}, 'Admin.International.Feature') }}
+    </div>
 
-    <div class="card-body">
-      <div class="form-wrapper">
+    <div class="card-block row">
+      <div class="card-text">
         {{ form_errors(zoneForm) }}
         {% block form_zone_widget %}
           {{ form_widget(zoneForm) }}

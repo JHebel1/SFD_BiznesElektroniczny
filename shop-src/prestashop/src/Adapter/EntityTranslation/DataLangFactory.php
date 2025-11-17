@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -23,14 +24,13 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
-
 declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Adapter\EntityTranslation;
 
 use DataLangCore;
+use Doctrine\Common\Inflector\Inflector;
 use PrestaShop\PrestaShop\Adapter\EntityTranslation\Exception\DataLangClassNameNotFoundException;
-use PrestaShop\PrestaShop\Core\Util\Inflector;
 use PrestaShopBundle\Translation\TranslatorInterface;
 
 /**
@@ -70,7 +70,7 @@ class DataLangFactory
         $tableName = $this->removeDbPrefixIfPresent($tableName);
         $tableName = $this->ensureLangSuffix($tableName);
 
-        return Inflector::getInflector()->classify($tableName);
+        return Inflector::classify($tableName);
     }
 
     /**
@@ -134,7 +134,7 @@ class DataLangFactory
      */
     private function ensureLangSuffix(string $tableName): string
     {
-        if (!str_ends_with($tableName, '_lang')) {
+        if (substr($tableName, -5) !== '_lang') {
             $tableName .= '_lang';
         }
 

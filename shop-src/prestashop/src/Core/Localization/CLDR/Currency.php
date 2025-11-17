@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -135,9 +136,7 @@ final class Currency implements CurrencyInterface
      *                             "one"     = talking about one unit of this currency (e.g.: "one euro")
      *                             "other"   = talking about several units of this currency (e.g.: "ten euros")
      *
-     * @return string|null The wanted display name
-     *
-     * @throws LocalizationException When an invalid display name is passed
+     * @return string The wanted display name
      */
     public function getDisplayName($countContext = CurrencyInterface::DISPLAY_NAME_COUNT_DEFAULT)
     {

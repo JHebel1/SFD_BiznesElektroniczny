@@ -26,7 +26,6 @@
 
 namespace PrestaShopBundle\Entity;
 
-use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use PrestaShop\PrestaShop\Adapter\Configuration;
 
@@ -34,91 +33,116 @@ use PrestaShop\PrestaShop\Adapter\Configuration;
  * StockMvt.
  *
  * @ORM\Table(indexes={@ORM\Index(name="id_stock", columns={"id_stock"}), @ORM\Index(name="id_stock_mvt_reason", columns={"id_stock_mvt_reason"})})
- *
  * @ORM\Entity(repositoryClass="PrestaShopBundle\Entity\Repository\StockMovementRepository")
  */
 class StockMvt
 {
     /**
+     * @var int
+     *
      * @ORM\Column(name="id_stock_mvt", type="bigint")
-     *
      * @ORM\Id
-     *
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private int $idStockMvt;
+    private $idStockMvt;
 
     /**
+     * @var int
+     *
      * @ORM\Column(name="id_stock", type="integer", nullable=false)
      */
-    private int $idStock;
+    private $idStock;
 
     /**
+     * @var int
+     *
      * @ORM\Column(name="id_order", type="integer", nullable=true)
      */
-    private ?int $idOrder;
+    private $idOrder;
 
     /**
-     * @ORM\Column(name="id_supply_order", type="integer", nullable=true, options={"default":0})
+     * @var int
+     *
+     * @ORM\Column(name="id_supply_order", type="integer", nullable=true)
      */
-    private ?int $idSupplyOrder = 0;
+    private $idSupplyOrder;
 
     /**
+     * @var int
+     *
      * @ORM\Column(name="id_stock_mvt_reason", type="integer", nullable=false)
      */
-    private int $idStockMvtReason;
+    private $idStockMvtReason;
 
     /**
+     * @var int
+     *
      * @ORM\Column(name="id_employee", type="integer", nullable=false)
      */
-    private int $idEmployee = 0;
+    private $idEmployee;
 
     /**
-     * @ORM\Column(name="employee_lastname", type="string", length=255, nullable=true)
+     * @var string
+     *
+     * @ORM\Column(name="employee_lastname", type="string", length=32, nullable=true)
      */
-    private ?string $employeeLastname = '';
+    private $employeeLastname = '';
 
     /**
-     * @ORM\Column(name="employee_firstname", type="string", length=255, nullable=true)
+     * @var string
+     *
+     * @ORM\Column(name="employee_firstname", type="string", length=32, nullable=true)
      */
-    private ?string $employeeFirstname = '';
+    private $employeeFirstname = '';
 
     /**
-     * @ORM\Column(name="physical_quantity", type="integer", nullable=false, options={"unsigned":true})
+     * @var int
+     *
+     * @ORM\Column(name="physical_quantity", type="integer", nullable=false)
      */
-    private int $physicalQuantity;
+    private $physicalQuantity;
 
     /**
-     * @var DateTime
+     * @var \DateTime
      *
      * @ORM\Column(name="date_add", type="datetime", nullable=false)
      */
-    private DateTime $dateAdd;
+    private $dateAdd;
 
     /**
+     * @var int
+     *
      * @ORM\Column(name="sign", type="smallint", nullable=false, options={"default":1})
      */
-    private int $sign = 1;
+    private $sign = 1;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="price_te", type="decimal", precision=20, scale=6, nullable=true, options={"default":"0.000000"})
      */
-    private ?string $priceTe = '0.000000';
+    private $priceTe = '0.000000';
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="last_wa", type="decimal", precision=20, scale=6, nullable=true, options={"default":"0.000000"})
      */
-    private ?string $lastWa = '0.000000';
+    private $lastWa = '0.000000';
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="current_wa", type="decimal", precision=20, scale=6, nullable=true, options={"default":"0.000000"})
      */
-    private ?string $currentWa = '0.000000';
+    private $currentWa = '0.000000';
 
     /**
+     * @var int
+     *
      * @ORM\Column(name="referer", type="bigint", nullable=true)
      */
-    private ?int $referer;
+    private $referer;
 
     public function __construct()
     {
@@ -126,175 +150,348 @@ class StockMvt
         $this->setIdStockMvtReason($this->getSign() >= 1 ? $configuration->get('PS_STOCK_MVT_INC_EMPLOYEE_EDITION') : $configuration->get('PS_STOCK_MVT_DEC_EMPLOYEE_EDITION'));
     }
 
-    public function getIdStockMvt(): int
+    /**
+     * Get idStockMvt.
+     *
+     * @return int
+     */
+    public function getIdStockMvt()
     {
         return $this->idStockMvt;
     }
 
-    public function setIdStock(int $idStock): static
+    /**
+     * Set idStock.
+     *
+     * @param int $idStock
+     *
+     * @return StockMvt
+     */
+    public function setIdStock($idStock)
     {
         $this->idStock = $idStock;
 
         return $this;
     }
 
-    public function getIdStock(): int
+    /**
+     * Get idStock.
+     *
+     * @return int
+     */
+    public function getIdStock()
     {
         return $this->idStock;
     }
 
-    public function setIdOrder(?int $idOrder): static
+    /**
+     * Set idOrder.
+     *
+     * @param int $idOrder
+     *
+     * @return StockMvt
+     */
+    public function setIdOrder($idOrder)
     {
         $this->idOrder = $idOrder;
 
         return $this;
     }
 
-    public function getIdOrder(): ?int
+    /**
+     * Get idOrder.
+     *
+     * @return int
+     */
+    public function getIdOrder()
     {
         return $this->idOrder;
     }
 
-    public function setIdSupplyOrder(?int $idSupplyOrder): static
+    /**
+     * Set idSupplyOrder.
+     *
+     * @param int $idSupplyOrder
+     *
+     * @return StockMvt
+     */
+    public function setIdSupplyOrder($idSupplyOrder)
     {
         $this->idSupplyOrder = $idSupplyOrder;
 
         return $this;
     }
 
-    public function getIdSupplyOrder(): ?int
+    /**
+     * Get idSupplyOrder.
+     *
+     * @return int
+     */
+    public function getIdSupplyOrder()
     {
         return $this->idSupplyOrder;
     }
 
-    public function setIdStockMvtReason(int $idStockMvtReason): static
+    /**
+     * Set idStockMvtReason.
+     *
+     * @param int $idStockMvtReason
+     *
+     * @return StockMvt
+     */
+    public function setIdStockMvtReason($idStockMvtReason)
     {
         $this->idStockMvtReason = $idStockMvtReason;
 
         return $this;
     }
 
-    public function getIdStockMvtReason(): int
+    /**
+     * Get idStockMvtReason.
+     *
+     * @return int
+     */
+    public function getIdStockMvtReason()
     {
         return $this->idStockMvtReason;
     }
 
-    public function setIdEmployee(int $idEmployee): static
+    /**
+     * Set idEmployee.
+     *
+     * @param int $idEmployee
+     *
+     * @return StockMvt
+     */
+    public function setIdEmployee($idEmployee)
     {
         $this->idEmployee = $idEmployee;
 
         return $this;
     }
 
-    public function getIdEmployee(): int
+    /**
+     * Get idEmployee.
+     *
+     * @return int
+     */
+    public function getIdEmployee()
     {
         return $this->idEmployee;
     }
 
-    public function setEmployeeLastname(?string $employeeLastname): static
+    /**
+     * Set employeeLastname.
+     *
+     * @param string $employeeLastname
+     *
+     * @return StockMvt
+     */
+    public function setEmployeeLastname($employeeLastname)
     {
         $this->employeeLastname = $employeeLastname;
 
         return $this;
     }
 
-    public function getEmployeeLastname(): ?string
+    /**
+     * Get employeeLastname.
+     *
+     * @return string
+     */
+    public function getEmployeeLastname()
     {
         return $this->employeeLastname;
     }
 
-    public function setEmployeeFirstname(?string $employeeFirstname): static
+    /**
+     * Set employeeFirstname.
+     *
+     * @param string $employeeFirstname
+     *
+     * @return StockMvt
+     */
+    public function setEmployeeFirstname($employeeFirstname)
     {
         $this->employeeFirstname = $employeeFirstname;
 
         return $this;
     }
 
-    public function getEmployeeFirstname(): ?string
+    /**
+     * Get employeeFirstname.
+     *
+     * @return string
+     */
+    public function getEmployeeFirstname()
     {
         return $this->employeeFirstname;
     }
 
-    public function setPhysicalQuantity(int $physicalQuantity): static
+    /**
+     * Set physicalQuantity.
+     *
+     * @param int $physicalQuantity
+     *
+     * @return StockMvt
+     */
+    public function setPhysicalQuantity($physicalQuantity)
     {
         $this->physicalQuantity = $physicalQuantity;
 
         return $this;
     }
 
-    public function getPhysicalQuantity(): int
+    /**
+     * Get physicalQuantity.
+     *
+     * @return int
+     */
+    public function getPhysicalQuantity()
     {
         return $this->physicalQuantity;
     }
 
-    public function setDateAdd(DateTime $dateAdd): static
+    /**
+     * Set dateAdd.
+     *
+     * @param \DateTime $dateAdd
+     *
+     * @return StockMvt
+     */
+    public function setDateAdd($dateAdd)
     {
         $this->dateAdd = $dateAdd;
 
         return $this;
     }
 
-    public function getDateAdd(): DateTime
+    /**
+     * Get dateAdd.
+     *
+     * @return \DateTime
+     */
+    public function getDateAdd()
     {
         return $this->dateAdd;
     }
 
-    public function setSign(int $sign): static
+    /**
+     * Set sign.
+     *
+     * @param int $sign
+     *
+     * @return StockMvt
+     */
+    public function setSign($sign)
     {
         $this->sign = $sign;
 
         return $this;
     }
 
-    public function getSign(): int
+    /**
+     * Get sign.
+     *
+     * @return int
+     */
+    public function getSign()
     {
         return $this->sign;
     }
 
-    public function setPriceTe(?string $priceTe): static
+    /**
+     * Set priceTe.
+     *
+     * @param string $priceTe
+     *
+     * @return StockMvt
+     */
+    public function setPriceTe($priceTe)
     {
         $this->priceTe = $priceTe;
 
         return $this;
     }
 
-    public function getPriceTe(): ?string
+    /**
+     * Get priceTe.
+     *
+     * @return string
+     */
+    public function getPriceTe()
     {
         return $this->priceTe;
     }
 
-    public function setLastWa(?string $lastWa): static
+    /**
+     * Set lastWa.
+     *
+     * @param string $lastWa
+     *
+     * @return StockMvt
+     */
+    public function setLastWa($lastWa)
     {
         $this->lastWa = $lastWa;
 
         return $this;
     }
 
-    public function getLastWa(): ?string
+    /**
+     * Get lastWa.
+     *
+     * @return string
+     */
+    public function getLastWa()
     {
         return $this->lastWa;
     }
 
-    public function setCurrentWa(?string $currentWa): static
+    /**
+     * Set currentWa.
+     *
+     * @param string $currentWa
+     *
+     * @return StockMvt
+     */
+    public function setCurrentWa($currentWa)
     {
         $this->currentWa = $currentWa;
 
         return $this;
     }
 
-    public function getCurrentWa(): ?string
+    /**
+     * Get currentWa.
+     *
+     * @return string
+     */
+    public function getCurrentWa()
     {
         return $this->currentWa;
     }
 
-    public function setReferer(?int $referer): static
+    /**
+     * Set referer.
+     *
+     * @param int $referer
+     *
+     * @return StockMvt
+     */
+    public function setReferer($referer)
     {
         $this->referer = $referer;
 
         return $this;
     }
 
-    public function getReferer(): ?int
+    /**
+     * Get referer.
+     *
+     * @return int
+     */
+    public function getReferer()
     {
         return $this->referer;
     }

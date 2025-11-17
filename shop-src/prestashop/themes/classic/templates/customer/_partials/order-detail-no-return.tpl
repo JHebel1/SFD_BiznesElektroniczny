@@ -37,18 +37,12 @@
         <tr>
           <td>
             <strong>
-              <a href="{$urls.pages.product}&id_product={$product.id_product}">
+              <a {if isset($product.download_link)}href="{$product.download_link}"{/if}>
                 {$product.name}
               </a>
             </strong><br/>
             {if $product.product_reference}
               {l s='Reference' d='Shop.Theme.Catalog'}: {$product.product_reference}<br/>
-            {/if}
-            {if isset($product.download_link)}
-              <a href="{$product.download_link}">{l s='Download' d='Shop.Theme.Actions'}</a><br/>
-            {/if}
-            {if $product.is_virtual}
-              {l s='Virtual products can\'t be returned.' d='Shop.Theme.Customeraccount'}</br>
             {/if}
             {if $product.customizations}
               {foreach from=$product.customizations item="customization"}
@@ -93,7 +87,13 @@
             {/if}
           </td>
           <td>
-            {$product.quantity}
+            {if $product.customizations}
+              {foreach $product.customizations as $customization}
+                {$customization.quantity}
+              {/foreach}
+            {else}
+              {$product.quantity}
+            {/if}
           </td>
           <td class="text-xs-right">{$product.price}</td>
           <td class="text-xs-right">{$product.total}</td>
@@ -125,9 +125,6 @@
             {if $product.product_reference}
               <div class="ref">{l s='Reference' d='Shop.Theme.Catalog'}: {$product.product_reference}</div>
             {/if}
-            {if isset($product.download_link)}
-              <a href="{$product.download_link}">{l s='Download' d='Shop.Theme.Actions'}</a><br/>
-            {/if}
             {if $product.customizations}
               {foreach $product.customizations as $customization}
                 <div class="customization">
@@ -144,7 +141,13 @@
                 {$product.price}
               </div>
               <div class="col-xs-4">
-                {$product.quantity}
+                {if $product.customizations}
+                  {foreach $product.customizations as $customization}
+                    {$customization.quantity}
+                  {/foreach}
+                {else}
+                  {$product.quantity}
+                {/if}
               </div>
               <div class="col-xs-4 text-xs-right">
                 {$product.total}

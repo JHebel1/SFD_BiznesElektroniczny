@@ -27,6 +27,7 @@
 namespace PrestaShop\PrestaShop\Core\Grid\Data\Factory;
 
 use Doctrine\DBAL\Connection;
+use PDO;
 use PrestaShop\PrestaShop\Core\Grid\Data\GridData;
 use PrestaShop\PrestaShop\Core\Grid\Record\RecordCollection;
 use PrestaShop\PrestaShop\Core\Grid\Record\RecordCollectionInterface;
@@ -154,6 +155,6 @@ final class AttachmentGridDataFactoryDecorator implements GridDataFactoryInterfa
             ->setParameter('attachmentId', $attachmentId)
             ->setParameter('langId', $this->employeeIdLang);
 
-        return $qb->executeQuery()->fetchFirstColumn();
+        return $qb->execute()->fetchAll(PDO::FETCH_COLUMN);
     }
 }

@@ -39,13 +39,13 @@ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Validator\Constraints\GreaterThan;
 use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\LessThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Type;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Class CurrencyType
@@ -98,8 +98,10 @@ class CurrencyType extends TranslatorAwareType
                     'choice_translation_domain' => false,
                     'required' => false,
                     'placeholder' => '--',
-                    'autocomplete' => true,
-                    'autocomplete_minimum_choices' => 1,
+                    'attr' => [
+                        'data-toggle' => 'select2',
+                        'data-minimumResultsForSearch' => '1',
+                    ],
                 ])
                 ->add('unofficial', CheckboxType::class, [
                     'required' => false,
@@ -164,7 +166,7 @@ class CurrencyType extends TranslatorAwareType
             ->add('iso_code', TextType::class, [
                 'attr' => $isoCodeAttrs,
                 'label' => $this->trans(
-                    'ISO code',
+                  'ISO code',
                     'Admin.International.Feature'
                 ),
                 'help' => $this->trans(
@@ -192,7 +194,7 @@ class CurrencyType extends TranslatorAwareType
                     'Admin.International.Feature'
                 ),
                 'help' => $this->trans(
-                    'Exchange rates are calculated from one unit of your store\'s default currency. For example, if the default currency is euros and your chosen currency is dollars, type "1.20" (1&euro; = $1.20).',
+                    'Exchange rates are calculated from one unit of your shop\'s default currency. For example, if the default currency is euros and your chosen currency is dollars, type "1.20" (1&euro; = $1.20).',
                     'Admin.International.Help'
                 ),
                 'scale' => 6,
@@ -281,7 +283,7 @@ class CurrencyType extends TranslatorAwareType
         if ($this->isShopFeatureEnabled) {
             $builder->add('shop_association', ShopChoiceTreeType::class, [
                 'label' => $this->trans(
-                    'Store association',
+                    'Shop association',
                     'Admin.Global'
                 ),
                 'constraints' => [
@@ -290,7 +292,7 @@ class CurrencyType extends TranslatorAwareType
                             'The %s field is required.',
                             'Admin.Notifications.Error',
                             [
-                                sprintf('"%s"', $this->trans('Store association', 'Admin.Global')),
+                                sprintf('"%s"', $this->trans('Shop association', 'Admin.Global')),
                             ]
                         ),
                     ]),

@@ -25,7 +25,7 @@
  */
 abstract class TreeToolbarButtonCore
 {
-    public const DEFAULT_TEMPLATE_DIRECTORY = 'helpers/tree';
+    const DEFAULT_TEMPLATE_DIRECTORY = 'helpers/tree';
 
     protected $_attributes;
     private $_context;
@@ -172,7 +172,7 @@ abstract class TreeToolbarButtonCore
         }
 
         if ($this->getContext()->controller instanceof ModuleAdminController && file_exists($this->_normalizeDirectory(
-            $this->getContext()->controller->getTemplatePath()
+                $this->getContext()->controller->getTemplatePath()
         ) . $this->getTemplateDirectory() . $template)) {
             return $this->_normalizeDirectory($this->getContext()->controller->getTemplatePath())
                 . $this->getTemplateDirectory() . $template;

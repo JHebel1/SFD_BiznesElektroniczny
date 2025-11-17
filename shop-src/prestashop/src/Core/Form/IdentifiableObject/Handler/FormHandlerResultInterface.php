@@ -48,7 +48,7 @@ interface FormHandlerResultInterface
     /**
      * Get identifiable object id
      *
-     * @return int|mixed|null ID of identifiable object or null if it does not exist
+     * @return int|null ID of identifiable object or null if it does not exist
      */
-    public function getIdentifiableObjectId(): mixed;
+    public function getIdentifiableObjectId();
 }

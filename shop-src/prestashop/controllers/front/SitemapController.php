@@ -25,7 +25,6 @@
  */
 class SitemapControllerCore extends FrontController
 {
-    /** @var string */
     public $php_self = 'sitemap';
 
     /**
@@ -33,62 +32,28 @@ class SitemapControllerCore extends FrontController
      *
      * @see FrontController::initContent()
      */
-    public function initContent(): void
+    public function initContent()
     {
-        $sitemapUrls = [
-            'our_offers' => [
-                'name' => $this->trans('Our Offers', [], 'Shop.Theme.Global'),
-                'links' => $this->getOffersLinks(),
-            ],
-            'categories' => [
-                'name' => $this->trans('Categories', [], 'Shop.Theme.Catalog'),
-                'links' => $this->getCategoriesLinks(),
-            ],
-            'your_account' => [
-                'name' => $this->trans('Your account', [], 'Shop.Theme.Customeraccount'),
-                'links' => $this->getUserAccountLinks(),
-            ],
-            'pages' => [
-                'name' => $this->trans('Pages', [], 'Shop.Theme.Catalog'),
-                'links' => $this->getPagesLinks(),
-            ],
-        ];
-
-        /*
-         * Allows modules to add own urls (even whole new groups) to frontend sitemap.
-         * For example landing pages, blog posts and others.
-         */
-        Hook::exec(
-            'actionModifyFrontendSitemap',
-            ['urls' => &$sitemapUrls]
-        );
-
-        /*
-         * Backward compatibility with older themes.
-         * This should be removed as soon as possible, because $pages variable is overwriting
-         * our global template variable assigned in FrontController.
-         */
         $this->context->smarty->assign(
             [
-                'our_offers' => !empty($sitemapUrls['our_offers']['name']) ? $sitemapUrls['our_offers']['name'] : '',
-                'categories' => !empty($sitemapUrls['categories']['name']) ? $sitemapUrls['categories']['name'] : '',
-                'your_account' => !empty($sitemapUrls['your_account']['name']) ? $sitemapUrls['your_account']['name'] : '',
-                'pages' => !empty($sitemapUrls['pages']['name']) ? $sitemapUrls['pages']['name'] : '',
+                'our_offers' => $this->trans('Our Offers', [], 'Shop.Theme.Global'),
+                'categories' => $this->trans('Categories', [], 'Shop.Theme.Catalog'),
+                'your_account' => $this->trans('Your account', [], 'Shop.Theme.Customeraccount'),
+                'pages' => $this->trans('Pages', [], 'Shop.Theme.Catalog'),
                 'links' => [
-                    'offers' => !empty($sitemapUrls['our_offers']['links']) ? $sitemapUrls['our_offers']['links'] : [],
-                    'pages' => !empty($sitemapUrls['pages']['links']) ? $sitemapUrls['pages']['links'] : [],
-                    'user_account' => !empty($sitemapUrls['your_account']['links']) ? $sitemapUrls['your_account']['links'] : [],
-                    'categories' => !empty($sitemapUrls['categories']['links']) ? $sitemapUrls['categories']['links'] : [],
+                    'offers' => $this->getOffersLinks(),
+                    'pages' => $this->getPagesLinks(),
+                    'user_account' => $this->getUserAccountLinks(),
+                    'categories' => $this->getCategoriesLinks(),
                 ],
             ]
         );
 
-        $this->context->smarty->assign('sitemapUrls', $sitemapUrls);
         parent::initContent();
         $this->setTemplate('cms/sitemap');
     }
 
-    public function getCategoriesLinks(): array
+    public function getCategoriesLinks()
     {
         return [Category::getRootCategory()->recurseLiteCategTree(0, 0, null, null, 'sitemap')];
     }
@@ -96,19 +61,16 @@ class SitemapControllerCore extends FrontController
     /**
      * @return array
      */
-    protected function getPagesLinks(): array
+    protected function getPagesLinks()
     {
         $cms = CMSCategory::getRecurseCategory($this->context->language->id, 1, 1, 1);
         $links = $this->getCmsTree($cms);
 
-        // We hide stores page, if there is no page configured
-        if (Store::atLeastOneStoreExists()) {
-            $links[] = [
-                'id' => 'stores-page',
-                'label' => $this->trans('Our stores', [], 'Shop.Theme.Global'),
-                'url' => $this->context->link->getPageLink('stores'),
-            ];
-        }
+        $links[] = [
+            'id' => 'stores-page',
+            'label' => $this->trans('Our stores', [], 'Shop.Theme.Global'),
+            'url' => $this->context->link->getPageLink('stores'),
+        ];
 
         $links[] = [
             'id' => 'contact-page',
@@ -128,7 +90,7 @@ class SitemapControllerCore extends FrontController
     /**
      * @return array
      */
-    protected function getCmsTree($cms): array
+    protected function getCmsTree($cms)
     {
         $links = [];
 
@@ -157,7 +119,7 @@ class SitemapControllerCore extends FrontController
     /**
      * @return array
      */
-    protected function getUserAccountLinks(): array
+    protected function getUserAccountLinks()
     {
         $links = [];
 
@@ -170,7 +132,7 @@ class SitemapControllerCore extends FrontController
         $links[] = [
             'id' => 'register-page',
             'label' => $this->trans('Create new account', [], 'Shop.Theme.Global'),
-            'url' => $this->context->link->getPageLink('registration'),
+            'url' => $this->context->link->getPageLink('authentication', null, null, ['create_account' => 1]),
         ];
 
         return $links;
@@ -179,7 +141,7 @@ class SitemapControllerCore extends FrontController
     /**
      * @return array
      */
-    protected function getOffersLinks(): array
+    protected function getOffersLinks()
     {
         $links = [
             [
@@ -189,15 +151,12 @@ class SitemapControllerCore extends FrontController
             ],
         ];
 
-        if (!Configuration::isCatalogMode()) {
-            if (Configuration::get('PS_DISPLAY_BEST_SELLERS')) {
-                $links[] = [
-                    'id' => 'best-sales-page',
-                    'label' => $this->trans('Best sellers', [], 'Shop.Theme.Catalog'),
-                    'url' => $this->context->link->getPageLink('best-sales'),
-                ];
-            }
-
+        if (Configuration::isCatalogMode() && Configuration::get('PS_DISPLAY_BEST_SELLERS')) {
+            $links[] = [
+                'id' => 'best-sales-page',
+                'label' => $this->trans('Best sellers', [], 'Shop.Theme.Catalog'),
+                'url' => $this->context->link->getPageLink('best-sales'),
+            ];
             $links[] = [
                 'id' => 'prices-drop-page',
                 'label' => $this->trans('Price drop', [], 'Shop.Theme.Catalog'),
@@ -228,23 +187,15 @@ class SitemapControllerCore extends FrontController
         return $links;
     }
 
-    public function getBreadcrumbLinks(): array
+    public function getBreadcrumbLinks()
     {
         $breadcrumb = parent::getBreadcrumbLinks();
 
         $breadcrumb['links'][] = [
             'title' => $this->trans('Sitemap', [], 'Shop.Theme.Global'),
-            'url' => $this->context->link->getPageLink('sitemap'),
+            'url' => $this->context->link->getPageLink('sitemap', true),
         ];
 
         return $breadcrumb;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getCanonicalURL(): string
-    {
-        return $this->context->link->getPageLink('sitemap');
     }
 }

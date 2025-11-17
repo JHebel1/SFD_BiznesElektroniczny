@@ -28,7 +28,6 @@ namespace PrestaShop\PrestaShop\Adapter\Meta\CommandHandler;
 
 use Meta;
 use PrestaShop\PrestaShop\Adapter\Meta\MetaDataProvider;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\DefaultLanguage;
 use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\IsUrlRewrite;
 use PrestaShop\PrestaShop\Core\Domain\Meta\Command\AddMetaCommand;
@@ -46,7 +45,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class AddMetaHandler implements AddMetaHandlerInterface
 {
     /**
@@ -104,6 +102,7 @@ final class AddMetaHandler implements AddMetaHandlerInterface
             $entity->page = $command->getPageName()->getValue();
             $entity->title = $command->getLocalisedPageTitles();
             $entity->description = $command->getLocalisedMetaDescription();
+            $entity->keywords = $command->getLocalisedMetaKeywords();
 
             $rewriteUrls = $command->getLocalisedRewriteUrls();
             foreach ($rewriteUrls as $idLang => $rewriteUrl) {

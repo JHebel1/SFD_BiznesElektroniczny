@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -25,8 +26,8 @@
  */
 class PrestashopAssetsLibraries
 {
-    public const css = 'registerStylesheet';
-    public const js = 'registerJavascript';
+    const css = 'registerStylesheet';
+    const js = 'registerJavascript';
 
     /**
      * List of libraries available.

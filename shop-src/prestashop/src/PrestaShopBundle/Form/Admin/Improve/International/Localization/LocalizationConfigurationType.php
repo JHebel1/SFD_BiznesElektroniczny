@@ -26,13 +26,11 @@
 
 namespace PrestaShopBundle\Form\Admin\Improve\International\Localization;
 
-use PrestaShopBundle\Form\Admin\Type\CountryChoiceType;
-use PrestaShopBundle\Form\Admin\Type\CurrencyChoiceType;
 use PrestaShopBundle\Form\Admin\Type\SwitchType;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class LocalizationConfigurationType is responsible for building 'Improve > International > Localization' page
@@ -48,20 +46,36 @@ class LocalizationConfigurationType extends TranslatorAwareType
     /**
      * @var array
      */
+    private $countryChoices;
+
+    /**
+     * @var array
+     */
+    private $currencyChoices;
+
+    /**
+     * @var array
+     */
     private $timezoneChoices;
 
     /**
      * @param array $languageChoices
+     * @param array $countryChoices
+     * @param array $currencyChoices
      * @param array $timezoneChoices
      */
     public function __construct(
         TranslatorInterface $translator,
         array $locales,
         array $languageChoices,
+        array $countryChoices,
+        array $currencyChoices,
         array $timezoneChoices
     ) {
         parent::__construct($translator, $locales);
         $this->languageChoices = $languageChoices;
+        $this->countryChoices = $countryChoices;
+        $this->currencyChoices = $currencyChoices;
         $this->timezoneChoices = $timezoneChoices;
     }
 
@@ -82,7 +96,10 @@ class LocalizationConfigurationType extends TranslatorAwareType
                 ),
                 'choices' => $this->languageChoices,
                 'choice_translation_domain' => false,
-                'autocomplete' => true,
+                'attr' => [
+                    'data-minimumResultsForSearch' => '7',
+                    'data-toggle' => 'select2',
+                ],
             ])
             ->add('detect_language_from_browser', SwitchType::class, [
                 'label' => $this->trans(
@@ -94,7 +111,7 @@ class LocalizationConfigurationType extends TranslatorAwareType
                     'Admin.International.Help'
                 ),
             ])
-            ->add('default_country', CountryChoiceType::class, [
+            ->add('default_country', ChoiceType::class, [
                 'label' => $this->trans(
                     'Default country',
                     'Admin.International.Feature'
@@ -103,7 +120,12 @@ class LocalizationConfigurationType extends TranslatorAwareType
                     'The default country used in your shop.',
                     'Admin.International.Help'
                 ),
-                'autocomplete' => true,
+                'choices' => $this->countryChoices,
+                'choice_translation_domain' => false,
+                'attr' => [
+                    'data-minimumResultsForSearch' => '7',
+                    'data-toggle' => 'select2',
+                ],
             ])
             ->add('detect_country_from_browser', SwitchType::class, [
                 'label' => $this->trans(
@@ -116,7 +138,9 @@ class LocalizationConfigurationType extends TranslatorAwareType
                 ),
             ]
             )
-            ->add('default_currency', CurrencyChoiceType::class, [
+            ->add('default_currency', ChoiceType::class, [
+                'choices' => $this->currencyChoices,
+                'choice_translation_domain' => false,
                 'label' => $this->trans(
                     'Default currency',
                     'Admin.International.Feature'
@@ -125,9 +149,10 @@ class LocalizationConfigurationType extends TranslatorAwareType
                     'The default currency used in your shop.',
                     'Admin.International.Help'
                 ),
-                'autocomplete' => true,
                 'attr' => [
                     'data-warning-message' => 'Before changing the default currency, we strongly recommend that you enable maintenance mode. Indeed, any change on the default currency requires a manual adjustment of the price of each product and its combinations.',
+                    'data-minimumResultsForSearch' => '7',
+                    'data-toggle' => 'select2',
                 ],
             ])
             ->add('timezone', ChoiceType::class, [
@@ -137,7 +162,10 @@ class LocalizationConfigurationType extends TranslatorAwareType
                 ),
                 'choices' => $this->timezoneChoices,
                 'choice_translation_domain' => false,
-                'autocomplete' => true,
+                'attr' => [
+                    'data-minimumResultsForSearch' => '7',
+                    'data-toggle' => 'select2',
+                ],
             ]);
     }
 }

@@ -60,7 +60,7 @@ class MemcacheServerManager
      */
     public function addServer($serverIp, $serverPort, $serverWeight)
     {
-        $this->connection->executeStatement('INSERT INTO ' . $this->tableName . ' (ip, port, weight) VALUES(:serverIp, :serverPort, :serverWeight)', [
+        $this->connection->executeUpdate('INSERT INTO ' . $this->tableName . ' (ip, port, weight) VALUES(:serverIp, :serverPort, :serverWeight)', [
             'serverIp' => $serverIp,
             'serverPort' => (int) $serverPort,
             'serverWeight' => (int) $serverWeight,
@@ -78,7 +78,7 @@ class MemcacheServerManager
      * Test if a Memcache configuration is valid.
      *
      * @param string $serverIp
-     * @param int $serverPort
+     * @param string $serverPort
      *
      * @return bool
      */
@@ -86,7 +86,7 @@ class MemcacheServerManager
     {
         if (extension_loaded('memcached')) {
             $memcached = new Memcached();
-            $memcached->addServer($serverIp, (int) $serverPort);
+            $memcached->addServer($serverIp, $serverPort);
             $version = $memcached->getVersion();
 
             return is_array($version) && false === in_array('255.255.255', $version, true);
@@ -94,7 +94,7 @@ class MemcacheServerManager
 
         $memcache = new Memcache();
 
-        return true === $memcache->connect($serverIp, (int) $serverPort);
+        return true === $memcache->connect($serverIp, $serverPort);
     }
 
     /**
@@ -118,6 +118,6 @@ class MemcacheServerManager
      */
     public function getServers()
     {
-        return $this->connection->fetchAllAssociative('SELECT * FROM ' . $this->tableName);
+        return $this->connection->fetchAll('SELECT * FROM ' . $this->tableName, []);
     }
 }

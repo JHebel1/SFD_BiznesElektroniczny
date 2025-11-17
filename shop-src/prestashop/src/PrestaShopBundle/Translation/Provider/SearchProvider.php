@@ -26,9 +26,7 @@
 
 namespace PrestaShopBundle\Translation\Provider;
 
-use Exception;
 use PrestaShop\PrestaShop\Core\Exception\FileNotFoundException;
-use PrestaShop\PrestaShop\Core\Translation\Exception\TranslationFilesNotFoundException;
 use Symfony\Component\Translation\Loader\LoaderInterface;
 use Symfony\Component\Translation\MessageCatalogue;
 use Symfony\Component\Translation\MessageCatalogueInterface;
@@ -39,6 +37,11 @@ use Symfony\Component\Translation\MessageCatalogueInterface;
 class SearchProvider extends AbstractProvider implements UseDefaultCatalogueInterface, UseModuleInterface
 {
     /**
+     * @var string the "modules" directory path
+     */
+    private $modulesDirectory;
+
+    /**
      * @var ExternalModuleLegacySystemProvider
      */
     private $externalModuleLegacySystemProvider;
@@ -46,11 +49,30 @@ class SearchProvider extends AbstractProvider implements UseDefaultCatalogueInte
     public function __construct(
         LoaderInterface $databaseLoader,
         ExternalModuleLegacySystemProvider $externalModuleLegacySystemProvider,
-        $resourceDirectory
+        $resourceDirectory,
+        $modulesDirectory
     ) {
+        $this->modulesDirectory = $modulesDirectory;
         $this->externalModuleLegacySystemProvider = $externalModuleLegacySystemProvider;
 
         parent::__construct($databaseLoader, $resourceDirectory);
+    }
+
+    /**
+     * Get domain.
+     *
+     * @deprecated since 1.7.6, to be removed in the next major
+     *
+     * @return mixed
+     */
+    public function getDomain()
+    {
+        @trigger_error(
+            __METHOD__ . ' function is deprecated and will be removed in the next major',
+            E_USER_DEPRECATED
+        );
+
+        return $this->domain;
     }
 
     /**
@@ -89,7 +111,7 @@ class SearchProvider extends AbstractProvider implements UseDefaultCatalogueInte
     {
         try {
             $defaultCatalogue = parent::getDefaultCatalogue($empty);
-        } catch (TranslationFilesNotFoundException) {
+        } catch (FileNotFoundException $e) {
             $defaultCatalogue = $this->externalModuleLegacySystemProvider->getDefaultCatalogue($empty);
             $defaultCatalogue = $this->filterCatalogue($defaultCatalogue);
         }
@@ -106,12 +128,27 @@ class SearchProvider extends AbstractProvider implements UseDefaultCatalogueInte
     {
         try {
             $xliffCatalogue = parent::getXliffCatalogue();
-        } catch (Exception) {
+        } catch (\Exception $e) {
             $xliffCatalogue = $this->externalModuleLegacySystemProvider->getXliffCatalogue();
             $xliffCatalogue = $this->filterCatalogue($xliffCatalogue);
         }
 
         return $xliffCatalogue;
+    }
+
+    /**
+     * @deprecated since 1.7.6, to be removed in the next major
+     *
+     * @return string
+     */
+    public function getModuleDirectory()
+    {
+        @trigger_error(
+            __METHOD__ . ' function is deprecated and will be removed in the next major',
+            E_USER_DEPRECATED
+        );
+
+        return $this->modulesDirectory;
     }
 
     /**

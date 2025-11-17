@@ -23,20 +23,20 @@ use Symfony\Bundle\MonologBundle\DependencyInjection\Compiler\AddProcessorsPass;
 use Symfony\Bundle\MonologBundle\DependencyInjection\Compiler\FixEmptyLoggerPass;
 
 /**
- * @author Jordi Boggiano <j.boggiano@seld.be>
+ * Bundle.
  *
- * @finalsince 3.9.0
+ * @author Jordi Boggiano <j.boggiano@seld.be>
  */
 class MonologBundle extends Bundle
 {
-    /**
-     * @return void
-     */
     public function build(ContainerBuilder $container)
     {
         parent::build($container);
 
         $container->addCompilerPass($channelPass = new LoggerChannelPass());
+        if (!class_exists('Symfony\Bridge\Monolog\Processor\DebugProcessor') || !class_exists('Symfony\Bundle\FrameworkBundle\DependencyInjection\Compiler\AddDebugLogProcessorPass')) {
+            $container->addCompilerPass(new DebugHandlerPass($channelPass));
+        }
         $container->addCompilerPass(new FixEmptyLoggerPass($channelPass));
         $container->addCompilerPass(new AddProcessorsPass());
         $container->addCompilerPass(new AddSwiftMailerTransportPass());
@@ -44,7 +44,6 @@ class MonologBundle extends Bundle
 
     /**
      * @internal
-     * @return void
      */
     public static function includeStacktraces(HandlerInterface $handler)
     {

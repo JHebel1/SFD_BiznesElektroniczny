@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * This file is part of the FOSJsRoutingBundle package.
  *
@@ -14,33 +12,39 @@ declare(strict_types=1);
 namespace FOS\JsRoutingBundle\Util;
 
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\EventListener\AbstractSessionListener;
 
 class CacheControlConfig
 {
-    public function __construct(private array $parameters = [])
+    /**
+     * @var array
+     */
+    private $parameters;
+
+    public function __construct(array $parameters = array())
     {
+        $this->parameters = $parameters;
     }
 
-    public function apply(Response $response): void
+    /**
+     * @param Response $response
+     */
+    public function apply(Response $response)
     {
         if (empty($this->parameters['enabled'])) {
             return;
         }
 
-        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
-
         $this->parameters['public'] ? $response->setPublic() : $response->setPrivate();
 
-        if (is_int($this->parameters['maxage'])) {
+        if (is_integer($this->parameters['maxage'])) {
             $response->setMaxAge($this->parameters['maxage']);
         }
 
-        if (is_int($this->parameters['smaxage'])) {
+        if (is_integer($this->parameters['smaxage'])) {
             $response->setSharedMaxAge($this->parameters['smaxage']);
         }
 
-        if (null !== $this->parameters['expires']) {
+        if ($this->parameters['expires'] !== null) {
             $response->setExpires(new \DateTime($this->parameters['expires']));
         }
 

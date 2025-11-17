@@ -85,7 +85,7 @@ class ImageTypeCore extends ObjectModel
     /**
      * Returns image type definitions.
      *
-     * @param string|null $type Image type
+     * @param string|null Image type
      * @param bool $orderBySize
      *
      * @return array Image type definitions
@@ -113,21 +113,7 @@ class ImageTypeCore extends ObjectModel
     }
 
     /**
-     * Returns image type by id.
-     *
-     * @param int $id id
-     *
-     * @return array Image type definitions
-     *
-     * @throws PrestaShopDatabaseException
-     */
-    public static function getImageTypeById(int $id): array
-    {
-        return Db::getInstance()->getRow('SELECT * FROM `' . _DB_PREFIX_ . 'image_type` WHERE `id_image_type` = ' . $id);
-    }
-
-    /**
-     * Check if type is already registered in database.
+     * Check if type already is already registered in database.
      *
      * @param string $typeName Name
      *
@@ -136,7 +122,7 @@ class ImageTypeCore extends ObjectModel
     public static function typeAlreadyExists($typeName)
     {
         if (!Validate::isImageTypeName($typeName)) {
-            throw new PrestaShopException(sprintf('"%s" is not valid image type name.', $typeName));
+            die(Tools::displayError());
         }
 
         Db::getInstance()->executeS('
@@ -185,6 +171,22 @@ class ImageTypeCore extends ObjectModel
     /**
      * Get formatted name.
      *
+     * @deprecated 1.7.0.0 Use ImageType::getFormattedName($name) instead
+     *
+     * @param string $name
+     *
+     * @return string
+     */
+    public static function getFormatedName($name)
+    {
+        Tools::displayAsDeprecated('Please use ImageType::getFormattedName($name) instead');
+
+        return self::getFormattedName($name);
+    }
+
+    /**
+     * Get formatted name.
+     *
      * @param string $name
      *
      * @return string
@@ -194,7 +196,7 @@ class ImageTypeCore extends ObjectModel
         $themeName = Context::getContext()->shop->theme_name;
         $nameWithoutThemeName = str_replace(['_' . $themeName, $themeName . '_'], '', $name);
 
-        // check if the theme name is already in $name if yes only return $name
+        //check if the theme name is already in $name if yes only return $name
         if ($themeName !== null && strstr($name, $themeName) && self::getByNameNType($name)) {
             return $name;
         }

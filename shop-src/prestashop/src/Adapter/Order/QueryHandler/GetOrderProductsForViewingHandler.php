@@ -37,25 +37,25 @@ use OrderSlip;
 use Pack;
 use PrestaShop\Decimal\DecimalNumber;
 use PrestaShop\PrestaShop\Adapter\Order\AbstractOrderHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Order\Query\GetOrderProductsForViewing;
 use PrestaShop\PrestaShop\Core\Domain\Order\QueryHandler\GetOrderProductsForViewingHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Order\QueryResult\OrderProductCustomizationForViewing;
 use PrestaShop\PrestaShop\Core\Domain\Order\QueryResult\OrderProductCustomizationsForViewing;
 use PrestaShop\PrestaShop\Core\Domain\Order\QueryResult\OrderProductForViewing;
 use PrestaShop\PrestaShop\Core\Domain\Order\QueryResult\OrderProductsForViewing;
+use PrestaShop\PrestaShop\Core\Domain\ValueObject\QuerySorting;
 use PrestaShop\PrestaShop\Core\Image\Parser\ImageTagSourceParserInterface;
 use PrestaShop\PrestaShop\Core\Localization\CLDR\ComputingPrecision;
 use PrestaShop\PrestaShop\Core\Localization\Locale;
-use PrestaShop\PrestaShop\Core\Util\Sorter;
 use Product;
 use Shop;
 use StockAvailable;
+use Warehouse;
+use WarehouseProductLocation;
 
 /**
  * Handles GetOrderProductsForViewing query using legacy object models
  */
-#[AsQueryHandler]
 final class GetOrderProductsForViewingHandler extends AbstractOrderHandler implements GetOrderProductsForViewingHandlerInterface
 {
     /**
@@ -138,6 +138,20 @@ final class GetOrderProductsForViewingHandler extends AbstractOrderHandler imple
             $product['refund_history'] = OrderSlip::getProductSlipDetail($product['id_order_detail']);
             $product['return_history'] = OrderReturn::getProductReturnDetail($product['id_order_detail']);
 
+            if ($product['id_warehouse'] != 0) {
+                $warehouse = new Warehouse((int) $product['id_warehouse']);
+                $product['warehouse_name'] = $warehouse->name;
+                $warehouse_location = WarehouseProductLocation::getProductLocation($product['product_id'], $product['product_attribute_id'], $product['id_warehouse']);
+                if (!empty($warehouse_location)) {
+                    $product['warehouse_location'] = $warehouse_location;
+                } else {
+                    $product['warehouse_location'] = false;
+                }
+            } else {
+                $product['warehouse_name'] = '--';
+                $product['warehouse_location'] = false;
+            }
+
             $pack_items = $product['cache_is_pack'] ? Pack::getItemTable($product['id_product'], $this->contextLanguageId, true) : [];
             foreach ($pack_items as &$pack_item) {
                 $pack_item['current_stock'] = StockAvailable::getQuantityAvailableByProduct($pack_item['id_product'], $pack_item['id_product_attribute'], $pack_item['id_shop']);
@@ -161,14 +175,13 @@ final class GetOrderProductsForViewingHandler extends AbstractOrderHandler imple
 
         unset($product);
 
-        // Sort products by Reference ID (and if equals (like combination) by Supplier Reference)
-        $sorter = new Sorter();
-        $products = $sorter->natural(
-            $products,
-            $query->getProductsSorting()->getValue(),
-            'product_reference',
-            'product_supplier_reference'
-        );
+        if (QuerySorting::DESC === $query->getProductsSorting()->getValue()) {
+            // reorder products by order_detail_id DESC
+            krsort($products);
+        } else {
+            // reorder products by order_detail_id ASC
+            ksort($products);
+        }
 
         $productsForViewing = [];
 
@@ -185,7 +198,8 @@ final class GetOrderProductsForViewingHandler extends AbstractOrderHandler imple
                 $unitPrice = (new DecimalNumber((string) $unitPrice))->round($precision, $this->getNumberRoundMode());
             }
 
-            $totalPrice = $unitPrice * $product['product_quantity'];
+            $totalPrice = $unitPrice *
+                (!empty($product['customizedDatas']) ? $product['customizationQuantityTotal'] : $product['product_quantity']);
 
             $unitPriceFormatted = $this->locale->formatPrice($unitPrice, $currency->iso_code);
             $totalPriceFormatted = $this->locale->formatPrice($totalPrice, $currency->iso_code);
@@ -215,25 +229,22 @@ final class GetOrderProductsForViewingHandler extends AbstractOrderHandler imple
                     $pack_item['reference'],
                     $pack_item['supplier_reference'],
                     $pack_item['pack_quantity'],
-                    '0',
-                    '0',
+                    0,
+                    0,
                     $pack_item['current_stock'],
                     $packItemImagePath,
                     '0',
                     '0',
-                    '0',
+                        '0',
                     $this->locale->formatPrice(0, $currency->iso_code),
                     0,
                     $this->locale->formatPrice(0, $currency->iso_code),
-                    '0',
+                        '0',
                     $pack_item['location'],
                     null,
                     '',
                     $packItemType,
-                    (bool) Product::isAvailableWhenOutOfStock(StockAvailable::outOfStock($pack_item['id_product'])),
-                    [],
-                    null,
-                    $pack_item['mpn']
+                    (bool) Product::isAvailableWhenOutOfStock(StockAvailable::outOfStock($pack_item['id_product']))
                 );
             }
 
@@ -264,15 +275,14 @@ final class GetOrderProductsForViewingHandler extends AbstractOrderHandler imple
                 $productType,
                 (bool) Product::isAvailableWhenOutOfStock(StockAvailable::outOfStock($product['product_id'])),
                 $packItems,
-                $product['customizations'],
-                $product['product_mpn']
+                $product['customizations']
             );
         }
 
         $offset = $query->getOffset();
         $limit = $query->getLimit();
 
-        // @todo: its not really paginated, as all products are retrieved from legacy Order::getProducts(). But could be improved in future.
+        //@todo: its not really paginated, as all products are retrieved from legacy Order::getProducts(). But could be improved in future.
         if (null !== $offset && $limit) {
             $productsForViewing = array_slice($products, (int) $offset, (int) $limit);
         }
@@ -294,7 +304,8 @@ final class GetOrderProductsForViewingHandler extends AbstractOrderHandler imple
         }
 
         if (!isset($id_image) || !$id_image) {
-            $id_image = Db::getInstance()->getValue('
+            $id_image = Db::getInstance()->getValue(
+                '
                 SELECT `image_shop`.id_image
                 FROM `' . _DB_PREFIX_ . 'image` i' .
                 Shop::addSqlAssociation('image', 'i', true, 'image_shop.cover=1') . '
@@ -302,7 +313,11 @@ final class GetOrderProductsForViewingHandler extends AbstractOrderHandler imple
             );
         }
 
-        $pack_item['image'] = $id_image ? new Image((int) $id_image) : null;
+        $pack_item['image'] = null;
         $pack_item['image_size'] = null;
+
+        if ($id_image) {
+            $pack_item['image'] = new Image($id_image);
+        }
     }
 }

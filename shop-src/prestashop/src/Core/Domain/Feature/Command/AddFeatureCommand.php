@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Core\Domain\Feature\Command;
 
 use PrestaShop\PrestaShop\Core\Domain\Feature\Exception\FeatureConstraintException;
-use PrestaShop\PrestaShop\Core\Domain\Shop\ValueObject\ShopId;
 
 /**
  * Adds new feature
@@ -40,63 +39,49 @@ class AddFeatureCommand
     private $localizedNames;
 
     /**
-     * @var ShopId[]
+     * @var int[]
      */
-    private $associatedShopIds;
+    private $shopAssociation;
 
     /**
      * @param string[] $localizedNames
      * @param int[] $shopAssociation
      */
-    public function __construct(array $localizedNames, array $shopAssociation)
+    public function __construct(array $localizedNames, array $shopAssociation = [])
     {
-        $this->assertNamesAreNotEmpty($localizedNames);
-        $this->setShopAssociation($shopAssociation);
+        $this->assertNamesAreValid($localizedNames);
+
         $this->localizedNames = $localizedNames;
+        $this->shopAssociation = $shopAssociation;
     }
 
     /**
      * @return string[]
      */
-    public function getLocalizedNames(): array
+    public function getLocalizedNames()
     {
         return $this->localizedNames;
     }
 
     /**
-     * @return ShopId[]
+     * @return int[]
      */
-    public function getAssociatedShopIds(): array
+    public function getShopAssociation()
     {
-        return $this->associatedShopIds;
+        return $this->shopAssociation;
     }
 
     /**
+     * Asserts that feature names are valid.
+     *
      * @param string[] $names
      *
      * @throws FeatureConstraintException
      */
-    private function assertNamesAreNotEmpty(array $names): void
+    private function assertNamesAreValid(array $names)
     {
         if (empty($names)) {
-            throw new FeatureConstraintException(
-                'Feature name cannot be empty',
-                FeatureConstraintException::INVALID_NAME
-            );
+            throw new FeatureConstraintException('Feature name cannot be empty', FeatureConstraintException::EMPTY_NAME);
         }
-    }
-
-    /**
-     * @param int[] $associatedShopIds
-     */
-    private function setShopAssociation(array $associatedShopIds): void
-    {
-        if (empty($associatedShopIds)) {
-            throw new FeatureConstraintException('Shop association cannot be empty', FeatureConstraintException::INVALID_SHOP_ASSOCIATION);
-        }
-
-        $this->associatedShopIds = array_map(static function (int $shopId): ShopId {
-            return new ShopId($shopId);
-        }, $associatedShopIds);
     }
 }

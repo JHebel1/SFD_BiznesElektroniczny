@@ -36,7 +36,7 @@ use PrestaShop\PrestaShop\Core\Localization\Exception\LocalizationException;
 use PrestaShop\PrestaShop\Core\Localization\Locale;
 use PrestaShopDatabaseException;
 use PrestaShopException;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class VoucherGenerator is responsible of generating a voucher for a customer
@@ -129,7 +129,7 @@ class VoucherGenerator
             throw new OrderException('You cannot generate a voucher.');
         }
 
-        $customer = new Customer((int) $order->id_customer);
+        $customer = new Customer((int) ($order->id_customer));
 
         $params = [
             '{lastname}' => $customer->lastname,
@@ -143,27 +143,25 @@ class VoucherGenerator
         // @todo: use private method to send mail and later a decoupled mail sender
         $orderLanguage = $order->getAssociatedLanguage();
 
-        if (!empty($customer->email)) {
-            @Mail::Send(
-                (int) $orderLanguage->getId(),
-                'voucher',
-                $this->translator->trans(
-                    'New voucher for your order #%s',
-                    [$order->reference],
-                    'Emails.Subject',
-                    $orderLanguage->locale
-                ),
-                $params,
-                $customer->email,
-                $customer->firstname . ' ' . $customer->lastname,
-                null,
-                null,
-                null,
-                null,
-                _PS_MAIL_DIR_,
-                true,
-                (int) $order->id_shop
-            );
-        }
+        @Mail::Send(
+            (int) $orderLanguage->getId(),
+            'voucher',
+            $this->translator->trans(
+                'New voucher for your order #%s',
+                [$order->reference],
+                'Emails.Subject',
+                $orderLanguage->locale
+            ),
+            $params,
+            $customer->email,
+            $customer->firstname . ' ' . $customer->lastname,
+            null,
+            null,
+            null,
+            null,
+            _PS_MAIL_DIR_,
+            true,
+            (int) $order->id_shop
+        );
     }
 }

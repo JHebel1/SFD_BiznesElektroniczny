@@ -27,17 +27,53 @@
 namespace PrestaShop\PrestaShop\Adapter\Module;
 
 use Module as LegacyModule;
+use PrestaShopBundle\Service\DataProvider\Admin\AddonsInterface;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
- * Responsible of managing updates of modules. This class is currently used only by autoupgrade module.
- * Core has it's own solution in PrestaShop\PrestaShop\Core\Module\ModuleManager.
- * In the future, autoupgrade module upgrade process should be unified with the core, so we can remove
- * this duplicate code.
+ * Responsible of managing updates of modules.
  */
 class ModuleDataUpdater
 {
+    /**
+     * @var AddonsInterface
+     */
+    private $addonsDataProvider;
+
+    /**
+     * @var AdminModuleDataProvider
+     */
+    private $adminModuleDataProvider;
+
+    /**
+     * @param AddonsInterface $addonsDataProvider
+     * @param AdminModuleDataProvider $adminModuleDataProvider
+     */
+    public function __construct(AddonsInterface $addonsDataProvider, AdminModuleDataProvider $adminModuleDataProvider)
+    {
+        $this->addonsDataProvider = $addonsDataProvider;
+        $this->adminModuleDataProvider = $adminModuleDataProvider;
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function setModuleOnDiskFromAddons($name)
+    {
+        // Note : Data caching should be handled by the addons data provider
+        // Check if the module can be downloaded from addons
+        foreach ($this->adminModuleDataProvider->getCatalogModules(['name' => $name]) as $catalog_module) {
+            if ($catalog_module->name == $name && in_array($catalog_module->origin, ['native', 'native_all', 'must-have', 'customer'])) {
+                return $this->addonsDataProvider->downloadModule($catalog_module->id);
+            }
+        }
+
+        return false;
+    }
+
     /**
      * @param string $name
      *
@@ -45,13 +81,13 @@ class ModuleDataUpdater
      */
     public function removeModuleFromDisk($name)
     {
-        $fs = new Filesystem();
+        $fs = new FileSystem();
 
         try {
             $fs->remove(_PS_MODULE_DIR_ . '/' . $name);
 
             return true;
-        } catch (IOException) {
+        } catch (IOException $e) {
             return false;
         }
     }

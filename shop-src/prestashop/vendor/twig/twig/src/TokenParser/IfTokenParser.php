@@ -15,7 +15,6 @@ namespace Twig\TokenParser;
 use Twig\Error\SyntaxError;
 use Twig\Node\IfNode;
 use Twig\Node\Node;
-use Twig\Node\Nodes;
 use Twig\Token;
 
 /**
@@ -29,11 +28,11 @@ use Twig\Token;
  *    </ul>
  *   {% endif %}
  *
- * @internal
+ * @final
  */
-final class IfTokenParser extends AbstractTokenParser
+class IfTokenParser extends AbstractTokenParser
 {
-    public function parse(Token $token): Node
+    public function parse(Token $token)
     {
         $lineno = $token->getLine();
         $expr = $this->parser->getExpressionParser()->parseExpression();
@@ -64,27 +63,29 @@ final class IfTokenParser extends AbstractTokenParser
                     break;
 
                 default:
-                    throw new SyntaxError(\sprintf('Unexpected end of template. Twig was looking for the following tags "else", "elseif", or "endif" to close the "if" block started at line %d).', $lineno), $stream->getCurrent()->getLine(), $stream->getSourceContext());
+                    throw new SyntaxError(sprintf('Unexpected end of template. Twig was looking for the following tags "else", "elseif", or "endif" to close the "if" block started at line %d).', $lineno), $stream->getCurrent()->getLine(), $stream->getSourceContext());
             }
         }
 
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        return new IfNode(new Nodes($tests), $else, $lineno);
+        return new IfNode(new Node($tests), $else, $lineno, $this->getTag());
     }
 
-    public function decideIfFork(Token $token): bool
+    public function decideIfFork(Token $token)
     {
         return $token->test(['elseif', 'else', 'endif']);
     }
 
-    public function decideIfEnd(Token $token): bool
+    public function decideIfEnd(Token $token)
     {
         return $token->test(['endif']);
     }
 
-    public function getTag(): string
+    public function getTag()
     {
         return 'if';
     }
 }
+
+class_alias('Twig\TokenParser\IfTokenParser', 'Twig_TokenParser_If');

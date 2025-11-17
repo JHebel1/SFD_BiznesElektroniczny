@@ -30,7 +30,6 @@ use PrestaShop\PrestaShop\Core\Encoding\CharsetEncoding;
 use PrestaShopBundle\Form\Admin\Type\SwitchType;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 
 /**
@@ -38,7 +37,7 @@ use Symfony\Component\Form\FormBuilderInterface;
  */
 class SqlRequestSettingsType extends TranslatorAwareType
 {
-    public function buildForm(FormBuilderInterface $builder, array $options): void
+    public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
             ->add('default_file_encoding', ChoiceType::class, [
@@ -49,20 +48,13 @@ class SqlRequestSettingsType extends TranslatorAwareType
                 ],
                 'translation_domain' => false,
             ])
-            ->add('default_file_separator', TextType::class, [
-                'label' => $this->trans('Select your default file separator', 'Admin.Advparameters.Feature'),
-                'translation_domain' => false,
-                'attr' => [
-                    'maxlength' => '1',
-                    'required',
-                ],
-            ])
             ->add('enable_multi_statements', SwitchType::class, [
                 'label' => $this->trans('Enable multi-statements queries', 'Admin.Advparameters.Feature'),
                 'help' => $this->trans(
-                    'Enabling multi-statements queries increases the risk of SQL injection vulnerabilities being exploited.',
+                    'Enabling multi-statements queries increases the risk of SQL injection vulnerability to be exploited',
                     'Admin.Advparameters.Help'
                 ),
-            ]);
+            ])
+        ;
     }
 }

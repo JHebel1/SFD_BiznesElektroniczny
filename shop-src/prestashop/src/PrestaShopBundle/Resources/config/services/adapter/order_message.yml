@@ -4,23 +4,33 @@ services:
 
   prestashop.adapter.order_message.command_handler.add_order_message_handler:
     class: PrestaShop\PrestaShop\Adapter\OrderMessage\CommandHandler\AddOrderMessageHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\OrderMessage\Command\AddOrderMessageCommand
 
   prestashop.adapter.order_message.command_handler.edit_order_message_handler:
     class: PrestaShop\PrestaShop\Adapter\OrderMessage\CommandHandler\EditOrderMessageHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\OrderMessage\Command\EditOrderMessageCommand
 
   prestashop.adapter.order_message.query_handler.get_order_message_for_editing_handler:
     class: PrestaShop\PrestaShop\Adapter\OrderMessage\QueryHandler\GetOrderMessageForEditingHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\OrderMessage\Query\GetOrderMessageForEditing
 
   prestashop.adapter.order_message.command_handler.delete_order_message_handler:
     class: PrestaShop\PrestaShop\Adapter\OrderMessage\CommandHandler\DeleteOrderMessageHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\OrderMessage\Command\DeleteOrderMessageCommand
 
   prestashop.adapter.order_message.command_handler.bulk_delete_order_message_handler:
     class: PrestaShop\PrestaShop\Adapter\OrderMessage\CommandHandler\BulkDeleteOrderMessageHandler
-    autoconfigure: true
+    tags:
+      - name: tactician.handler
+        command: PrestaShop\PrestaShop\Core\Domain\OrderMessage\Command\BulkDeleteOrderMessageCommand
 
   prestashop.adapter.order_message.order_message_provider:
     class: 'PrestaShop\PrestaShop\Adapter\OrderMessage\OrderMessageProvider'

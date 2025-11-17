@@ -29,7 +29,6 @@ namespace PrestaShop\PrestaShop\Adapter\Form\ChoiceProvider;
 use Context;
 use Country;
 use Db;
-use PrestaShop\PrestaShop\Core\Form\FormChoiceFormatter;
 use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 use Shop;
 
@@ -47,7 +46,7 @@ final class OrderCountriesChoiceProvider implements FormChoiceProviderInterface
             return [];
         }
 
-        $countries = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
+        $result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
 			SELECT DISTINCT c.id_country, cl.`name`
 			FROM `' . _DB_PREFIX_ . 'orders` o
 			' . Shop::addSqlAssociation('orders', 'o') . '
@@ -61,10 +60,12 @@ final class OrderCountriesChoiceProvider implements FormChoiceProviderInterface
 			ORDER BY cl.name ASC'
         );
 
-        return FormChoiceFormatter::formatFormChoices(
-            $countries,
-            'id_country',
-            'name'
-        );
+        $choices = [];
+
+        foreach ($result as $row) {
+            $choices[$row['name']] = $row['id_country'];
+        }
+
+        return $choices;
     }
 }

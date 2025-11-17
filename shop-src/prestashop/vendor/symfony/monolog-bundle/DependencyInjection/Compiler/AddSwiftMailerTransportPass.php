@@ -20,8 +20,6 @@ use Symfony\Component\DependencyInjection\Reference;
  * container definitions.
  *
  * @author Christian Flothmann <christian.flothmann@xabbuh.de>
- *
- * @internalsince 3.9.0
  */
 class AddSwiftMailerTransportPass implements CompilerPassInterface
 {

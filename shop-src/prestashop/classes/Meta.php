@@ -24,6 +24,7 @@
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
 use PrestaShop\PrestaShop\Adapter\Presenter\Object\ObjectPresenter;
+use Symfony\Component\HttpFoundation\IpUtils;
 
 /**
  * Class MetaCore.
@@ -34,6 +35,7 @@ class MetaCore extends ObjectModel
     public $configurable = 1;
     public $title;
     public $description;
+    public $keywords;
     public $url_rewrite;
 
     /**
@@ -51,6 +53,7 @@ class MetaCore extends ObjectModel
             /* Lang fields */
             'title' => ['type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'size' => 128],
             'description' => ['type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'size' => 255],
+            'keywords' => ['type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'size' => 255],
             'url_rewrite' => ['type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isLinkRewrite', 'size' => 255],
         ],
     ];
@@ -59,7 +62,7 @@ class MetaCore extends ObjectModel
      * Get pages.
      *
      * @param bool $excludeFilled
-     * @param bool|string $addPage
+     * @param bool $addPage
      *
      * @return array
      */
@@ -67,14 +70,11 @@ class MetaCore extends ObjectModel
     {
         $selectedPages = [];
         if (!$files = Tools::scandir(_PS_CORE_DIR_ . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . 'front' . DIRECTORY_SEPARATOR, 'php', '', true)) {
-            throw new PrestaShopException(Context::getContext()->getTranslator()->trans('Cannot scan root directory', [], 'Admin.Notifications.Error'));
+            die(Tools::displayError(Context::getContext()->getTranslator()->trans('Cannot scan root directory', [], 'Admin.Notifications.Error')));
         }
 
-        $overrideDir = _PS_CORE_DIR_ . DIRECTORY_SEPARATOR . 'override' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . 'front' . DIRECTORY_SEPARATOR;
-        if (!is_dir($overrideDir)) {
-            $overrideFiles = [];
-        } elseif (!$overrideFiles = Tools::scandir($overrideDir, 'php', '', true)) {
-            throw new PrestaShopException(Context::getContext()->getTranslator()->trans('Cannot scan "override" directory', [], 'Admin.Notifications.Error'));
+        if (!$overrideFiles = Tools::scandir(_PS_CORE_DIR_ . DIRECTORY_SEPARATOR . 'override' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . 'front' . DIRECTORY_SEPARATOR, 'php', '', true)) {
+            die(Tools::displayError(Context::getContext()->getTranslator()->trans('Cannot scan "override" directory', [], 'Admin.Notifications.Error')));
         }
 
         $files = array_values(array_unique(array_merge($files, $overrideFiles)));
@@ -249,8 +249,11 @@ class MetaCore extends ObjectModel
      *
      * @return bool
      */
-    public function deleteSelection(array $selection)
+    public function deleteSelection($selection)
     {
+        if (!is_array($selection)) {
+            die(Tools::displayError());
+        }
         $result = true;
         foreach ($selection as $id) {
             $this->id = (int) $id;
@@ -286,10 +289,13 @@ class MetaCore extends ObjectModel
 
     /**
      * Get meta tags.
+     *
+     * @since 1.5.0
      */
     public static function getMetaTags($idLang, $pageName, $title = '')
     {
-        if (Configuration::get('PS_SHOP_ENABLE') || Tools::isAllowedToBypassMaintenance()) {
+        if (Configuration::get('PS_SHOP_ENABLE')
+            || IpUtils::checkIp(Tools::getRemoteAddr(), explode(',', Configuration::get('PS_MAINTENANCE_IP')))) {
             if ($pageName == 'product' && ($idProduct = Tools::getValue('id_product'))) {
                 return Meta::getProductMetas($idProduct, $idLang, $pageName);
             } elseif ($pageName == 'category' && ($idCategory = Tools::getValue('id_category'))) {
@@ -315,13 +321,15 @@ class MetaCore extends ObjectModel
      * @param string $pageName Page name
      *
      * @return array Meta tags
+     *
+     * @since 1.5.0
      */
     public static function getHomeMetas($idLang, $pageName)
     {
         $metas = Meta::getMetaByPage($pageName, $idLang);
         $ret['meta_title'] = (isset($metas['title']) && $metas['title']) ? $metas['title'] : Configuration::get('PS_SHOP_NAME');
         $ret['meta_description'] = (isset($metas['description']) && $metas['description']) ? $metas['description'] : '';
-        $ret = Meta::completeMetaTags($ret, $ret['meta_title']);
+        $ret['meta_keywords'] = (isset($metas['keywords']) && $metas['keywords']) ? $metas['keywords'] : '';
 
         return $ret;
     }
@@ -334,6 +342,8 @@ class MetaCore extends ObjectModel
      * @param string $pageName
      *
      * @return array
+     *
+     * @since 1.5.0
      */
     public static function getProductMetas($idProduct, $idLang, $pageName)
     {
@@ -358,9 +368,15 @@ class MetaCore extends ObjectModel
      * @param string $pageName
      *
      * @return array
+     *
+     * @since 1.5.0
      */
     public static function getCategoryMetas($idCategory, $idLang, $pageName, $title = '')
     {
+        if (!empty($title)) {
+            $title = ' - ' . $title;
+        }
+        $pageNumber = (int) Tools::getValue('page');
         $category = new Category($idCategory, $idLang);
 
         $cacheId = 'Meta::getCategoryMetas' . (int) $idCategory . '-' . (int) $idLang;
@@ -371,10 +387,15 @@ class MetaCore extends ObjectModel
                     $row['meta_description'] = strip_tags($row['description']);
                 }
 
-                if (is_string($title) && $title !== '') {
-                    $row['meta_title'] = $title;
+                // Paginate title
+                if (!empty($row['meta_title'])) {
+                    $row['meta_title'] = $title . $row['meta_title'] . (!empty($pageNumber) ? ' (' . $pageNumber . ')' : '');
                 } else {
-                    $row['meta_title'] = $row['meta_title'] ?: $row['name'];
+                    $row['meta_title'] = $row['name'] . (!empty($pageNumber) ? ' (' . $pageNumber . ')' : '');
+                }
+
+                if (!empty($title)) {
+                    $row['meta_title'] = $title . (!empty($pageNumber) ? ' (' . $pageNumber . ')' : '');
                 }
 
                 $result = Meta::completeMetaTags($row, $row['name']);
@@ -397,16 +418,20 @@ class MetaCore extends ObjectModel
      * @param string $pageName
      *
      * @return array
+     *
+     * @since 1.5.0
      */
     public static function getManufacturerMetas($idManufacturer, $idLang, $pageName)
     {
+        $pageNumber = (int) Tools::getValue('page');
         $manufacturer = new Manufacturer($idManufacturer, $idLang);
         if (Validate::isLoadedObject($manufacturer)) {
             $row = Meta::getPresentedObject($manufacturer);
             if (!empty($row['meta_description'])) {
                 $row['meta_description'] = strip_tags($row['meta_description']);
             }
-            $row['meta_title'] = $row['meta_title'] ?: $row['name'];
+            $row['meta_title'] = ($row['meta_title'] ? $row['meta_title'] : $row['name']) . (!empty($pageNumber) ? ' (' . $pageNumber . ')' : '');
+            $row['meta_title'];
 
             return Meta::completeMetaTags($row, $row['meta_title']);
         }
@@ -422,6 +447,8 @@ class MetaCore extends ObjectModel
      * @param string $pageName
      *
      * @return array
+     *
+     * @since 1.5.0
      */
     public static function getSupplierMetas($idSupplier, $idLang, $pageName)
     {
@@ -446,6 +473,8 @@ class MetaCore extends ObjectModel
      * @param string $pageName
      *
      * @return array
+     *
+     * @since 1.5.0
      */
     public static function getCmsMetas($idCms, $idLang, $pageName)
     {
@@ -468,6 +497,8 @@ class MetaCore extends ObjectModel
      * @param string $pageName
      *
      * @return array
+     *
+     * @since 1.5.0
      */
     public static function getCmsCategoryMetas($idCmsCategory, $idLang, $pageName)
     {
@@ -482,7 +513,10 @@ class MetaCore extends ObjectModel
         return Meta::getHomeMetas($idLang, $pageName);
     }
 
-    public static function completeMetaTags($metaTags, $defaultValue, ?Context $context = null)
+    /**
+     * @since 1.5.0
+     */
+    public static function completeMetaTags($metaTags, $defaultValue, Context $context = null)
     {
         if (!$context) {
             $context = Context::getContext();
@@ -492,28 +526,7 @@ class MetaCore extends ObjectModel
             $metaTags['meta_title'] = $defaultValue;
         }
 
-        if (!empty($context->controller) && method_exists($context->controller, 'getTemplateVarPagination')) {
-            $metaTags['meta_title'] = Meta::paginateTitle($metaTags['meta_title']);
-        }
-
         return $metaTags;
-    }
-
-    /**
-     * Add page number to title
-     *
-     * @param string $title
-     *
-     * @return string
-     */
-    public static function paginateTitle(string $title): string
-    {
-        $page_num = (int) Tools::getValue('page');
-        if ($page_num > 1) {
-            $title .= ' (' . $page_num . ')';
-        }
-
-        return $title;
     }
 
     /**

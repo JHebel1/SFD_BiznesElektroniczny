@@ -37,7 +37,6 @@ use PrestaShop\Decimal\DecimalNumber;
 use PrestaShop\PrestaShop\Adapter\Address\AddressFormatter;
 use PrestaShop\PrestaShop\Adapter\Entity\Address;
 use PrestaShop\PrestaShop\Core\Address\AddressFormatterInterface;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Address\ValueObject\AddressId;
 use PrestaShop\PrestaShop\Core\Domain\Order\Exception\OrderNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Order\Query\GetOrderPreview;
@@ -48,7 +47,6 @@ use PrestaShop\PrestaShop\Core\Domain\Order\QueryResult\OrderPreviewProductDetai
 use PrestaShop\PrestaShop\Core\Domain\Order\QueryResult\OrderPreviewShippingDetails;
 use PrestaShop\PrestaShop\Core\Domain\Order\ValueObject\OrderId;
 use PrestaShop\PrestaShop\Core\Localization\Locale\Repository as LocaleRepository;
-use PrestaShop\PrestaShop\Core\Util\Sorter;
 use State;
 use StockAvailable;
 use Validate;
@@ -56,7 +54,6 @@ use Validate;
 /**
  * Handles GetOrderPreview query using legacy object model
  */
-#[AsQueryHandler]
 final class GetOrderPreviewHandler implements GetOrderPreviewHandlerInterface
 {
     /**
@@ -82,7 +79,7 @@ final class GetOrderPreviewHandler implements GetOrderPreviewHandlerInterface
     public function __construct(
         LocaleRepository $localeRepository,
         string $locale,
-        ?AddressFormatterInterface $addressFormatter = null
+        AddressFormatterInterface $addressFormatter = null
     ) {
         $this->localeRepository = $localeRepository;
         $this->locale = $locale;
@@ -150,7 +147,7 @@ final class GetOrderPreviewHandler implements GetOrderPreviewHandlerInterface
             $address->postcode,
             $stateName,
             $country->name[(int) $order->getAssociatedLanguage()->getId()],
-            $customer->email,
+            $customer->email ?? null,
             $address->phone,
             $dni
         );
@@ -211,12 +208,7 @@ final class GetOrderPreviewHandler implements GetOrderPreviewHandlerInterface
 
         $taxCalculationMethod = $this->getOrderTaxCalculationMethod($order);
 
-        $orderDetails = $order->getProductsDetail();
-        // Sort products by Reference ID (and if equals (like combination) by Supplier Reference)
-        $sorter = new Sorter();
-        $orderDetails = $sorter->natural($orderDetails, Sorter::ORDER_DESC, 'product_reference', 'product_supplier_reference');
-
-        foreach ($orderDetails as $detail) {
+        foreach ($order->getProductsDetail() as $detail) {
             $unitPrice = $detail['unit_price_tax_excl'];
             $totalPrice = $detail['total_price_tax_excl'];
 
@@ -241,8 +233,7 @@ final class GetOrderPreviewHandler implements GetOrderPreviewHandlerInterface
                 (int) $detail['product_quantity'],
                 $locale->formatPrice($unitPrice, $currency->iso_code),
                 $locale->formatPrice($totalPrice, $currency->iso_code),
-                $locale->formatPrice((string) $totalTaxAmount, $currency->iso_code),
-                (int) $detail['id_product']
+                $locale->formatPrice((string) $totalTaxAmount, $currency->iso_code)
             );
         }
 

@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Customer\CommandHandler;
 
 use Customer;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Command\TransformGuestToCustomerCommand;
 use PrestaShop\PrestaShop\Core\Domain\Customer\CommandHandler\TransformGuestToCustomerHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Exception\CustomerNotFoundException;
@@ -39,7 +38,6 @@ use PrestaShop\PrestaShop\Core\Domain\Customer\ValueObject\CustomerId;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class TransformGuestToCustomerHandler implements TransformGuestToCustomerHandlerInterface
 {
     /**
@@ -80,13 +78,11 @@ final class TransformGuestToCustomerHandler implements TransformGuestToCustomerH
     private function assertCustomerExists(CustomerId $customerId, Customer $customer)
     {
         if ($customer->id !== $customerId->getValue()) {
-            throw new CustomerNotFoundException(sprintf('Customer with id "%d" was not found', $customerId->getValue()));
+            throw new CustomerNotFoundException($customerId, sprintf('Customer with id "%s" was not found', $customerId->getValue()));
         }
     }
 
     /**
-     * Checks if a customer with the same email already exists in database.
-     *
      * @param Customer $customer
      *
      * @throws CustomerTransformationException

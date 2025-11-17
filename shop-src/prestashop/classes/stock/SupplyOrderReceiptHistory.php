@@ -27,7 +27,7 @@
 /**
  * History of receipts.
  *
- * @deprecated since 9.0 and will be removed in 10.0
+ * @since 1.5.0
  */
 class SupplyOrderReceiptHistoryCore extends ObjectModel
 {

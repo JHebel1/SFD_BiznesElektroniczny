@@ -26,14 +26,11 @@
 
 /**
  * Override module templates easily.
+ *
+ * @since 1.7.0.0
  */
 class SmartyResourceParentCore extends Smarty_Resource_Custom
 {
-    /**
-     * @var array<string>
-     */
-    public $paths;
-
     public function __construct(array $paths)
     {
         $this->paths = $paths;

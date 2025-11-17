@@ -26,11 +26,10 @@
 
 namespace PrestaShopBundle\Form\Admin\Improve\International\Translations;
 
-use PrestaShopBundle\Form\Admin\Type\LocaleChoiceType;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class ExportThemeLanguageType is responsible for building export language form
@@ -63,7 +62,14 @@ class ExportThemeLanguageType extends TranslatorAwareType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('iso_code', LocaleChoiceType::class)
+            ->add('iso_code', ChoiceType::class, [
+                'label' => $this->trans(
+                    'Language',
+                    'Admin.Global'
+                ),
+                'choices' => $this->getLocaleChoices(),
+                'choice_translation_domain' => false,
+            ])
             ->add('theme_name', ChoiceType::class, [
                 'label' => $this->trans(
                     'Select your theme',

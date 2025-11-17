@@ -1,4 +1,4 @@
-{# **
+{#**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
  *
@@ -21,15 +21,12 @@
  * @author    PrestaShop SA and Contributors <contact@prestashop.com>
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
- * #}
+ *#}
 
 <button id="{{ '%s_grid_bulk_action_%s'|format(grid.id, action.id) }}"
         data-categories-delete-url="{{ path(action.options.categories_bulk_delete_route) }}"
         class="dropdown-item js-delete-categories-bulk-action"
         type="button"
 >
-  {% if action.icon is not empty %}
-    <i class="material-icons">{{ action.icon }}</i>
-  {% endif %}
   {{ action.name }}
 </button>

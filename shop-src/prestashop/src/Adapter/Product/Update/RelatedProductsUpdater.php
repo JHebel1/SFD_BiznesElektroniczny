@@ -60,7 +60,7 @@ class RelatedProductsUpdater
      */
     public function setRelatedProducts(ProductId $productId, array $relatedProductIds): void
     {
-        $product = $this->productRepository->getProductByDefaultShop($productId);
+        $product = $this->productRepository->get($productId);
 
         if (empty($relatedProductIds)) {
             $this->deleteRelatedProducts($product);
@@ -88,7 +88,7 @@ class RelatedProductsUpdater
 
         try {
             $product->changeAccessories($ids);
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new CoreException(sprintf(
                 'Error occurred when updating related products for product #%d',
                 $product->id
@@ -111,7 +111,7 @@ class RelatedProductsUpdater
                     $product->id
                 ));
             }
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new CoreException(sprintf(
                 'Error occurred when updating related products for product #%d',
                 $product->id

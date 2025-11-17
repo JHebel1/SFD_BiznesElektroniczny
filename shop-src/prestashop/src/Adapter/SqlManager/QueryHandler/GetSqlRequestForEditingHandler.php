@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\SqlManager\QueryHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\EditableSqlRequest;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Exception\SqlRequestException;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Exception\SqlRequestNotFoundException;
@@ -40,7 +39,6 @@ use RequestSql;
  *
  * @internal
  */
-#[AsQueryHandler]
 final class GetSqlRequestForEditingHandler implements GetSqlRequestForEditingHandlerInterface
 {
     /**

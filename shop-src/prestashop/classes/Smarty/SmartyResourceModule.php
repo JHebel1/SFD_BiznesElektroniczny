@@ -26,19 +26,11 @@
 
 /**
  * Override module templates easily.
+ *
+ * @since 1.7.0.0
  */
 class SmartyResourceModuleCore extends Smarty_Resource_Custom
 {
-    /**
-     * @var array<string>
-     */
-    public $paths;
-
-    /**
-     * @var bool
-     */
-    public $isAdmin;
-
     public function __construct(array $paths, $isAdmin = false)
     {
         $this->paths = $paths;

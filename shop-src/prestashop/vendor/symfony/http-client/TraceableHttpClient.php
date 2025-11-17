@@ -11,11 +11,6 @@
 
 namespace Symfony\Component\HttpClient;
 
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpClient\Response\ResponseStream;
-use Symfony\Component\HttpClient\Response\TraceableResponse;
-use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Symfony\Contracts\HttpClient\ResponseStreamInterface;
@@ -24,36 +19,29 @@ use Symfony\Contracts\Service\ResetInterface;
 /**
  * @author Jérémy Romey <jeremy@free-agent.fr>
  */
-final class TraceableHttpClient implements HttpClientInterface, ResetInterface, LoggerAwareInterface
+final class TraceableHttpClient implements HttpClientInterface, ResetInterface
 {
-    private HttpClientInterface $client;
-    private ?Stopwatch $stopwatch;
-    private \ArrayObject $tracedRequests;
+    private $client;
+    private $tracedRequests = [];
 
-    public function __construct(HttpClientInterface $client, ?Stopwatch $stopwatch = null)
+    public function __construct(HttpClientInterface $client)
     {
         $this->client = $client;
-        $this->stopwatch = $stopwatch;
-        $this->tracedRequests = new \ArrayObject();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function request(string $method, string $url, array $options = []): ResponseInterface
     {
-        $content = null;
         $traceInfo = [];
         $this->tracedRequests[] = [
             'method' => $method,
             'url' => $url,
             'options' => $options,
             'info' => &$traceInfo,
-            'content' => &$content,
         ];
         $onProgress = $options['on_progress'] ?? null;
-
-        if (false === ($options['extra']['trace_content'] ?? true)) {
-            unset($content);
-            $content = false;
-        }
 
         $options['on_progress'] = function (int $dlNow, int $dlSize, array $info) use (&$traceInfo, $onProgress) {
             $traceInfo = $info;
@@ -63,44 +51,28 @@ final class TraceableHttpClient implements HttpClientInterface, ResetInterface, 
             }
         };
 
-        return new TraceableResponse($this->client, $this->client->request($method, $url, $options), $content, $this->stopwatch?->start("$method $url", 'http_client'));
+        return $this->client->request($method, $url, $options);
     }
 
-    public function stream(ResponseInterface|iterable $responses, ?float $timeout = null): ResponseStreamInterface
+    /**
+     * {@inheritdoc}
+     */
+    public function stream($responses, float $timeout = null): ResponseStreamInterface
     {
-        if ($responses instanceof TraceableResponse) {
-            $responses = [$responses];
-        }
-
-        return new ResponseStream(TraceableResponse::stream($this->client, $responses, $timeout));
+        return $this->client->stream($responses, $timeout);
     }
 
     public function getTracedRequests(): array
     {
-        return $this->tracedRequests->getArrayCopy();
+        return $this->tracedRequests;
     }
 
-    public function reset(): void
+    public function reset()
     {
         if ($this->client instanceof ResetInterface) {
             $this->client->reset();
         }
 
-        $this->tracedRequests->exchangeArray([]);
-    }
-
-    public function setLogger(LoggerInterface $logger): void
-    {
-        if ($this->client instanceof LoggerAwareInterface) {
-            $this->client->setLogger($logger);
-        }
-    }
-
-    public function withOptions(array $options): static
-    {
-        $clone = clone $this;
-        $clone->client = $this->client->withOptions($options);
-
-        return $clone;
+        $this->tracedRequests = [];
     }
 }

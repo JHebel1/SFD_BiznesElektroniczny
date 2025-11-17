@@ -105,6 +105,11 @@ class EditableSupplier
     private $localizedMetaDescriptions;
 
     /**
+     * @var string[]
+     */
+    private $localizedMetaKeywords;
+
+    /**
      * @var bool
      */
     private $enabled;
@@ -133,6 +138,7 @@ class EditableSupplier
      * @param string $mobilePhone
      * @param string[] $localizedMetaTitles
      * @param string[] $localizedMetaDescriptions
+     * @param string[] $localizedMetaKeywords
      * @param bool $enabled
      * @param array $associatedShops
      * @param string $dni
@@ -152,6 +158,7 @@ class EditableSupplier
         string $mobilePhone,
         array $localizedMetaTitles,
         array $localizedMetaDescriptions,
+        array $localizedMetaKeywords,
         bool $enabled,
         array $associatedShops,
         string $dni,
@@ -171,6 +178,7 @@ class EditableSupplier
         $this->logoImage = $logoImage;
         $this->localizedMetaTitles = $localizedMetaTitles;
         $this->localizedMetaDescriptions = $localizedMetaDescriptions;
+        $this->localizedMetaKeywords = $localizedMetaKeywords;
         $this->enabled = $enabled;
         $this->dni = $dni;
         $this->associatedShops = $associatedShops;
@@ -286,6 +294,14 @@ class EditableSupplier
     public function getLocalizedMetaDescriptions(): array
     {
         return $this->localizedMetaDescriptions;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getLocalizedMetaKeywords(): array
+    {
+        return $this->localizedMetaKeywords;
     }
 
     /**

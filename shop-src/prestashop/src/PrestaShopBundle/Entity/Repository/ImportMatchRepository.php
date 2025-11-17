@@ -70,7 +70,7 @@ class ImportMatchRepository implements RepositoryInterface
             ->where('id_import_match = :id')
             ->setParameter('id', $id);
 
-        return $queryBuilder->executeQuery()->fetchAssociative();
+        return $queryBuilder->execute()->fetch();
     }
 
     /**
@@ -89,7 +89,7 @@ class ImportMatchRepository implements RepositoryInterface
             ->where('`name` = :name')
             ->setParameter('name', $name);
 
-        return $queryBuilder->executeQuery()->fetchAssociative();
+        return $queryBuilder->execute()->fetch();
     }
 
     /**
@@ -102,7 +102,7 @@ class ImportMatchRepository implements RepositoryInterface
             ->select('*')
             ->from($this->importMatchTable);
 
-        return $queryBuilder->executeQuery()->fetchAllAssociative();
+        return $queryBuilder->execute()->fetchAll();
     }
 
     /**

@@ -26,7 +26,7 @@
 
 namespace PrestaShopBundle\Translation\View;
 
-use PrestaShop\PrestaShop\Core\Util\Inflector;
+use Doctrine\Common\Util\Inflector;
 use PrestaShopBundle\Translation\Provider\AbstractProvider;
 use Symfony\Bundle\FrameworkBundle\Routing\Router;
 
@@ -37,13 +37,13 @@ class TreeBuilder
      */
     private $locale;
     /**
-     * @var string|null
+     * @var string
      */
     private $theme;
 
     /**
      * @param string $locale
-     * @param string|null $theme
+     * @param string $theme
      */
     public function __construct($locale, $theme)
     {
@@ -53,7 +53,7 @@ class TreeBuilder
 
     /**
      * @param AbstractProvider $provider
-     * @param string|array|null $search
+     * @param null $search
      *
      * @return array|mixed
      */
@@ -118,18 +118,18 @@ class TreeBuilder
         if (is_string($search)) {
             $search = strtolower($search);
 
-            return str_contains(strtolower($data['default']), $search)
-                || str_contains(strtolower($data['xlf']), $search)
-                || str_contains(strtolower($data['db']), $search);
+            return false !== strpos(strtolower($data['default']), $search) ||
+                false !== strpos(strtolower($data['xlf']), $search) ||
+                false !== strpos(strtolower($data['db']), $search);
         }
 
         if (is_array($search)) {
             $contains = true;
             foreach ($search as $s) {
                 $s = strtolower($s);
-                $contains &= str_contains(strtolower($data['default']), $s)
-                    || str_contains(strtolower($data['xlf']), $s)
-                    || str_contains(strtolower($data['db']), $s);
+                $contains &= false !== strpos(strtolower($data['default']), $s) ||
+                    false !== strpos(strtolower($data['xlf']), $s) ||
+                    false !== strpos(strtolower($data['db']), $s);
             }
 
             return $contains;
@@ -146,7 +146,7 @@ class TreeBuilder
         $translationsTree = [];
 
         foreach ($catalogue as $domain => $messages) {
-            $tableisedDomain = Inflector::getInflector()->tableize($domain);
+            $tableisedDomain = Inflector::tableize($domain);
             // the third component of the domain may have underscores, so we need to limit pieces to 3
             $parts = explode('_', $tableisedDomain, 3);
             /** @var array $subtree */
@@ -165,7 +165,7 @@ class TreeBuilder
             $subtree['__messages'] = [$domain => $messages];
             if (isset($messages['__metadata'])) {
                 $subtree['__fixed_length_id'] = '_' . sha1($domain);
-                [$subtree['__domain']] = explode('.', $domain);
+                list($subtree['__domain']) = explode('.', $domain);
                 $subtree['__metadata'] = $messages['__metadata'];
                 $subtree['__metadata']['domain'] = $subtree['__domain'];
                 unset($messages['__metadata']);
@@ -180,9 +180,9 @@ class TreeBuilder
      *
      * @param array $tree
      * @param Router $router
-     * @param string|null $theme
+     * @param null $theme
      * @param null $search
-     * @param string|null $module
+     * @param null $module
      *
      * @return array
      */
@@ -201,7 +201,7 @@ class TreeBuilder
         $index1 = 0;
         foreach ($tree as $k1 => $t1) {
             $index2 = 0;
-            if (is_array($t1) && !str_starts_with($k1, '__')) {
+            if (is_array($t1) && '__' !== substr($k1, 0, 2)) {
                 $this->addTreeInfo($router, $cleanTree, $index1, $k1, $k1, $this->theme, $search, $module);
 
                 if (array_key_exists('__messages', $t1)) {
@@ -221,7 +221,7 @@ class TreeBuilder
 
                 foreach ($t1 as $k2 => $t2) {
                     $index3 = 0;
-                    if (is_array($t2) && !str_starts_with($k2, '__')) {
+                    if (is_array($t2) && '__' !== substr($k2, 0, 2)) {
                         $this->addTreeInfo($router, $cleanTree[$index1]['children'], $index2, $k2, $k1 . $k2, $this->theme, $search, $module);
 
                         if (array_key_exists('__messages', $t2)) {
@@ -242,7 +242,7 @@ class TreeBuilder
                         }
 
                         foreach ($t2 as $k3 => $t3) {
-                            if (is_array($t3) && !str_starts_with($k3, '__')) {
+                            if (is_array($t3) && '__' !== substr($k3, 0, 2)) {
                                 $this->addTreeInfo($router, $cleanTree[$index1]['children'][$index2]['children'], $index3, $k3, $k1 . $k2 . $k3, $this->theme, $search, $module);
 
                                 if (array_key_exists('__messages', $t3)) {
@@ -294,9 +294,9 @@ class TreeBuilder
      * @param int $index
      * @param string $name
      * @param string $fullName
-     * @param string|bool $theme
-     * @param string|null $search
-     * @param string|bool $module
+     * @param bool $theme
+     * @param null $search
+     * @param bool $module
      *
      * @return mixed
      */

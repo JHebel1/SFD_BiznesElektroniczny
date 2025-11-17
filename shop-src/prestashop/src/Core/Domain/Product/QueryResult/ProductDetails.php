@@ -46,7 +46,7 @@ class ProductDetails
     /**
      * @var string
      */
-    private $gtin;
+    private $ean13;
 
     /**
      * @var string
@@ -61,20 +61,20 @@ class ProductDetails
     /**
      * @param string $isbn
      * @param string $upc
-     * @param string $gtin
+     * @param string $ean13
      * @param string $mpn
      * @param string $reference
      */
     public function __construct(
         string $isbn,
         string $upc,
-        string $gtin,
+        string $ean13,
         string $mpn,
         string $reference
     ) {
         $this->isbn = $isbn;
         $this->upc = $upc;
-        $this->gtin = $gtin;
+        $this->ean13 = $ean13;
         $this->mpn = $mpn;
         $this->reference = $reference;
     }
@@ -100,12 +100,7 @@ class ProductDetails
      */
     public function getEan13(): string
     {
-        return $this->getGtin();
-    }
-
-    public function getGtin(): string
-    {
-        return $this->gtin;
+        return $this->ean13;
     }
 
     /**

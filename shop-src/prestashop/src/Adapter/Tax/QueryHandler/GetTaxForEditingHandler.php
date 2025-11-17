@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Tax\QueryHandler;
 
 use PrestaShop\PrestaShop\Adapter\Tax\AbstractTaxHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Tax\Query\GetTaxForEditing;
 use PrestaShop\PrestaShop\Core\Domain\Tax\QueryHandler\GetTaxForEditingHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Tax\QueryResult\EditableTax;
@@ -35,7 +34,6 @@ use PrestaShop\PrestaShop\Core\Domain\Tax\QueryResult\EditableTax;
 /**
  * Handles query which gets tax for editing
  */
-#[AsQueryHandler]
 final class GetTaxForEditingHandler extends AbstractTaxHandler implements GetTaxForEditingHandlerInterface
 {
     /**

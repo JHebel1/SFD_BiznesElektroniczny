@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Core\Form\ChoiceProvider;
 
 use PrestaShop\PrestaShop\Adapter\Group\GroupDataProvider;
-use PrestaShop\PrestaShop\Core\Form\FormChoiceFormatter;
 use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 
 /**
@@ -62,11 +61,13 @@ final class GroupByIdChoiceProvider implements FormChoiceProviderInterface
      */
     public function getChoices()
     {
-        return FormChoiceFormatter::formatFormChoices(
-            $this->groupDataProvider->getGroups($this->langId),
-            'id_group',
-            'name',
-            false
-        );
+        $choices = [];
+        $groups = $this->groupDataProvider->getGroups($this->langId);
+
+        foreach ($groups as $group) {
+            $choices[$group['name']] = $group['id_group'];
+        }
+
+        return $choices;
     }
 }

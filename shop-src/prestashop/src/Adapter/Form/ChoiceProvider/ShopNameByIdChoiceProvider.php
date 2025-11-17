@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Form\ChoiceProvider;
 
-use PrestaShop\PrestaShop\Core\Form\FormChoiceFormatter;
 use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 use Shop;
 
@@ -40,10 +39,12 @@ final class ShopNameByIdChoiceProvider implements FormChoiceProviderInterface
      */
     public function getChoices()
     {
-        return FormChoiceFormatter::formatFormChoices(
-            Shop::getShops(),
-            'id_shop',
-            'name'
-        );
+        $shopsById = [];
+
+        foreach (Shop::getShops() as $shop) {
+            $shopsById[$shop['name']] = $shop['id_shop'];
+        }
+
+        return $shopsById;
     }
 }

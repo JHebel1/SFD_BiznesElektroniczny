@@ -31,10 +31,9 @@ use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchContext;
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchProviderInterface;
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchQuery;
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchResult;
-use PrestaShop\PrestaShop\Core\Product\Search\SortOrder;
-use PrestaShop\PrestaShop\Core\Product\Search\SortOrdersCollection;
+use PrestaShop\PrestaShop\Core\Product\Search\SortOrderFactory;
 use Search;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 use Tools;
 
 /**
@@ -50,15 +49,15 @@ class SearchProductSearchProvider implements ProductSearchProviderInterface
     private $translator;
 
     /**
-     * @var SortOrdersCollection
+     * @var SortOrderFactory
      */
-    private $sortOrdersCollection;
+    private $sortOrderFactory;
 
     public function __construct(
         TranslatorInterface $translator
     ) {
         $this->translator = $translator;
-        $this->sortOrdersCollection = new SortOrdersCollection($this->translator);
+        $this->sortOrderFactory = new SortOrderFactory($this->translator);
     }
 
     /**
@@ -71,7 +70,7 @@ class SearchProductSearchProvider implements ProductSearchProviderInterface
         $products = [];
         $count = 0;
 
-        if ($string = $query->getSearchString()) {
+        if (($string = $query->getSearchString())) {
             $queryString = Tools::replaceAccentedChars(urldecode($string));
 
             $result = Search::find(
@@ -95,7 +94,7 @@ class SearchProductSearchProvider implements ProductSearchProviderInterface
                 // deprecated since 1.7.x
                 'expr' => $queryString,
             ]);
-        } elseif ($tag = $query->getSearchTag()) {
+        } elseif (($tag = $query->getSearchTag())) {
             $queryString = urldecode($tag);
 
             $products = Search::searchTag(
@@ -138,15 +137,8 @@ class SearchProductSearchProvider implements ProductSearchProviderInterface
                 ->setProducts($products)
                 ->setTotalProductsCount($count);
 
-            // We use default set of sort orders + option to sort by position (relevance), which makes sense only here and on category page
             $result->setAvailableSortOrders(
-                array_merge(
-                    [
-                        (new SortOrder('product', 'position', 'desc'))->setLabel(
-                            $this->translator->trans('Relevance', [], 'Shop.Theme.Catalog')
-                        ),
-                    ],
-                    $this->sortOrdersCollection->getDefaults())
+                $this->sortOrderFactory->getDefaultSortOrders()
             );
         }
 

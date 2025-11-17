@@ -78,7 +78,7 @@ abstract class AbstractTypedCollection extends ArrayCollection
      *
      * @throws TypeException
      */
-    public function offsetSet($offset, $value): void
+    public function offsetSet($offset, $value)
     {
         $this->checkElementType($value);
 
@@ -161,7 +161,7 @@ abstract class AbstractTypedCollection extends ArrayCollection
     {
         $expectedType = $this->getType();
         if (!($element instanceof $expectedType)) {
-            throw new TypeException(sprintf('Invalid element type %s, expected %s', get_debug_type($element), $expectedType));
+            throw new TypeException(sprintf('Invalid element type %s, expected %s', is_object($element) ? get_class($element) : gettype($element), $expectedType));
         }
     }
 }

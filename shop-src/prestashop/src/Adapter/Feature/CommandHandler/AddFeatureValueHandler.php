@@ -31,7 +31,6 @@ namespace PrestaShop\PrestaShop\Adapter\Feature\CommandHandler;
 use FeatureValue;
 use PrestaShop\PrestaShop\Adapter\Feature\Repository\FeatureRepository;
 use PrestaShop\PrestaShop\Adapter\Feature\Repository\FeatureValueRepository;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Feature\Command\AddFeatureValueCommand;
 use PrestaShop\PrestaShop\Core\Domain\Feature\CommandHandler\AddFeatureValueHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Feature\ValueObject\FeatureValueId;
@@ -39,7 +38,6 @@ use PrestaShop\PrestaShop\Core\Domain\Feature\ValueObject\FeatureValueId;
 /**
  * Handles adding of feature value using legacy model.
  */
-#[AsCommandHandler]
 class AddFeatureValueHandler implements AddFeatureValueHandlerInterface
 {
     /**

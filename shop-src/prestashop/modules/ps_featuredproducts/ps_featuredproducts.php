@@ -44,7 +44,7 @@ class Ps_FeaturedProducts extends Module implements WidgetInterface
     {
         $this->name = 'ps_featuredproducts';
         $this->author = 'PrestaShop';
-        $this->version = '2.1.6';
+        $this->version = '2.1.5';
         $this->need_instance = 0;
 
         $this->ps_versions_compliancy = [
@@ -324,19 +324,12 @@ class Ps_FeaturedProducts extends Module implements WidgetInterface
             );
         }
 
-        // Now, we can present the products for the template.
         $products_for_template = [];
-        $rawProducts = $result->getProducts();
 
-        // Assemble & present in bulk or separately, depending on core version
-        $assembleInBulk = method_exists($assembler, 'assembleProducts');
-        if ($assembleInBulk) {
-            $rawProducts = $assembler->assembleProducts($rawProducts);
-        }
-        foreach ($rawProducts as $rawProduct) {
+        foreach ($result->getProducts() as $rawProduct) {
             $products_for_template[] = $presenter->present(
                 $presentationSettings,
-                ($assembleInBulk ? $rawProduct : $assembler->assembleProduct($rawProduct)),
+                $assembler->assembleProduct($rawProduct),
                 $this->context->language
             );
         }

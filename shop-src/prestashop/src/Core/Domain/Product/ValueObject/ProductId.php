@@ -43,16 +43,17 @@ class ProductId
      *
      * @throws ProductConstraintException
      */
-    public function __construct(int $productId)
+    public function __construct($productId)
     {
         $this->assertIntegerIsGreaterThanZero($productId);
+
         $this->productId = $productId;
     }
 
     /**
      * @return int
      */
-    public function getValue(): int
+    public function getValue()
     {
         return $this->productId;
     }
@@ -60,15 +61,13 @@ class ProductId
     /**
      * @param int $productId
      */
-    private function assertIntegerIsGreaterThanZero(int $productId): void
+    private function assertIntegerIsGreaterThanZero($productId)
     {
-        if ($productId > 0) {
-            return;
+        if (!is_int($productId) || 0 > $productId) {
+            throw new ProductConstraintException(
+                sprintf('Product id %s is invalid. Product id must be number that is greater than zero.', var_export($productId, true)),
+                ProductConstraintException::INVALID_ID
+            );
         }
-
-        throw new ProductConstraintException(
-            sprintf('Product id %s is invalid. Product id must be an integer greater than zero.', $productId),
-            ProductConstraintException::INVALID_ID
-        );
     }
 }

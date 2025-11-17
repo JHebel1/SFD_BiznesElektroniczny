@@ -35,8 +35,8 @@ use PrestaShop\PrestaShop\Core\Grid\Action\Row\Type\Customer\EditCustomerDiscoun
 use PrestaShop\PrestaShop\Core\Grid\Action\ViewOptionsCollection;
 use PrestaShop\PrestaShop\Core\Grid\Column\ColumnCollection;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ActionColumn;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\StatusColumn;
+use PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn;
 
 /**
  * Class CustomerDiscountGridDefinitionFactory defines customer's discounts grid structure.
@@ -72,7 +72,6 @@ final class CustomerDiscountGridDefinitionFactory extends AbstractGridDefinition
                     ->setName($this->trans('ID', [], 'Admin.Global'))
                     ->setOptions([
                         'field' => 'id_cart_rule',
-                        'sortable' => false,
                     ])
             )
             ->add(
@@ -80,7 +79,6 @@ final class CustomerDiscountGridDefinitionFactory extends AbstractGridDefinition
                     ->setName($this->trans('Code', [], 'Admin.Global'))
                     ->setOptions([
                         'field' => 'code',
-                        'sortable' => false,
                     ])
             )
             ->add(
@@ -88,7 +86,6 @@ final class CustomerDiscountGridDefinitionFactory extends AbstractGridDefinition
                     ->setName($this->trans('Name', [], 'Admin.Global'))
                     ->setOptions([
                         'field' => 'name',
-                        'sortable' => false,
                     ])
             )
             ->add(
@@ -96,7 +93,6 @@ final class CustomerDiscountGridDefinitionFactory extends AbstractGridDefinition
                     ->setName($this->trans('Status', [], 'Admin.Global'))
                     ->setOptions([
                         'field' => 'active',
-                        'sortable' => false,
                     ])
             )
             ->add(
@@ -104,38 +100,37 @@ final class CustomerDiscountGridDefinitionFactory extends AbstractGridDefinition
                     ->setName($this->trans('Qty available', [], 'Admin.Orderscustomers.Feature'))
                     ->setOptions([
                         'field' => 'quantity',
-                        'sortable' => false,
                     ])
             )
             ->add((new ActionColumn('actions'))
-                ->setName($this->trans('Actions', [], 'Admin.Global'))
-                ->setOptions([
-                    'actions' => (new RowActionCollection())
-                        ->add(
-                            (new EditCustomerDiscountRowAction('edit'))
-                                ->setName($this->trans('Edit', [], 'Admin.Actions'))
-                                ->setIcon('edit')
-                                ->setOptions([
-                                    'id_cart_rule' => 'id_cart_rule',
-                                ])
-                        )
-                        ->add(
-                            (new DeleteCustomerDiscountRowAction('delete'))
-                                ->setName($this->trans('Delete', [], 'Admin.Actions'))
-                                ->setIcon('delete')
-                                ->setOptions([
-                                    'id_cart_rule' => 'id_cart_rule',
-                                    'confirm_message' => $this->trans('Are you sure you want to delete the selected item(s)?', [], 'Admin.Global'),
-                                    'method' => 'POST',
-                                    'modal_options' => new ModalOptions([
-                                        'title' => $this->trans('Delete selection', [], 'Admin.Actions'),
-                                        'confirm_button_label' => $this->trans('Delete', [], 'Admin.Actions'),
-                                        'close_button_label' => $this->trans('Cancel', [], 'Admin.Actions'),
-                                        'confirm_button_class' => 'btn-danger',
-                                    ]),
-                                ])
-                        ),
-                ])
+            ->setName($this->trans('Actions', [], 'Admin.Global'))
+            ->setOptions([
+                'actions' => (new RowActionCollection())
+                    ->add(
+                        (new EditCustomerDiscountRowAction('edit'))
+                            ->setName($this->trans('Edit', [], 'Admin.Actions'))
+                            ->setIcon('edit')
+                            ->setOptions([
+                                'id_cart_rule' => 'id_cart_rule',
+                            ])
+                    )
+                    ->add(
+                        (new DeleteCustomerDiscountRowAction('delete'))
+                            ->setName($this->trans('Delete', [], 'Admin.Actions'))
+                            ->setIcon('delete')
+                            ->setOptions([
+                                'id_cart_rule' => 'id_cart_rule',
+                                'confirm_message' => $this->trans('Are you sure you want to delete the selected item(s)?', [], 'Admin.Global'),
+                                'method' => 'POST',
+                                'modal_options' => new ModalOptions([
+                                    'title' => $this->trans('Delete selection', [], 'Admin.Actions'),
+                                    'confirm_button_label' => $this->trans('Delete', [], 'Admin.Actions'),
+                                    'close_button_label' => $this->trans('Cancel', [], 'Admin.Actions'),
+                                    'confirm_button_class' => 'btn-danger',
+                                ]),
+                            ])
+                    ),
+            ])
             );
     }
 

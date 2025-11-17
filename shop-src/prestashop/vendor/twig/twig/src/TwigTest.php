@@ -11,57 +11,77 @@
 
 namespace Twig;
 
-use Twig\Node\Expression\TestExpression;
-
 /**
  * Represents a template test.
  *
- * @author Fabien Potencier <fabien@symfony.com>
+ * @final
  *
- * @see https://twig.symfony.com/doc/templates.html#test-operator
+ * @author Fabien Potencier <fabien@symfony.com>
  */
-final class TwigTest extends AbstractTwigCallable
+class TwigTest
 {
-    /**
-     * @param callable|array{class-string, string}|null $callable A callable implementing the test. If null, you need to overwrite the "node_class" option to customize compilation.
-     */
-    public function __construct(string $name, $callable = null, array $options = [])
-    {
-        parent::__construct($name, $callable, $options);
+    protected $name;
+    protected $callable;
+    protected $options;
 
+    private $arguments = [];
+
+    public function __construct($name, $callable, array $options = [])
+    {
+        $this->name = $name;
+        $this->callable = $callable;
         $this->options = array_merge([
-            'node_class' => TestExpression::class,
-            'one_mandatory_argument' => false,
-        ], $this->options);
+            'is_variadic' => false,
+            'node_class' => '\Twig\Node\Expression\TestExpression',
+            'deprecated' => false,
+            'alternative' => null,
+        ], $options);
     }
 
-    public function getType(): string
+    public function getName()
     {
-        return 'test';
+        return $this->name;
     }
 
-    public function needsCharset(): bool
+    public function getCallable()
     {
-        return false;
+        return $this->callable;
     }
 
-    public function needsEnvironment(): bool
+    public function getNodeClass()
     {
-        return false;
+        return $this->options['node_class'];
     }
 
-    public function needsContext(): bool
+    public function isVariadic()
     {
-        return false;
+        return $this->options['is_variadic'];
     }
 
-    public function hasOneMandatoryArgument(): bool
+    public function isDeprecated()
     {
-        return (bool) $this->options['one_mandatory_argument'];
+        return (bool) $this->options['deprecated'];
     }
 
-    public function getMinimalNumberOfRequiredArguments(): int
+    public function getDeprecatedVersion()
     {
-        return parent::getMinimalNumberOfRequiredArguments() + 1;
+        return $this->options['deprecated'];
+    }
+
+    public function getAlternative()
+    {
+        return $this->options['alternative'];
+    }
+
+    public function setArguments($arguments)
+    {
+        $this->arguments = $arguments;
+    }
+
+    public function getArguments()
+    {
+        return $this->arguments;
     }
 }
+
+class_alias('Twig\TwigTest', 'Twig_SimpleTest');

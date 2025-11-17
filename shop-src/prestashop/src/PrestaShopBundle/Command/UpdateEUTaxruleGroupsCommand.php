@@ -28,7 +28,7 @@ namespace PrestaShopBundle\Command;
 
 use DOMDocument;
 use SimpleXMLElement;
-use Symfony\Component\Console\Command\Command;
+use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -61,23 +61,12 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * Clean things up by removing all the previous taxes that had the attributes eu-tax-group="virtual" and auto-generated="1"
  */
-class UpdateEUTaxruleGroupsCommand extends Command
+class UpdateEUTaxruleGroupsCommand extends ContainerAwareCommand
 {
     /**
      * @var OutputInterface
      */
     private $output;
-
-    /**
-     * @var string
-     */
-    private $localizationPath;
-
-    public function __construct(string $localizationPath)
-    {
-        parent::__construct();
-        $this->localizationPath = $localizationPath;
-    }
 
     protected function configure()
     {
@@ -86,12 +75,14 @@ class UpdateEUTaxruleGroupsCommand extends Command
             ->setDescription('Update EU Tax rule groups');
     }
 
-    public function execute(InputInterface $input, OutputInterface $output): int
+    public function execute(InputInterface $input, OutputInterface $output)
     {
         /* Tweak */
         $this->output = $output;
 
-        if (!file_exists($this->localizationPath)) {
+        $localizationPacksRoot = $this->getContainer()->getParameter('kernel.root_dir') . '/../localization';
+
+        if (!$localizationPacksRoot) {
             $output->writeln(
                 "<error>Could not find the folder containing the localization files (should be 'localization' at the root of the PrestaShop folder)</error>"
             );
@@ -101,12 +92,12 @@ class UpdateEUTaxruleGroupsCommand extends Command
 
         $euLocalizationFiles = [];
 
-        foreach (scandir($this->localizationPath, SCANDIR_SORT_ASCENDING) as $entry) {
+        foreach (scandir($localizationPacksRoot, SCANDIR_SORT_ASCENDING) as $entry) {
             if (!preg_match('/\.xml$/', $entry)) {
                 continue;
             }
 
-            $localizationPackFile = $this->localizationPath . DIRECTORY_SEPARATOR . $entry;
+            $localizationPackFile = $localizationPacksRoot . DIRECTORY_SEPARATOR . $entry;
 
             $localizationPack = @simplexml_load_file($localizationPackFile);
 
@@ -176,10 +167,6 @@ class UpdateEUTaxruleGroupsCommand extends Command
                     'from-eu-tax-group' => 'virtual',
                 ], ['eu-tax-group']);
 
-                if (null === $tax) {
-                    return 1;
-                }
-
                 $this->addTaxRule($taxRulesGroup, $tax, $foreignFile['iso_code_country']);
 
                 ++$taxId;
@@ -203,18 +190,16 @@ class UpdateEUTaxruleGroupsCommand extends Command
         return 0;
     }
 
-    protected function addTax(SimpleXMLElement $taxes, SimpleXMLElement $tax, array $attributesToUpdate = [], array $attributesToRemove = []): ?SimpleXMLElement
+    protected function addTax(SimpleXMLElement $taxes, SimpleXMLElement $tax, array $attributesToUpdate = [], array $attributesToRemove = [])
     {
+        $newTax = new SimpleXMLElement('<tax/>');
+
         $taxRulesGroups = $taxes->xpath('//taxRulesGroup[1]');
         $insertBefore = $taxRulesGroups[0] ?? false;
 
         if (!$insertBefore) {
-            $this->output->writeln("<error>Could not find any `taxRulesGroup`, don't know where to append the tax.</error>");
-
-            return null;
+            return $this->output->writeln("<error>Could not find any `taxRulesGroup`, don't know where to append the tax.");
         }
-
-        $newTax = new SimpleXMLElement('<tax/>');
 
         /**
          * Add the `tax` node before the first `taxRulesGroup`.

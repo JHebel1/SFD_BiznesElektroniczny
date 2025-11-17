@@ -29,7 +29,6 @@ namespace PrestaShopBundle\DataCollector;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
-use Throwable;
 
 /**
  * Collect all information about Legacy hooks and make it available
@@ -50,18 +49,26 @@ final class HookDataCollector extends DataCollector
     /**
      * {@inheritdoc}
      */
-    public function collect(Request $request, Response $response, ?Throwable $exception = null)
+    public function collect(Request $request, Response $response, \Exception $exception = null)
     {
         $hooks = $this->registry->getHooks();
         $calledHooks = $this->registry->getCalledHooks();
         $notCalledHooks = $this->registry->getNotCalledHooks();
-        $notRegisteredHooks = $this->registry->getNotRegisteredHooks();
         $this->data = [
             'hooks' => $this->stringifyHookArguments($hooks),
             'calledHooks' => $this->stringifyHookArguments($calledHooks),
             'notCalledHooks' => $this->stringifyHookArguments($notCalledHooks),
-            'notRegisteredHooks' => $this->stringifyHookArguments($notRegisteredHooks),
         ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function unserialize($data)
+    {
+        // it seems that php 7.3 has a bug with unserialize: https://bugs.php.net/bug.php?id=77302
+        /* @phpstan-ignore-next-line */
+        $this->data = is_array($data) ? $data : @unserialize($data);
     }
 
     /**
@@ -92,16 +99,6 @@ final class HookDataCollector extends DataCollector
     public function getNotCalledHooks()
     {
         return $this->data['notCalledHooks'];
-    }
-
-    /**
-     * Return the list of every uncalled legacy hooks during oHookne request.
-     *
-     * @return array
-     */
-    public function getNotRegisteredHooks()
-    {
-        return $this->data['notRegisteredHooks'];
     }
 
     /**

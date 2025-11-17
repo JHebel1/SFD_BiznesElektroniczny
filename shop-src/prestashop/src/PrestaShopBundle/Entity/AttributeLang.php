@@ -32,66 +32,109 @@ use Doctrine\ORM\Mapping as ORM;
  * AttributeLang.
  *
  * @ORM\Table()
- *
  * @ORM\Entity(repositoryClass="PrestaShopBundle\Entity\Repository\AttributeLangRepository")
  */
 class AttributeLang
 {
     /**
      * @ORM\Id
-     *
      * @ORM\ManyToOne(targetEntity="PrestaShopBundle\Entity\Attribute", inversedBy="attributeLangs")
-     *
      * @ORM\JoinColumn(name="id_attribute", referencedColumnName="id_attribute", nullable=false)
      */
-    private Attribute $attribute;
+    private $attribute;
 
     /**
      * @ORM\Id
-     *
      * @ORM\ManyToOne(targetEntity="PrestaShopBundle\Entity\Lang")
-     *
      * @ORM\JoinColumn(name="id_lang", referencedColumnName="id_lang", nullable=false, onDelete="CASCADE")
      */
-    private Lang $lang;
+    private $lang;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="name", type="string", length=128)
      */
-    private string $name;
+    private $name;
 
-    public function setName(string $name): static
+    /**
+     * Get id.
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->attribute;
+    }
+
+    /**
+     * Set name.
+     *
+     * @param string $name
+     *
+     * @return AttributeLang
+     */
+    public function setName($name)
     {
         $this->name = $name;
 
         return $this;
     }
 
-    public function getName(): string
+    /**
+     * Get name.
+     *
+     * @return string
+     */
+    public function getName()
     {
         return $this->name;
     }
 
-    public function setAttribute(Attribute $attribute): static
+    /**
+     * Set attribute.
+     *
+     * @param \PrestaShopBundle\Entity\Attribute $attribute
+     *
+     * @return AttributeLang
+     */
+    public function setAttribute(Attribute $attribute)
     {
         $this->attribute = $attribute;
 
         return $this;
     }
 
-    public function getAttribute(): Attribute
+    /**
+     * Get attribute.
+     *
+     * @return \PrestaShopBundle\Entity\Attribute
+     */
+    public function getAttribute()
     {
         return $this->attribute;
     }
 
-    public function setLang(Lang $lang): static
+    /**
+     * Set lang.
+     *
+     * @param \PrestaShopBundle\Entity\Lang $lang
+     *
+     * @return AttributeLang
+     */
+    public function setLang(Lang $lang)
     {
         $this->lang = $lang;
 
         return $this;
     }
 
-    public function getLang(): Lang
+    /**
+     * Get lang.
+     *
+     * @return \PrestaShopBundle\Entity\Lang
+     */
+    public function getLang()
     {
         return $this->lang;
     }

@@ -15,9 +15,7 @@ namespace Twig\TokenParser;
 use Twig\Error\SyntaxError;
 use Twig\Node\BlockNode;
 use Twig\Node\BlockReferenceNode;
-use Twig\Node\EmptyNode;
 use Twig\Node\Node;
-use Twig\Node\Nodes;
 use Twig\Node\PrintNode;
 use Twig\Token;
 
@@ -29,16 +27,19 @@ use Twig\Token;
  *    <title>{% block title %}{% endblock %} - My Webpage</title>
  *  {% endblock %}
  *
- * @internal
+ * @final
  */
-final class BlockTokenParser extends AbstractTokenParser
+class BlockTokenParser extends AbstractTokenParser
 {
-    public function parse(Token $token): Node
+    public function parse(Token $token)
     {
         $lineno = $token->getLine();
         $stream = $this->parser->getStream();
         $name = $stream->expect(Token::NAME_TYPE)->getValue();
-        $this->parser->setBlock($name, $block = new BlockNode($name, new EmptyNode(), $lineno));
+        if ($this->parser->hasBlock($name)) {
+            throw new SyntaxError(sprintf("The block '%s' has already been defined line %d.", $name, $this->parser->getBlock($name)->getTemplateLine()), $stream->getCurrent()->getLine(), $stream->getSourceContext());
+        }
+        $this->parser->setBlock($name, $block = new BlockNode($name, new Node([]), $lineno));
         $this->parser->pushLocalScope();
         $this->parser->pushBlockStack($name);
 
@@ -48,11 +49,11 @@ final class BlockTokenParser extends AbstractTokenParser
                 $value = $token->getValue();
 
                 if ($value != $name) {
-                    throw new SyntaxError(\sprintf('Expected endblock for block "%s" (but "%s" given).', $name, $value), $stream->getCurrent()->getLine(), $stream->getSourceContext());
+                    throw new SyntaxError(sprintf('Expected endblock for block "%s" (but "%s" given).', $name, $value), $stream->getCurrent()->getLine(), $stream->getSourceContext());
                 }
             }
         } else {
-            $body = new Nodes([
+            $body = new Node([
                 new PrintNode($this->parser->getExpressionParser()->parseExpression(), $lineno),
             ]);
         }
@@ -62,16 +63,18 @@ final class BlockTokenParser extends AbstractTokenParser
         $this->parser->popBlockStack();
         $this->parser->popLocalScope();
 
-        return new BlockReferenceNode($name, $lineno);
+        return new BlockReferenceNode($name, $lineno, $this->getTag());
     }
 
-    public function decideBlockEnd(Token $token): bool
+    public function decideBlockEnd(Token $token)
     {
         return $token->test('endblock');
     }
 
-    public function getTag(): string
+    public function getTag()
     {
         return 'block';
     }
 }
+
+class_alias('Twig\TokenParser\BlockTokenParser', 'Twig_TokenParser_Block');

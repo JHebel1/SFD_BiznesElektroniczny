@@ -28,7 +28,6 @@ declare(strict_types=1);
 namespace PrestaShop\PrestaShop\Adapter\Address\CommandHandler;
 
 use Order;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Address\Command\EditCustomerAddressCommand;
 use PrestaShop\PrestaShop\Core\Domain\Address\Command\EditOrderAddressCommand;
 use PrestaShop\PrestaShop\Core\Domain\Address\CommandHandler\EditCustomerAddressHandlerInterface;
@@ -49,7 +48,6 @@ use PrestaShopException;
  * EditOrderAddressCommandHandler manages an address update, it then updates order and cart
  * relation to the newly created address.
  */
-#[AsCommandHandler]
 class EditOrderAddressHandler implements EditOrderAddressHandlerInterface
 {
     /**
@@ -109,7 +107,7 @@ class EditOrderAddressHandler implements EditOrderAddressHandlerInterface
                     ));
                     break;
             }
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new CannotUpdateOrderAddressException(sprintf('An error occurred when updating address for order "%s"', $command->getOrderId()->getValue()));
         }
 

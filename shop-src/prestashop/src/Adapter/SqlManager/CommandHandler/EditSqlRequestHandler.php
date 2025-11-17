@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\SqlManager\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Command\EditSqlRequestCommand;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\CommandHandler\EditSqlRequestHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Exception\CannotEditSqlRequestException;
@@ -40,7 +39,6 @@ use RequestSql;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class EditSqlRequestHandler extends AbstractSqlRequestHandler implements EditSqlRequestHandlerInterface
 {
     /**
@@ -74,7 +72,7 @@ final class EditSqlRequestHandler extends AbstractSqlRequestHandler implements E
             if (false === $entity->update()) {
                 throw new CannotEditSqlRequestException(sprintf('Error occurred when updating SqlRequest with id "%s"', $command->getSqlRequestId()->getValue()));
             }
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new SqlRequestException(sprintf('Error occurred when updating SqlRequest with id "%s"', $command->getSqlRequestId()->getValue()));
         }
     }

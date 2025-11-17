@@ -71,14 +71,14 @@ class SearchProvider implements FacetsRendererInterface, ProductSearchProviderIn
         Filters\Converter $converter,
         URLSerializer $serializer,
         Filters\DataAccessor $dataAccessor,
-        SearchFactory $searchFactory,
+        SearchFactory $searchFactory = null,
         Filters\Provider $provider
     ) {
         $this->module = $module;
         $this->filtersConverter = $converter;
         $this->urlSerializer = $serializer;
         $this->dataAccessor = $dataAccessor;
-        $this->searchFactory = $searchFactory;
+        $this->searchFactory = $searchFactory === null ? new SearchFactory() : $searchFactory;
         $this->provider = $provider;
     }
 
@@ -90,9 +90,7 @@ class SearchProvider implements FacetsRendererInterface, ProductSearchProviderIn
     private function getAvailableSortOrders($query)
     {
         $sortSalesDesc = new SortOrder('product', 'sales', 'desc');
-        // If the query is a search, we want to sort by position in descending order = relevance
-        // If the query is a category, manufacturer or supplier, we want to sort by position in ascending order
-        $sortPosAsc = new SortOrder('product', 'position', ($query->getQueryType() == 'search' ? 'desc' : 'asc'));
+        $sortPosAsc = new SortOrder('product', 'position', 'asc');
         $sortNameAsc = new SortOrder('product', 'name', 'asc');
         $sortNameDesc = new SortOrder('product', 'name', 'desc');
         $sortPriceAsc = new SortOrder('product', 'price', 'asc');

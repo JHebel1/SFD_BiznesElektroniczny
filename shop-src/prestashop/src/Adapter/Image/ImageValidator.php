@@ -43,14 +43,14 @@ class ImageValidator
     /**
      * @var int
      */
-    protected $maxUploadSize;
+    private $maxUploadSize;
 
     /**
-     * @param int $maxUploadSizeInBytes
+     * @param int $maxUploadSize
      */
-    public function __construct(int $maxUploadSizeInBytes)
+    public function __construct(int $maxUploadSize)
     {
-        $this->maxUploadSize = $maxUploadSizeInBytes;
+        $this->maxUploadSize = $maxUploadSize;
     }
 
     /**
@@ -79,7 +79,7 @@ class ImageValidator
      * @throws ImageUploadException
      * @throws UploadedImageConstraintException
      */
-    public function assertIsValidImageType(string $filePath, ?array $allowedMimeTypes = null): void
+    public function assertIsValidImageType(string $filePath, array $allowedMimeTypes = null): void
     {
         if (!$allowedMimeTypes) {
             $allowedMimeTypes = ImageManagerCore::MIME_TYPE_SUPPORTED;

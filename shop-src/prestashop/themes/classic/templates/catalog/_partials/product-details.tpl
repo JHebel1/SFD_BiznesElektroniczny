@@ -4,26 +4,16 @@
      role="tabpanel"
   >
   {block name='product_reference'}
-    {if !empty($product_manufacturer.id)}
+    {if isset($product_manufacturer->id)}
       <div class="product-manufacturer">
-        {assign var="product_manufacturer_image_key" value="`$product_manufacturer.id`-"}
-        {if !empty($product_manufacturer.image.small.url) && strpos($product_manufacturer.image.small.url, $product_manufacturer_image_key)}
-          <a href="{$product_manufacturer.url}">
-            <picture>
-              {if !empty($product_manufacturer.image.small.sources.avif)}<source srcset="{$product_manufacturer.image.small.sources.avif}" type="image/avif">{/if}
-              {if !empty($product_manufacturer.image.small.sources.webp)}<source srcset="{$product_manufacturer.image.small.sources.webp}" type="image/webp">{/if}
-              <img
-                src="{$product_manufacturer.image.small.url}"
-                alt="{if !empty($product_manufacturer.image.legend)}{$product_manufacturer.image.legend}{else}{$product_manufacturer.name}{/if}"
-                class="img img-fluid manufacturer-logo"
-                loading="lazy"
-              >
-            </picture>
+        {if isset($manufacturer_image_url)}
+          <a href="{$product_brand_url}">
+            <img src="{$manufacturer_image_url}" class="img img-fluid manufacturer-logo" alt="{$product_manufacturer->name}" loading="lazy">
           </a>
         {else}
           <label class="label">{l s='Brand' d='Shop.Theme.Catalog'}</label>
           <span>
-            <a href="{$product_manufacturer.url}">{$product_manufacturer.name}</a>
+            <a href="{$product_brand_url}">{$product_manufacturer->name}</a>
           </span>
         {/if}
       </div>

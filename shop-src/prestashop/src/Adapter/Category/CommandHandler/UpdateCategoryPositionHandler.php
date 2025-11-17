@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Category\CommandHandler;
 
 use Category;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Category\Command\UpdateCategoryPositionCommand;
 use PrestaShop\PrestaShop\Core\Domain\Category\CommandHandler\UpdateCategoryPositionHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Category\Exception\CategoryException;
@@ -36,7 +35,6 @@ use PrestaShop\PrestaShop\Core\Domain\Category\Exception\CategoryNotFoundExcepti
 /**
  * Updates category position using legacy object model
  */
-#[AsCommandHandler]
 final class UpdateCategoryPositionHandler implements UpdateCategoryPositionHandlerInterface
 {
     /**
@@ -50,7 +48,7 @@ final class UpdateCategoryPositionHandler implements UpdateCategoryPositionHandl
         $position = null;
 
         foreach ($command->getPositions() as $key => $value) {
-            [, $positionParentCategoryId, $positionCategoryId] = explode('_', $value);
+            list(, $positionParentCategoryId, $positionCategoryId) = explode('_', $value);
 
             if ((int) $positionParentCategoryId === $parentCategoryId && (int) $positionCategoryId === $categoryId) {
                 $position = $key;
@@ -69,8 +67,8 @@ final class UpdateCategoryPositionHandler implements UpdateCategoryPositionHandl
             throw new CategoryNotFoundException($command->getCategoryId(), sprintf('Category with id "%s" was not found', $categoryId));
         }
 
-        if ($category->updatePosition((bool) $command->getWay(), $position)) {
-            /* Position '0' was not found in given positions so try to reorder parent category */
+        if ($category->updatePosition($command->getWay(), $position)) {
+            /* Position '0' was not found in given positions so try to reorder parent category*/
             if (!$command->isFoundFirst()) {
                 Category::cleanPositions((int) $category->id_parent);
             }

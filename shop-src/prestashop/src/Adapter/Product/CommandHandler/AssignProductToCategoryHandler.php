@@ -27,8 +27,7 @@
 namespace PrestaShop\PrestaShop\Adapter\Product\CommandHandler;
 
 use PrestaShop\PrestaShop\Adapter\Domain\AbstractObjectModelHandler;
-use PrestaShop\PrestaShop\Adapter\Product\Repository\ProductRepository;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
+use PrestaShop\PrestaShop\Adapter\Product\ProductDataProvider;
 use PrestaShop\PrestaShop\Core\Domain\Product\Command\AssignProductToCategoryCommand;
 use PrestaShop\PrestaShop\Core\Domain\Product\CommandHandler\AssignProductToCategoryHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Product\Exception\CannotAssignProductToCategoryException;
@@ -38,19 +37,8 @@ use PrestaShop\PrestaShop\Core\Domain\Product\Exception\CannotAssignProductToCat
  *
  * @internal
  */
-#[AsCommandHandler]
 final class AssignProductToCategoryHandler extends AbstractObjectModelHandler implements AssignProductToCategoryHandlerInterface
 {
-    /**
-     * @var ProductRepository
-     */
-    private $productRepository;
-
-    public function __construct(ProductRepository $productRepository)
-    {
-        $this->productRepository = $productRepository;
-    }
-
     /**
      * @param AssignProductToCategoryCommand $command
      */
@@ -66,7 +54,8 @@ final class AssignProductToCategoryHandler extends AbstractObjectModelHandler im
      */
     private function assignProductToCategory(AssignProductToCategoryCommand $command)
     {
-        $product = $this->productRepository->getProductByDefaultShop($command->getProductId());
+        $productDataProvider = new ProductDataProvider();
+        $product = $productDataProvider->getProductInstance($command->getProductId()->getValue());
         $product->addToCategories($command->getCategoryId()->getValue());
         if (false === $product->save()) {
             throw new CannotAssignProductToCategoryException(sprintf('Failed to add category to product %d', $command->getProductId()->getValue()));

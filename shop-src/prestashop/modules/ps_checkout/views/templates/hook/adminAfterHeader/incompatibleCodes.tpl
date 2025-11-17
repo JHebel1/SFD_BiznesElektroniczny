@@ -16,7 +16,6 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  *}
-
 {if $incompatibleCodes}
     <div class="container">
         <div class="banner-alert">
@@ -55,6 +54,7 @@
 
                 <a class="btn btn-link banner-link" href="{$paypalLink}" target="_blank">
                     {l s='Know more about compliant ISO Codes' mod='ps_checkout'}
+
                     <i class="material-icons banner-link-icon">trending_flat</i>
                 </a>
             </div>

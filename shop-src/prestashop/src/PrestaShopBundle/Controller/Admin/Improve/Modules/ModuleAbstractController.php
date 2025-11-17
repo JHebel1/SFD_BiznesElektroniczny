@@ -26,54 +26,43 @@
 
 namespace PrestaShopBundle\Controller\Admin\Improve\Modules;
 
-use PrestaShop\PrestaShop\Adapter\Presenter\Module\ModulePresenter;
-use PrestaShop\PrestaShop\Core\Module\ModuleCollection;
-use PrestaShop\PrestaShop\Core\Module\ModuleRepository;
-use PrestaShop\PrestaShop\Core\Module\ModuleRepositoryInterface;
-use PrestaShop\PrestaShop\Core\Security\Permission;
-use PrestaShopBundle\Controller\Admin\PrestaShopAdminController;
+use PrestaShop\PrestaShop\Core\Addon\AddonsCollection;
+use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
+use PrestaShopBundle\Security\Voter\PageVoter;
 
-abstract class ModuleAbstractController extends PrestaShopAdminController
+abstract class ModuleAbstractController extends FrameworkBundleAdminController
 {
     public const CONTROLLER_NAME = 'ADMINMODULESSF';
 
-    public const CONFIGURABLE_MODULE_TYPE = 'to_configure';
-    public const UPDATABLE_MODULE_TYPE = 'to_update';
-    public const TOTAL_MODULE_TYPE = 'count';
-
-    public static function getSubscribedServices(): array
+    /**
+     * Common method of alerts & updates routes for getting template variables.
+     *
+     * @param string $type Type of alert to display (to_configure / to_update ...)
+     *
+     * @return array
+     */
+    protected function getNotificationPageData($type)
     {
-        return parent::getSubscribedServices() + [
-            ModuleRepository::class => ModuleRepository::class,
-            ModulePresenter::class => ModulePresenter::class,
-        ];
-    }
+        $modulePresenter = $this->get('prestashop.adapter.presenter.module');
+        $modulesPresenterCallback = function (AddonsCollection &$modules) use ($modulePresenter) {
+            return $modulePresenter->presentCollection($modules);
+        };
 
-    protected function getNotificationPageData(ModuleCollection $moduleCollection): array
-    {
-        $this->getModuleRepository()->setActionUrls($moduleCollection);
+        $moduleManager = $this->get('prestashop.module.manager');
+        $modules = $moduleManager->getModulesWithNotifications($modulesPresenterCallback);
 
         return [
             'enableSidebar' => true,
             'layoutHeaderToolbarBtn' => $this->getToolbarButtons(),
-            'layoutTitle' => $this->trans('Module notifications', [], 'Admin.Navigation.Menu'),
+            'layoutTitle' => $this->trans('Module notifications', 'Admin.Modules.Feature'),
             'help_link' => $this->generateSidebarLink('AdminModules'),
-            'modules' => $this->getModulePresenter()->presentCollection($moduleCollection),
+            'modules' => $modules->{$type},
+            'requireAddonsSearch' => false,
             'requireBulkActions' => false,
             'requireFilterStatus' => false,
-            'level' => $this->getAuthorizationLevel($this::CONTROLLER_NAME),
-            'errorMessage' => $this->trans('You do not have permission to add this.', [], 'Admin.Notifications.Error'),
+            'level' => $this->authorizationLevel($this::CONTROLLER_NAME),
+            'errorMessage' => $this->trans('You do not have permission to add this.', 'Admin.Notifications.Error'),
         ];
-    }
-
-    protected function getModulePresenter(): ModulePresenter
-    {
-        return $this->container->get(ModulePresenter::class);
-    }
-
-    protected function getModuleRepository(): ModuleRepositoryInterface
-    {
-        return $this->container->get(ModuleRepository::class);
     }
 
     /**
@@ -81,20 +70,57 @@ abstract class ModuleAbstractController extends PrestaShopAdminController
      *
      * @return array
      */
-    protected function getToolbarButtons(): array
+    protected function getToolbarButtons()
     {
         // toolbarButtons
         $toolbarButtons = [];
 
-        if ($this->isGranted(Permission::CREATE, self::CONTROLLER_NAME) || $this->isGranted(Permission::DELETE, self::CONTROLLER_NAME)) {
+        if (!in_array(
+            $this->authorizationLevel($this::CONTROLLER_NAME),
+            [
+                PageVoter::LEVEL_READ,
+                PageVoter::LEVEL_UPDATE,
+            ]
+        )) {
             $toolbarButtons['add_module'] = [
                 'href' => '#',
-                'desc' => $this->trans('Upload a module', [], 'Admin.Modules.Feature'),
+                'desc' => $this->trans('Upload a module', 'Admin.Modules.Feature'),
                 'icon' => 'cloud_upload',
-                'help' => $this->trans('Upload a module', [], 'Admin.Modules.Feature'),
+                'help' => $this->trans('Upload a module', 'Admin.Modules.Feature'),
             ];
         }
 
-        return $toolbarButtons;
+        return array_merge($toolbarButtons, $this->getAddonsConnectToolbar());
+    }
+
+    /**
+     * Create a button in the header for the marketplace account (login or logout).
+     *
+     * @return array
+     */
+    protected function getAddonsConnectToolbar()
+    {
+        $addonsProvider = $this->get('prestashop.core.admin.data_provider.addons_interface');
+        if ($addonsProvider->isAddonsAuthenticated()) {
+            $addonsEmail = $addonsProvider->getAddonsEmail();
+
+            return [
+                'addons_logout' => [
+                    'href' => '#',
+                    'desc' => $addonsEmail['username_addons'],
+                    'icon' => 'exit_to_app',
+                    'help' => $this->trans('Synchronized with Addons marketplace!', 'Admin.Modules.Notification'),
+                ],
+            ];
+        }
+
+        return [
+            'addons_connect' => [
+                'href' => '#',
+                'desc' => $this->trans('Connect to Addons marketplace', 'Admin.Modules.Feature'),
+                'icon' => 'vpn_key',
+                'help' => $this->trans('Connect to Addons marketplace', 'Admin.Modules.Feature'),
+            ],
+        ];
     }
 }

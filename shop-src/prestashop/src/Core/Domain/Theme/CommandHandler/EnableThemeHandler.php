@@ -28,7 +28,6 @@ namespace PrestaShop\PrestaShop\Core\Domain\Theme\CommandHandler;
 
 use PrestaShop\PrestaShop\Core\Addon\Theme\ThemeManager;
 use PrestaShop\PrestaShop\Core\Cache\Clearer\CacheClearerInterface;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Theme\Command\EnableThemeCommand;
 use PrestaShop\PrestaShop\Core\Domain\Theme\Exception\CannotEnableThemeException;
 use PrestaShop\PrestaShop\Core\Domain\Theme\Exception\ThemeConstraintException;
@@ -36,7 +35,6 @@ use PrestaShop\PrestaShop\Core\Domain\Theme\Exception\ThemeConstraintException;
 /**
  * Class EnableThemeHandler
  */
-#[AsCommandHandler]
 final class EnableThemeHandler implements EnableThemeHandlerInterface
 {
     /**

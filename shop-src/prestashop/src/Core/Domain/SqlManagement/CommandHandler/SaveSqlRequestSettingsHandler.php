@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Core\Domain\SqlManagement\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\ConfigurationInterface;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Command\SaveSqlRequestSettingsCommand;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\SqlRequestSettings;
@@ -35,10 +34,12 @@ use PrestaShop\PrestaShop\Core\Encoding\CharsetEncoding;
 /**
  * Class SaveSqlRequestSettingsHandler handles command to save SqlRequest settings.
  */
-#[AsCommandHandler]
 final class SaveSqlRequestSettingsHandler implements SaveSqlRequestSettingsHandlerInterface
 {
-    private ConfigurationInterface $configuration;
+    /**
+     * @var ConfigurationInterface
+     */
+    private $configuration;
 
     /**
      * @param ConfigurationInterface $configuration
@@ -54,7 +55,6 @@ final class SaveSqlRequestSettingsHandler implements SaveSqlRequestSettingsHandl
     public function handle(SaveSqlRequestSettingsCommand $command)
     {
         $this->configuration->set(SqlRequestSettings::FILE_ENCODING, $this->getEncodingFileValue($command));
-        $this->configuration->set(SqlRequestSettings::FILE_SEPARATOR, $command->getFileSeparator());
     }
 
     /**
@@ -64,7 +64,7 @@ final class SaveSqlRequestSettingsHandler implements SaveSqlRequestSettingsHandl
      *
      * @return int
      */
-    private function getEncodingFileValue(SaveSqlRequestSettingsCommand $command): int
+    private function getEncodingFileValue(SaveSqlRequestSettingsCommand $command)
     {
         $valuesMapping = [
             CharsetEncoding::UTF_8 => 1,

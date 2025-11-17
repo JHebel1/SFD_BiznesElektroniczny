@@ -26,13 +26,11 @@
 
 namespace PrestaShopBundle\Translation\Provider;
 
-use Exception;
 use PrestaShop\PrestaShop\Core\Addon\Theme\ThemeRepository;
 use PrestaShop\TranslationToolsBundle\Translation\Extractor\Util\Flattenizer;
 use PrestaShopBundle\Translation\Extractor\ThemeExtractor;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\Translation\MessageCatalogue;
 use Symfony\Component\Translation\MessageCatalogueInterface;
 
 class ThemeProvider extends AbstractProvider
@@ -66,6 +64,23 @@ class ThemeProvider extends AbstractProvider
      * @var string Path to app/Resources/translations/
      */
     public $defaultTranslationDir;
+
+    /**
+     * Get domain.
+     *
+     * @deprecated since 1.7.6, to be removed in the next major
+     *
+     * @return mixed
+     */
+    public function getDomain()
+    {
+        @trigger_error(
+            'getDomain function is deprecated and will be removed in the next major',
+            E_USER_DEPRECATED
+        );
+
+        return $this->domain;
+    }
 
     /**
      * {@inheritdoc}
@@ -164,7 +179,7 @@ class ThemeProvider extends AbstractProvider
     /**
      * @param string|null $themeName
      *
-     * @return MessageCatalogue
+     * @return MessageCatalogueInterface
      */
     public function getDatabaseCatalogue($themeName = null)
     {
@@ -176,7 +191,7 @@ class ThemeProvider extends AbstractProvider
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      *
      * Will update translations files of the Theme
      */
@@ -206,7 +221,7 @@ class ThemeProvider extends AbstractProvider
     /**
      * @return MessageCatalogueInterface
      *
-     * @throws Exception
+     * @throws \Exception
      */
     public function getThemeCatalogue()
     {

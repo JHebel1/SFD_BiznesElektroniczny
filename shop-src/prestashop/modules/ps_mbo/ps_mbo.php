@@ -18,10 +18,8 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-
-declare(strict_types=1);
-if (!defined('_PS_VERSION_') || version_compare(_PS_VERSION_, '8.0.2', '<')) {
-    return;
+if (!defined('_PS_VERSION_')) {
+    exit;
 }
 
 $autoloadPath = __DIR__ . '/vendor/autoload.php';
@@ -29,49 +27,139 @@ if (file_exists($autoloadPath)) {
     require_once $autoloadPath;
 }
 
-use PrestaShop\Module\Mbo\Accounts\Provider\AccountsDataProvider;
-use PrestaShop\Module\Mbo\Addons\Subscriber\ModuleManagementEventSubscriber;
+use Doctrine\Common\Cache\CacheProvider;
+use PrestaShop\Module\Mbo\Distribution\AuthenticationProvider;
+use PrestaShop\Module\Mbo\Distribution\Client;
 use PrestaShop\Module\Mbo\Helpers\Config;
-use PrestaShop\Module\Mbo\Helpers\ErrorHelper;
-use PrestaShop\PrestaShop\Core\Module\ModuleRepository;
-use PrestaShopBundle\Event\ModuleManagementEvent;
+use PrestaShop\Module\Mbo\Service\View\ContextBuilder;
+use PrestaShop\Module\Mbo\Tab\TabCollectionProvider;
+use PrestaShop\PrestaShop\Adapter\SymfonyContainer;
+use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManagerBuilder;
+use Ramsey\Uuid\Uuid;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Dotenv\Dotenv;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class ps_mbo extends Module
 {
-    use PrestaShop\Module\Mbo\Traits\HaveTabs;
-    use PrestaShop\Module\Mbo\Traits\UseHooks;
 
-    /**
-     * @var string
-     */
-    public const VERSION = '5.1.0';
-
-    public const CONTROLLERS_WITH_CONNECTION_TOOLBAR = [
-        'AdminModulesManage',
-        'AdminModulesSf',
+    const VERSION = '3.3.1';
+    const TABS_WITH_RECOMMENDED_MODULES_BUTTON = [
+        'AdminOrders', // Orders> Orders
+        'AdminInvoices', // Orders > Invoices
+        'AdminSlip', // Orders > Credit Slips
+        'AdminDeliverySlip', // Orders > Delivery Slips
+        'AdminProducts', // Catalog > Products
+        'AdminFeatures', // Catalog > Attributes & Features > Features
+        'AdminManufacturers', // Catalog > Brands & Suppliers > Brands
+        'AdminCartRules', // Catalog > Discounts > Cart Rules
+        'AdminCustomers', // Customers > Customers
+        'AdminCustomerThreads', // Customer Service> Customers Service
+        'AdminStats', // Stats> Stats
+        'AdminCmsContent', // Pages
+        'AdminImages', // Image
+        'AdminShipping', // Shipping > Preferences
+        'AdminStatuses', // Shop Parameters > Order Settings > Statuses
+        'AdminGroups', // Shop Parameters > Customer Settings > Groups
+        'AdminContacts', // Shop Parameters > Contact > Contact
+        'AdminMeta', // Shop Parameters > Traffic & SEO > SEO & URLs
+        'AdminSearchConf', // Shop Parameters > Search > Search
+        'AdminAdminPreferences', // Advanced Parameters > Administration
+        'AdminEmails', // Advanced Parameters > E-mail
     ];
 
-    public const CONTROLLERS_WITH_CDC_SCRIPT = [
+    const TABS_WITH_RECOMMENDED_MODULES_AFTER_CONTENT = [
+        'AdminMarketing',
+        'AdminPayment',
+        'AdminCarriers',
+    ];
+
+    const CORE_TABS_RENAMED = [
+        'AdminModulesCatalog' => [
+            'old_name' => 'Modules catalog',
+            'new_name' => 'Marketplace',
+        ],
+        'AdminParentModulesCatalog' => [
+            'old_name' => 'Modules catalog',
+            'new_name' => 'Marketplace',
+        ],
+        'AdminAddonsCatalog' => [
+            'old_name' => 'Module selection',
+            'new_name' => 'Modules in the spotlight',
+            'trans_domain' => 'Modules.Mbo.Modulesselection',
+        ],
+    ];
+
+    const ADMIN_CONTROLLERS = [
+        'AdminPsMboModule' => [
+            'name' => 'Marketplace',
+            'visible' => true,
+            'class_name' => 'AdminPsMboModule',
+            'parent_class_name' => 'AdminParentModulesCatalog',
+            'core_reference' => 'AdminModulesCatalog',
+            'position' => 1,
+        ],
+        'AdminPsMboAddons' => [
+            'name' => 'Module selection',
+            'wording' => 'Modules in the spotlight',
+            'wording_domain' => 'Modules.Mbo.Modulesselection',
+            'visible' => true,
+            'class_name' => 'AdminPsMboAddons',
+            'parent_class_name' => 'AdminParentModulesCatalog',
+            'core_reference' => 'AdminAddonsCatalog',
+            'position' => 2,
+        ],
+        'AdminPsMboRecommended' => [
+            'name' => 'Module recommended',
+            'wording' => 'Recommended Modules and Services',
+            'wording_domain' => 'Modules.Mbo.Recommendedmodulesandservices',
+            'visible' => true,
+            'class_name' => 'AdminPsMboRecommended',
+        ],
+        'AdminPsMboTheme' => [
+            'name' => 'Theme catalog',
+            'visible' => true,
+            'class_name' => 'AdminPsMboTheme',
+            'parent_class_name' => 'AdminParentThemes',
+            'core_reference' => 'AdminThemesCatalog',
+        ],
+        'AdminPsMboUninstalledModules' => [
+            'name' => 'Uninstalled modules',
+            'wording' => 'Uninstalled modules',
+            'wording_domain' => 'Modules.Mbo.Modulesselection',
+            'visible' => true,
+            'position' => 2,
+            'class_name' => 'AdminPsMboUninstalledModules',
+            'parent_class_name' => 'AdminModulesSf',
+        ],
+    ];
+
+    const CONTROLLERS_WITH_CDC_SCRIPT = [
         'AdminModulesNotifications',
         'AdminModulesUpdates',
         'AdminModulesManage',
+        'AdminPsMboModule',
+        'AdminModulesCatalog',
+    ];
+
+    const HOOKS = [
+        'actionAdminControllerSetMedia',
+        'actionDispatcherBefore',
+        'actionEmployeeSave',
+        'actionGeneralPageSave',
+        'actionObjectEmployeeUpdateAfter',
+        'actionObjectShopUrlUpdateAfter',
+        'displayDashboardTop',
     ];
 
     public $configurationList = [
         'PS_MBO_SHOP_ADMIN_UUID' => '', // 'ADMIN' because there will be only one for all shops in a multishop context
-        'PS_MBO_LAST_PS_VERSION_API_CONFIG' => '',
     ];
 
     /**
-     * @var PrestaShop\Module\Mbo\DependencyInjection\ServiceContainer
+     * @var ContainerInterface
      */
-    private $serviceContainer;
-
-    /**
-     * @var string
-     */
-    public $imgPath;
+    protected $container;
 
     /**
      * @var string
@@ -79,40 +167,31 @@ class ps_mbo extends Module
     public $moduleCacheDir;
 
     /**
+     * @var CacheProvider
+     */
+    public $cacheProvider;
+
+    /**
      * Constructor.
      */
     public function __construct()
     {
         $this->name = 'ps_mbo';
-        // This value must be hard-coded to respect Addons rules, so we must make sure that the const value is always synced with this one
-        $this->version = '5.1.0';
-        if ($this->version !== self::VERSION) {
-            throw new PrestaShopException('The values from ps_mbo::$version and ps_mbo::VERSION must be identical');
-        }
+        $this->version = '3.3.1';
         $this->author = 'PrestaShop';
         $this->tab = 'administration';
         $this->module_key = '6cad5414354fbef755c7df4ef1ab74eb';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = [
-            'min' => '9.0.0',
-            'max' => '9.99.99',
+            'min' => '1.7.7.0',
+            'max' => '1.7.8.99',
         ];
 
         parent::__construct();
 
-        $this->imgPath = $this->_path . 'views/img/';
         $this->moduleCacheDir = sprintf('%s/var/modules/%s/', rtrim(_PS_ROOT_DIR_, '/'), $this->name);
-
-        $this->displayName = $this->trans('PrestaShop Marketplace in your Back Office', [], 'Modules.Mbo.Global');
-        $this->description = $this
-            ->trans('Browse the Addons marketplace directly from your back office to better meet your needs.',
-                [],
-                'Modules.Mbo.Global'
-            );
-
-        if (self::checkModuleStatus()) {
-            $this->bootHooks();
-        }
+        $this->displayName = $this->l('PrestaShop Marketplace in your Back Office');
+        $this->description = $this->l('Browse the Addons marketplace directly from your back office to better meet your needs.');
 
         $this->loadEnv();
     }
@@ -122,41 +201,32 @@ class ps_mbo extends Module
      *
      * @return bool
      */
-    public function install(): bool
+    public function install()
     {
-        try {
-            /** @var PrestaShop\PsAccountsInstaller\Installer\Installer|null $installer */
-            $installer = $this->get(PrestaShop\PsAccountsInstaller\Installer\Installer::class);
-            if ($installer) {
-                $installer->install();
-            }
-        } catch (Exception $e) {
-            ErrorHelper::reportError($e);
-        }
-
-        $this->installTables();
-        if (parent::install() && $this->registerHook($this->getHooksNames())) {
-            // Do come extra operations on modules' registration like modifying orders
-            $this->installHooks();
-
-            $this->postponeTabsTranslations();
-
-            return true;
-        }
-
-        // If installation fails, we remove the tables previously created
-        $this->uninstallTables();
-
-        return false;
+        return parent::install()
+            && $this->registerHook(static::HOOKS);
     }
 
     /**
-     * @inerhitDoc
+     * {@inheritDoc}
      */
     public function uninstall()
     {
         if (!parent::uninstall()) {
             return false;
+        }
+
+        /**
+         * @var AuthenticationProvider $authenticationProvider
+         */
+        $authenticationProvider = $this->get('mbo.cdc.distribution_authentication_provider');
+        $authenticationProvider->clearCache();
+
+        $lockFiles = ['registerShop', 'updateShop'];
+        foreach ($lockFiles as $lockFile) {
+            if (file_exists($this->moduleCacheDir . $lockFile . '.lock')) {
+                unlink($this->moduleCacheDir . $lockFile . '.lock');
+            }
         }
 
         foreach (array_keys($this->configurationList) as $name) {
@@ -166,29 +236,106 @@ class ps_mbo extends Module
         // This will reset cached configuration values (uuid, mail, ...) to avoid reusing them
         Config::resetConfigValues();
 
-        $this->uninstallTables();
+        return true;
+    }
 
-        /** @var Symfony\Component\EventDispatcher\EventDispatcher $eventDispatcher */
-        $eventDispatcher = $this->get('event_dispatcher');
-        if (!$eventDispatcher->hasListeners(ModuleManagementEvent::UNINSTALL)) {
-            return true;
+    /**
+     * Enable Module.
+     *
+     * @return bool
+     */
+    public function enable($force_all = false)
+    {
+        $result = parent::enable($force_all)
+            && $this->organizeCoreTabs()
+            && $this->installTabs();
+
+        $this->registerShop();
+
+        $this->postponeTabsTranslations();
+
+        return (bool) $result;
+    }
+
+    /**
+     * This method is here if we need to rename some Core tabs.
+     *
+     * @return bool
+     */
+    public function organizeCoreTabs($restore = false)
+    {
+        $return = true;
+        $coreTabsRenamed = static::CORE_TABS_RENAMED;
+
+        if (true === (bool) version_compare(_PS_VERSION_, '1.7.8', '<')) {
+            unset($coreTabsRenamed['AdminAddonsCatalog']);
         }
 
-        // Execute them first
-        foreach ($eventDispatcher->getListeners(ModuleManagementEvent::UNINSTALL) as $listener) {
-            if ($listener[0] instanceof ModuleManagementEventSubscriber) {
-                /** @var ModuleRepository $moduleRepository */
-                $moduleRepository = $this->get(ModuleRepository::class);
-                $legacyModule = $moduleRepository->getModule('ps_mbo');
-                $listener[0]->{(string) $listener[1]}(new ModuleManagementEvent($legacyModule));
+        // Rename tabs
+        foreach ($coreTabsRenamed as $className => $names) {
+            $tabId = Tab::getIdFromClassName($className);
+
+            if ($tabId !== false) {
+                $tabNameByLangId = [];
+                if ($restore) {
+                    $name = $names['old_name'];
+                    $transDomain = 'Admin.Navigation.Menu';
+                } else {
+                    $name = $names['new_name'];
+                    $transDomain = isset($names['trans_domain']) ? $names['trans_domain'] : 'Modules.Mbo.Global';
+                }
+                foreach (Language::getIDs(false) as $langId) {
+                    $langId = (int) $langId;
+                    $language = new Language($langId);
+                    $tabNameByLangId[$langId] = (string) $this->trans(
+                        $name,
+                        [],
+                        $transDomain,
+                        !empty($language->locale) ? $language->locale : $language->language_code // can't use getLocale because not existing in 1.7.5
+                    );
+                }
+
+                $tab = new Tab($tabId);
+                $tab->name = $tabNameByLangId;
+                if (true === (bool) version_compare(_PS_VERSION_, '1.7.8', '>=')) {
+                    $tab->wording = $name;
+                    $tab->wording_domain = $transDomain;
+                }
+                $return &= $tab->save();
             }
         }
 
-        // And then remove them
-        foreach ($eventDispatcher->getListeners(ModuleManagementEvent::UNINSTALL) as $listener) {
-            if ($listener[0] instanceof ModuleManagementEventSubscriber) {
-                $eventDispatcher->removeSubscriber($listener[0]);
-                break;
+        // Change tabs positions
+        $return &= $this->changeTabPosition('AdminParentModulesCatalog', $restore ? 1 : 0);
+        $return &= $this->changeTabPosition('AdminModulesSf', $restore ? 0 : 1);
+
+        return (bool) $return;
+    }
+
+    public function changeTabPosition($className, $newPosition)
+    {
+        $return = true;
+        $tabId = Tab::getIdFromClassName($className);
+
+        if ($tabId !== false) {
+            $tab = new Tab($tabId);
+            $tab->position = $newPosition;
+            $return &= $tab->save();
+        }
+
+        return $return;
+    }
+
+    /**
+     * Install all Tabs.
+     *
+     * @return bool
+     */
+    public function installTabs()
+    {
+        foreach (static::ADMIN_CONTROLLERS as $adminTab) {
+            if (false === $this->installTab($adminTab)) {
+                return false;
             }
         }
 
@@ -196,35 +343,65 @@ class ps_mbo extends Module
     }
 
     /**
-     * Enable Module.
+     * Install Tab.
+     * Used in upgrade script.
      *
-     * @param bool $force_all
+     * @param array $tabData
      *
      * @return bool
      */
-    public function enable($force_all = false): bool
+    public function installTab(array $tabData)
     {
-        if (self::checkModuleStatus()) {
-            return true;
-        }
-        // Store previous context
-        $previousContextType = Shop::getContext();
-        $previousContextShopId = Shop::getContextShopID();
+        $tabNameByLangId = array_fill_keys(
+            Language::getIDs(false),
+            $tabData['name']
+        );
 
-        $allShops = Shop::getShops(true, null, true);
+        if (isset($tabData['core_reference'])) {
+            $tabCoreId = Tab::getIdFromClassName($tabData['core_reference']);
 
-        foreach ($allShops as $shop) {
-            if (!$this->enableByShop($shop)) {
-                return false;
+            if ($tabCoreId !== false) {
+                $tabCore = new Tab($tabCoreId);
+                $tabNameByLangId = $tabCore->name;
+                $tabCore->active = false;
+                $tabCore->save();
             }
         }
 
-        // Restore previous context
-        Shop::setContext($previousContextType, $previousContextShopId);
+        $idParent = empty($tabData['parent_class_name']) ? -1 : Tab::getIdFromClassName($tabData['parent_class_name']);
 
-        // Install tab before registering shop, we need the tab to be active to create the good token
-        $this->updateTabs();
-        $this->postponeTabsTranslations();
+        $tab = Tab::getInstanceFromClassName($tabData['class_name']);
+        if (!Validate::isLoadedObject($tab)) {
+            $tab = new Tab();
+            $tab->class_name = $tabData['class_name'];
+        }
+
+        $tab->module = $this->name;
+        $tab->position = Tab::getNewLastPosition($idParent);
+        $tab->id_parent = $idParent;
+        $tab->name = $tabNameByLangId;
+        if (
+            true === (bool) version_compare(_PS_VERSION_, '1.7.8', '>=') &&
+            !empty($tabData['wording']) &&
+            !empty($tabData['wording_domain'])
+        ) {
+            $tab->wording = $tabData['wording'];
+            $tab->wording_domain = $tabData['wording_domain'];
+        }
+
+        if (!Validate::isLoadedObject($tab) && false === (bool) $tab->add()) {
+            return false;
+        }
+
+        if (Validate::isLoadedObject($tab)) {
+            $position = 0;
+            if (isset($tabData['position'])) {
+                $position = $tabData['position'];
+            }
+            $tab->cleanPositions($tab->id_parent);
+            $tab->save();
+            $this->putTabInPosition($tab, $position);
+        }
 
         return true;
     }
@@ -232,102 +409,29 @@ class ps_mbo extends Module
     /**
      * Disable Module.
      *
-     * @param bool $force_all
+     * @return bool
+     */
+    public function disable($force_all = false)
+    {
+        $result = parent::disable($force_all)
+            && $this->organizeCoreTabs(true)
+            && $this->uninstallTabs();
+
+        // Unregister from online services
+        $this->unregisterShop();
+
+        return $result;
+    }
+
+    /**
+     * Uninstall all Tabs.
      *
      * @return bool
      */
-    public function disable($force_all = false): bool
+    public function uninstallTabs()
     {
-        // Store previous context
-        $previousContextType = Shop::getContext();
-        $previousContextShopId = Shop::getContextShopID();
-
-        $allShops = Shop::getShops(true, null, true);
-
-        foreach ($allShops as $shop) {
-            if (!$this->disableByShop($shop)) {
-                return false;
-            }
-        }
-
-        // Restore previous context
-        Shop::setContext($previousContextType, $previousContextShopId);
-
-        return $this->handleTabAction('uninstall');
-    }
-
-    /**
-     * @param string $serviceName
-     *
-     * @return object|null
-     */
-    public function getService($serviceName)
-    {
-        if ($this->serviceContainer === null) {
-            $this->serviceContainer = new PrestaShop\Module\Mbo\DependencyInjection\ServiceContainer(
-                $this->name . str_replace('.', '', $this->version),
-                $this->getLocalPath()
-            );
-        }
-
-        return $this->serviceContainer->getService($serviceName);
-    }
-
-    /**
-     * @inerhitDoc
-     */
-    public function isUsingNewTranslationSystem(): bool
-    {
-        return true;
-    }
-
-    /**
-     * Used to correctly check if the module is enabled or not whe registering services
-     *
-     * @return bool
-     */
-    public static function checkModuleStatus(): bool
-    {
-        // First if the module have active=0 in the DB, the module is inactive
-        $result = Db::getInstance()->getRow('SELECT `active`
-        FROM `' . _DB_PREFIX_ . 'module`
-        WHERE `name` = "ps_mbo"');
-        if ($result && false === (bool) $result['active']) {
-            return false;
-        }
-
-        // If active = 1
-        // in the module table, the module must be associated to at least one shop to be considered as active
-        $result = Db::getInstance()->getRow('SELECT m.`id_module` as `active`, ms.`id_module` as `shop_active`
-        FROM `' . _DB_PREFIX_ . 'module` m
-        LEFT JOIN `' . _DB_PREFIX_ . 'module_shop` ms ON m.`id_module` = ms.`id_module`
-        WHERE `name` = "ps_mbo"');
-        if ($result) {
-            return $result['active'] && $result['shop_active'];
-        } else {
-            return false;
-        }
-    }
-
-    public function installTables(?string $table = null): bool
-    {
-        $sqlQueries = [];
-
-        if (null === $table || 'mbo_api_config' === $table) {
-            $sqlQueries[] = ' CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mbo_api_config` (
-                `id_mbo_api_config` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-                `config_key` varchar(255) NULL,
-                `config_value` varchar(255) NULL,
-                `ps_version` varchar(255) NULL,
-                `mbo_version` varchar(255) NULL,
-                `applied` TINYINT(1) NOT NULL DEFAULT \'0\',
-                `date_add` datetime NOT NULL,
-                PRIMARY KEY (`id_mbo_api_config`)
-            ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=UTF8;';
-        }
-
-        foreach ($sqlQueries as $query) {
-            if (!Db::getInstance()->execute($query)) {
+        foreach (static::ADMIN_CONTROLLERS as $adminTab) {
+            if (false === $this->uninstallTab($adminTab)) {
                 return false;
             }
         }
@@ -335,23 +439,602 @@ class ps_mbo extends Module
         return true;
     }
 
-    public function getAccountsDataProvider(): ?AccountsDataProvider
+    /**
+     * Uninstall Tab.
+     * Can be used in upgrade script.
+     *
+     * @param array $tabData
+     *
+     * @return bool
+     */
+    public function uninstallTab(array $tabData)
     {
+        $tabId = Tab::getIdFromClassName($tabData['class_name']);
+        $tab = new Tab($tabId);
+
+        if (false === Validate::isLoadedObject($tab)) {
+            return false;
+        }
+
+        if (false === (bool) $tab->delete()) {
+            return false;
+        }
+
+        if (isset($tabData['core_reference'])) {
+            $tabCoreId = Tab::getIdFromClassName($tabData['core_reference']);
+            $tabCore = new Tab($tabCoreId);
+
+            if (Validate::isLoadedObject($tabCore)) {
+                $tabCore->active = true;
+            }
+
+            if (false === (bool) $tabCore->save()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Hook actionAdminControllerSetMedia.
+     */
+    public function hookActionAdminControllerSetMedia()
+    {
+        // has to be loaded in header to prevent flash of content
+        $this->context->controller->addJs($this->getPathUri() . 'views/js/recommended-modules.js?v=' . $this->version);
+        $this->context->controller->addCSS($this->getPathUri() . 'views/css/catalog.css?v=' . $this->version, 'all', null, false);
+
+        if (Tools::getValue('controller') === 'AdminPsMboModule') {
+            $this->context->controller->addJs($this->getPathUri() . 'views/js/upload_module_with_cdc.js?v=' . $this->version);
+        }
+
+        if (
+            $this->shouldAttachRecommendedModulesButton()
+            || $this->shouldAttachRecommendedModulesAfterContent()
+        ) {
+            if (
+                true === (bool) version_compare(_PS_VERSION_, '1.7.8', '>=')
+            ) {
+                $this->context->controller->addCSS($this->getPathUri() . 'views/css/recommended-modules-since-1.7.8.css');
+            }
+            if (
+                true === (bool) version_compare(_PS_VERSION_, '1.7.8', '<')
+            ) {
+                $this->context->controller->addCSS($this->getPathUri() . 'views/css/recommended-modules-lower-1.7.8.css');
+            }
+            if (Tools::getValue('controller') !== 'AdminProducts') {
+                $this->context->controller->addJs(
+                    rtrim(__PS_BASE_URI__, '/')
+                        . str_ireplace(
+                            _PS_CORE_DIR_,
+                            '',
+                            _PS_BO_ALL_THEMES_DIR_
+                        )
+                        . 'default/js/bundle/module/module_card.js?v='
+                        . _PS_VERSION_
+                );
+            }
+        }
+
+        $this->loadMediaForAdminControllerSetMedia();
+    }
+
+    /**
+     * Add JS and CSS file
+     *
+     * @return void
+     */
+    protected function loadMediaForAdminControllerSetMedia()
+    {
+        if (in_array(Tools::getValue('controller'), self::CONTROLLERS_WITH_CDC_SCRIPT)) {
+            $this->context->controller->addJs('/js/jquery/plugins/growl/jquery.growl.js?v=' . $this->version);
+            $this->context->controller->addCSS($this->getPathUri() . 'views/css/module-catalog.css');
+        }
+
+        $this->context->controller->addCSS($this->getPathUri() . 'views/css/connection-toolbar.css');
+        $this->loadCdcMedia();
+    }
+
+    private function loadCdcMedia()
+    {
+        $controllerName = Tools::getValue('controller');
+        if (!is_string($controllerName)) {
+            return;
+        }
+        if (
+            !in_array($controllerName, self::CONTROLLERS_WITH_CDC_SCRIPT)
+        ) {
+            return;
+        }
+
+        $cdcJsFile = getenv('MBO_CDC_URL');
+        if (false === $cdcJsFile || !is_string($cdcJsFile) || empty($cdcJsFile)) {
+            $this->context->controller->addJs($this->getPathUri() . 'views/js/cdc-error.js');
+
+            return;
+        }
+
+        $this->context->controller->addJs($cdcJsFile);
+    }
+
+    /**
+     * Hook displayDashboardTop.
+     * Includes content just below the toolbar.
+     *
+     * @return string
+     */
+    public function hookDisplayDashboardTop()
+    {
+        /** @var UrlGeneratorInterface $router */
+        $router = $this->get('router');
+
         try {
-            return $this->get(AccountsDataProvider::class);
-        } catch (Exception $e) {
-            ErrorHelper::reportError($e);
+            $recommendedModulesUrl = $router->generate(
+                'admin_mbo_recommended_modules',
+                [
+                    'tabClassName' => Tools::getValue('controller'),
+                ]
+            );
+        } catch (Exception $exception) {
+            // Avoid fatal errors on ServiceNotFoundException
+            return '';
+        }
 
-            return null;
+        $shouldDisplayModuleManagerMessage = $this->shouldDisplayModuleManagerMessage();
+
+        $shopContext = null;
+        /** @var ContextBuilder $contextBuilder */
+        $contextBuilder = $this->get('mbo.cdc.context_builder');
+
+        if (null != $contextBuilder && $shouldDisplayModuleManagerMessage) {
+            $shopContext = $contextBuilder->getViewContext();
+        }
+
+        $this->smarty->assign([
+            'shouldAttachRecommendedModulesAfterContent' => $this->shouldAttachRecommendedModulesAfterContent(),
+            'shouldAttachRecommendedModulesButton' => $this->shouldAttachRecommendedModulesButton(),
+            'shouldDisplayModuleManagerMessage' => $this->shouldDisplayModuleManagerMessage(),
+            'shouldUseLegacyTheme' => $this->isAdminLegacyContext(),
+            'recommendedModulesTitleTranslated' => $this->getRecommendedModulesButtonTitle(),
+            'recommendedModulesDescriptionTranslated' => $this->getRecommendedModulesDescription(),
+            'recommendedModulesCloseTranslated' => $this->trans('Close', [], 'Admin.Actions'),
+            'recommendedModulesUrl' => $recommendedModulesUrl,
+            'shopContext' => json_encode($shopContext),
+        ]);
+
+        return $this->fetch('module:ps_mbo/views/templates/hook/recommended-modules.tpl');
+    }
+
+    /**
+     * Hook actionDispatcherBefore.
+     */
+    public function hookActionDispatcherBefore()
+    {
+        $controllerName = Tools::getValue('controller');
+
+        $this->translateTabsIfNeeded();
+
+        // Registration failed on install, retry it
+        if (in_array($controllerName, static::CONTROLLERS_WITH_CDC_SCRIPT)) {
+            $this->ensureShopIsRegistered();
+            $this->ensureShopIsUpdated();
+        }
+
+        try {
+            /**
+             * @var CacheProvider $cacheProvider
+             */
+            $cacheProvider = $this->get('doctrine.cache.provider');
+        } catch (Exception $e) {
+            $cacheProvider = null;
+        }
+        $cacheKey = 'mbo_cache_modules_list_cleared';
+
+        // Force clearing cache on module data at least once a day
+        if ($cacheProvider && !$cacheProvider->fetch($cacheKey)) {
+            $moduleManagerBuilder = ModuleManagerBuilder::getInstance();
+            $moduleManagerRepository = $moduleManagerBuilder->buildRepository();
+            $moduleManagerRepository->clearCache();
+
+            try {
+                /**
+                 * @var \PrestaShop\PrestaShop\Adapter\Module\AdminModuleDataProvider $modulesProvider
+                 */
+                $modulesProvider = $this->get('prestashop.core.admin.data_provider.module_interface');
+            } catch (Exception $e) {
+                $modulesProvider = null;
+            }
+            if ($modulesProvider) {
+                $modulesProvider->clearCatalogCache();
+            }
+
+            $cacheProvider->save($cacheKey, true, 86400);
         }
     }
 
-    public function postponeTabsTranslations(): void
+    /**
+     * Hook actionGeneralPageSave.
+     */
+    public function hookActionGeneralPageSave(array $params)
+    {
+        if (isset($params['route']) && $params['route'] === 'admin_preferences_save') {
+            // User may have updated the SSL configuration
+            $this->updateShop();
+        }
+    }
+
+    /**
+     * Hook actionEmployeeSave.
+     */
+    public function hookActionEmployeeSave(array $params)
+    {
+        $controllerName = Tools::getValue('controller');
+
+        if (
+            (isset($params['route']) && $params['route'] === 'admin_employees_edit')
+            || ('AdminEmployees' === $controllerName)
+        ) {
+            // User may have updated the employee language
+            $this->postponeTabsTranslations();
+        }
+    }
+
+    /**
+     * Hook actionObjectEmployeeUpdateAfter.
+     */
+    public function hookActionObjectEmployeeUpdateAfter(array $params)
+    {
+        $controllerName = Tools::getValue('controller');
+
+        if (
+            (isset($params['route']) && $params['route'] === 'admin_employees_edit')
+            || ('AdminEmployees' === $controllerName)
+        ) {
+            // User may have updated the employee language
+            $this->postponeTabsTranslations();
+        }
+    }
+
+    /**
+     * Hook actionGeneralPageSave.
+     */
+    public function hookActionObjectShopUrlUpdateAfter(array $params)
+    {
+        if ($params['object']->main) {
+            // Clear cache to be sure to load correctly the shop with good data whe building the service later
+            \Cache::clean('Shop::setUrl_' . (int) $params['object']->id_shop);
+
+            if (Config::isUsingSecureProtocol()) {
+                $url = 'https://' . preg_replace('#https?://#', '', $params['object']->domain_ssl);
+            } else {
+                $url = 'http://' . preg_replace('#https?://#', '', $params['object']->domain);
+            }
+
+            $this->updateShop([
+                'shop_url' => $url,
+            ]);
+        }
+
+        return true;
+    }
+
+    private function shouldDisplayModuleManagerMessage(): bool
+    {
+        if (!in_array(
+            Tools::getValue('controller'),
+            [
+                'AdminModulesManage',
+                'AdminModulesNotifications',
+                'AdminModulesUpdates',
+            ]
+        )) {
+            return false;
+        }
+
+        try {
+            $requestStack = $this->get('request_stack');
+            if (!$requestStack || !($request = $requestStack->getCurrentRequest())) {
+                throw new Exception('Unable to get request');
+            }
+        } catch (Exception $e) {
+            // ErrorHelper::reportError($e);
+            return false;
+        }
+        // because admin_employee_index and admin_employee_edit are in the same controller AdminEmployees
+        return in_array($request->get('_route'), [
+            'admin_module_manage',
+            'admin_module_notification',
+            'admin_module_updates',
+        ]);
+    }
+
+    /**
+     * Indicates if the recommended modules should be attached after content in this page
+     *
+     * @return bool
+     */
+    private function shouldAttachRecommendedModulesAfterContent()
+    {
+        // AdminLogin should not call TabCollectionProvider
+        if (Validate::isLoadedObject($this->context->employee)) {
+            /** @var TabCollectionProvider $tabCollectionProvider */
+            $tabCollectionProvider = $this->get('mbo.tab.collection.provider');
+            if ($tabCollectionProvider->isTabCollectionCached()) {
+                return $tabCollectionProvider->getTabCollection()->getTab(Tools::getValue('controller'))->shouldDisplayAfterContent()
+                    || 'AdminCarriers' === Tools::getValue('controller');
+            }
+        }
+
+        return in_array(Tools::getValue('controller'), static::TABS_WITH_RECOMMENDED_MODULES_AFTER_CONTENT, true);
+    }
+
+    /**
+     * Customize title button recommended modules
+     *
+     * @return string
+     */
+    private function getRecommendedModulesButtonTitle()
+    {
+        switch (Tools::getValue('controller')) {
+            case 'AdminSlip':
+            case 'AdminInvoices':
+                $title = $this->trans('Simplify accounting', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminDeliverySlip':
+                $title = $this->trans('Make shipping easier', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminOrders':
+                $title = $this->trans('Boost sales', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminFeatures':
+                $title = $this->trans('Optimize product creation', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminSpecificPriceRule':
+            case 'AdminCartRules':
+                $title = $this->trans('Create a discount strategy', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminManufacturers':
+                $title = $this->trans('Promote brands', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminProducts':
+                $title = $this->trans('Optimize product catalog', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminStats':
+                $title = $this->trans('Improve data strategy', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminContacts':
+            case 'AdminCustomerThreads':
+            case 'AdminCustomers':
+                $title = $this->trans('Improve customer experience', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminCmsContent':
+                $title = $this->trans('Customize pages', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminImages':
+                $title = $this->trans('Improve visuals', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminCarriers':
+                $title = $this->trans('Make your deliveries easier', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminShipping':
+                $title = $this->trans('Improve shipping', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminPayment':
+                $title = $this->trans('Improve the checkout experience', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminStatuses':
+                $title = $this->trans('Optimize order management', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminGroups':
+                $title = $this->trans('Improve customer targeting', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminContacts':
+                $title = $this->trans('Improve customer experience', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminSearchConf':
+            case 'AdminMeta':
+                $title = $this->trans('Improve SEO', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminAdminPreferences':
+                $title = $this->trans('Simplify store management', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminEmails':
+                $title = $this->trans('Automate emails', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            default:
+                $title = $this->trans('Recommended modules', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+        }
+
+        return $title;
+    }
+
+    /**
+     * Customize description of modal button recommended modules
+     *
+     * @return string
+     */
+    private function getRecommendedModulesDescription()
+    {
+        switch (Tools::getValue('controller')) {
+            case 'AdminEmails':
+                $description = $this->trans('Send automatic emails and notifications to your customers with ease.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminAdminPreferences':
+                $description = $this->trans('Simplify the daily management of your store and save time.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminSearchConf':
+            case 'AdminMeta':
+                $description = $this->trans('Rank higher in search results so more people can find you.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminContacts':
+            case 'AdminCustomers':
+            case 'AdminCustomerThreads':
+                $description = $this->trans('Create memorable experiences and turn visitors into customers.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminGroups':
+                $description = $this->trans('Manage groups and better target your customers in your marketing.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminStatuses':
+                $description = $this->trans('Save time: delete, edit, and manage your orders in bulk.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminPayment':
+                $description = $this->trans('Offer the payment methods your customers expect and improve your checkout process so you never miss a sale.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminShipping':
+                $description = $this->trans('Optimize your logistics and meet your customers\' delivery expectations.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminCarriers':
+                $description = $this->trans('Make your deliveries easier by choosing the right carriers.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminImages':
+                $description = $this->trans('Use quality and eye-catching visuals while preserving your store’s performance.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminCmsContent':
+                $description = $this->trans('Customize your store pages and highlight special offers.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminSpecificPriceRule':
+            case 'AdminCartRules':
+                $description = $this->trans('Drive more sales and increase customer retention with a well-planned discount strategy.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminManufacturers':
+                $description = $this->trans('Promote the brands you distribute and allow your visitors to browse the products of their favorite brands.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminFeatures':
+                $description = $this->trans('Save time on product creation and easily manage combinations.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminDeliverySlip':
+                $description = $this->trans('Save time in preparing and shipping your orders.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminSlip':
+            case 'AdminInvoices':
+                $description = $this->trans('Keep your records organized and stay on top of your accounting.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminOrders':
+                $description = $this->trans('Get new customers and keep them coming back.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminProducts':
+                $description = $this->trans('Make your products more visible and create product pages that convert.<br>
+                Here\'s a selection of modules, <strong>compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            case 'AdminStats':
+                $description = $this->trans('Build a data-driven strategy and make more informed decisions.<br>
+                Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals.', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+            default:
+                $description = $this->trans('Here\'s a selection of modules,<strong> compatible with your store</strong>, to help you achieve your goals', [], 'Modules.Mbo.Recommendedmodulesandservices');
+                break;
+        }
+
+        return $description;
+    }
+
+    /**
+     * Indicates if the recommended modules button should be attached in this page
+     *
+     * @return bool
+     */
+    private function shouldAttachRecommendedModulesButton()
+    {
+        return in_array(Tools::getValue('controller'), static::TABS_WITH_RECOMMENDED_MODULES_BUTTON, true);
+    }
+
+    /**
+     * Override of native function to always retrieve Symfony container instead of legacy admin container on legacy context.
+     *
+     * {@inheritdoc}
+     */
+    public function get($serviceName)
+    {
+        if (null === $this->container) {
+            $this->container = SymfonyContainer::getInstance();
+        }
+
+        if (null === $this->container) {
+            throw new Exception('Cannot get a valid Sf Container');
+        }
+
+        return $this->container->get($serviceName);
+    }
+
+    public function isUsingNewTranslationSystem()
+    {
+        return false;
+    }
+
+    /**
+     * Update hooks in DB.
+     * Search current hooks registered in DB and compare them with the hooks declared in the module.
+     * If a hook is missing, it will be added. If a hook is not declared in the module, it will be removed.
+     *
+     * @return void
+     */
+    public function updateHooks()
+    {
+        $hookData = (array) Db::getInstance()->executeS(
+            '
+            SELECT DISTINCT(phm.id_hook), name
+            FROM `' . _DB_PREFIX_ . 'hook_module` phm
+            JOIN `' . _DB_PREFIX_ . 'hook` ph ON ph.id_hook=phm.id_hook
+            WHERE `id_module` = ' . (int) $this->id
+        );
+
+        $oldHooks = [];
+        $newHooks = [];
+
+        // Iterate on DB hooks to get only the old ones
+        foreach ($hookData as $hook) {
+            if (!in_array(strtolower($hook['name']), array_map('strtolower', static::HOOKS))) {
+                $oldHooks[] = $hook;
+            }
+        }
+
+        // Iterate on module hooks to get only the new ones
+        foreach (static::HOOKS as $moduleHook) {
+            $isNew = true;
+            foreach ($hookData as $hookInDb) {
+                if (strtolower($moduleHook) === strtolower($hookInDb['name'])) {
+                    $isNew = false;
+                    break;
+                }
+            }
+            if ($isNew) {
+                $newHooks[] = $moduleHook;
+            }
+        }
+
+        foreach ($oldHooks as $oldHook) {
+            $this->unregisterHook($oldHook['id']);
+        }
+        // we iterate because registerHook accepts array only since 1.7.7.0
+        foreach ($newHooks as $newHook) {
+            $this->registerHook($newHook);
+        }
+    }
+
+    public function postponeTabsTranslations()
     {
         /**it'
          * There is an issue for translating tabs during installation :
-         * Active modules translations files are loaded during the kernel boot.
-         * So the installing module translations are not known
+         * Active modules translations files are loaded during the kernel boot. So the installing module translations are not known
          * So, we postpone the tabs translations for the first time the module's code is executed.
          */
         $lockFile = $this->moduleCacheDir . 'translate_tabs.lock';
@@ -364,50 +1047,224 @@ class ps_mbo extends Module
         }
     }
 
-    private function enableByShop(int $shopId)
+    private function translateTabsIfNeeded()
     {
-        // Force context to all shops
-        Shop::setContext(Shop::CONTEXT_SHOP, $shopId);
-
-        return parent::enable(true);
-    }
-
-    private function disableByShop(int $shopId)
-    {
-        // Force context to all shops
-        Shop::setContext(Shop::CONTEXT_SHOP, $shopId);
-
-        return parent::disable(true);
-    }
-
-    private function uninstallTables(): bool
-    {
-        $sqlQueries[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'mbo_api_config`';
-
-        foreach ($sqlQueries as $query) {
-            if (!Db::getInstance()->execute($query)) {
-                return false;
+        try {
+            if (Tools::getValue('controller') === 'AdminCommon') {
+                return; // Avoid early translation by notifications controller
             }
+            $lockFile = $this->moduleCacheDir . 'translate_tabs.lock';
+            if (!file_exists($lockFile)) {
+                return;
+            }
+
+            $languages = Language::getLanguages(false);
+
+            // Because the wording and wording_domain are introduced since PS v1.7.8.0 and we cannot use them
+            if (true === (bool) version_compare(_PS_VERSION_, '1.7.8', '>=')) {
+                $this->translateTabs();
+            }
+
+            @unlink($lockFile);
+        } catch (\Exception $e) {
+            // Do nothing
+        }
+    }
+
+    private function translateTabs()
+    {
+        $moduleTabs = Tab::getCollectionFromModule($this->name);
+        $languages = Language::getLanguages(false);
+
+        /**
+         * @var Tab $tab
+         */
+        foreach ($moduleTabs as $tab) {
+            $this->translateTab($tab, $languages);
         }
 
-        return true;
+        foreach (static::CORE_TABS_RENAMED as $coreTabClass => $coreTabRenamed) {
+            if (array_key_exists('trans_domain', $coreTabRenamed)) {
+                $tab = Tab::getInstanceFromClassName($coreTabClass);
+                $this->translateTab($tab, $languages);
+            }
+        }
+    }
+
+    private function translateTab($tab, $languages)
+    {
+        if (!$tab instanceof Tab) {
+            throw new \Exception('First argument of translateTab mut be a Tab instance');
+        }
+
+        if (!empty($tab->wording) && !empty($tab->wording_domain)) {
+            $tabNameByLangId = [];
+            foreach ($languages as $language) {
+                $tabNameByLangId[$language['id_lang']] = $this->trans(
+                    $tab->wording,
+                    [],
+                    $tab->wording_domain,
+                    $language['locale']
+                );
+            }
+
+            $tab->name = $tabNameByLangId;
+            $tab->save();
+        }
     }
 
     /**
      * @return void
      */
-    private function loadEnv(): void
+    private function loadEnv()
     {
-        $dotenv = new Dotenv();
-        $dotenv->usePutenv();
-        $dotenv->loadEnv(__DIR__ . '/.env');
+        (new Dotenv())->load(__DIR__ . '/.env');
     }
 
-    private function isPsAccountEnabled(): bool
+    public function registerShop()
     {
-        /** @var PrestaShop\PsAccountsInstaller\Installer\Installer|null $accountsInstaller */
-        $accountsInstaller = $this->get(PrestaShop\PsAccountsInstaller\Installer\Installer::class);
+        $this->installConfiguration();
+        $this->callServiceWithLockFile('registerShop');
+    }
 
-        return null !== $accountsInstaller && $accountsInstaller->isModuleEnabled();
+    public function updateShop(array $params = [])
+    {
+        $this->callServiceWithLockFile('updateShop', $params);
+    }
+
+    /**
+     * Unregister a shop of online services delivered by API.
+     * When the module is disabled or uninstalled, remove it from online services
+     *
+     * @return void
+     */
+    private function unregisterShop()
+    {
+        try {
+            $authenticationProvider = $this->get('mbo.cdc.distribution_authentication_provider');
+            $distributionApi = $this->get('mbo.cdc.client.distribution_api');
+
+            if (
+                $authenticationProvider instanceof AuthenticationProvider
+                && $distributionApi instanceof Client
+            ) {
+                $distributionApi->setBearer($authenticationProvider->getMboJWT());
+                $distributionApi->unregisterShop();
+            }
+        } catch (Exception $exception) {
+            // Do nothing here, the exception is caught to avoid displaying an error to the client
+            // Furthermore, the operation can't be tried again later as the module is now disabled or uninstalled
+        }
+    }
+
+    /**
+     * Install configuration for each shop
+     *
+     * @return bool
+     */
+    private function installConfiguration()
+    {
+        $result = true;
+
+        $this->configurationList['PS_MBO_SHOP_ADMIN_UUID'] = Uuid::uuid4()->toString();
+
+        foreach (Shop::getShops(false, null, true) as $shopId) {
+            foreach ($this->configurationList as $name => $value) {
+                if (false === Configuration::hasKey($name, null, null, (int) $shopId)) {
+                    $result = $result && (bool) Configuration::updateValue(
+                        $name,
+                        $value,
+                        false,
+                        null,
+                        (int) $shopId
+                    );
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    private function callServiceWithLockFile(string $method, array $params = [])
+    {
+        $lockFile = $this->moduleCacheDir . $method . '.lock';
+        try {
+            // If the module is installed via command line or somehow the ADMIN_DIR is not defined,
+            // we ignore the shop registration, so it will be done at any action on the backoffice
+            if (php_sapi_name() === 'cli' || !defined('_PS_ADMIN_DIR_')) {
+                throw new Exception();
+            }
+            /** @var Client $distributionApi */
+            $distributionApi = $this->get('mbo.cdc.client.distribution_api');
+            if (!method_exists($distributionApi, $method)) {
+                return;
+            }
+
+            /**
+             * @var AuthenticationProvider $authenticationProvider
+             */
+            $authenticationProvider = $this->get('mbo.cdc.distribution_authentication_provider');
+            $distributionApi->setBearer($authenticationProvider->getMboJWT());
+            $distributionApi->{$method}($params);
+
+            if (file_exists($lockFile)) {
+                unlink($lockFile);
+            }
+        } catch (Exception $exception) {
+            // Create the lock file
+            if (!file_exists($lockFile)) {
+                if (!is_dir($this->moduleCacheDir)) {
+                    mkdir($this->moduleCacheDir, 0777, true);
+                }
+                $f = fopen($lockFile, 'w+');
+                fclose($f);
+            }
+        }
+    }
+
+    private function ensureShopIsRegistered()
+    {
+        if (!file_exists($this->moduleCacheDir . 'registerShop.lock')) {
+            return;
+        }
+        $this->registerShop();
+    }
+
+    private function ensureShopIsUpdated()
+    {
+        if (!file_exists($this->moduleCacheDir . 'updateShop.lock')) {
+            return;
+        }
+        $this->updateShop();
+    }
+
+    private function putTabInPosition(Tab $tab, int $position)
+    {
+        // Check tab position in DB
+        $dbTabPosition = Db::getInstance()->getValue(
+            '
+			SELECT `position`
+			FROM `' . _DB_PREFIX_ . 'tab`
+			WHERE `id_tab` = ' . (int) $tab->id
+        );
+
+        if ((int) $dbTabPosition === $position) {
+            // Nothing to do, tab is already in the right position
+            return;
+        }
+
+        Db::getInstance()->execute(
+            '
+            UPDATE `' . _DB_PREFIX_ . 'tab`
+            SET `position` = `position`+1
+            WHERE `id_parent` = ' . (int) $tab->id_parent . ' AND `position` >= ' . $position . ' AND `id_tab` <> ' . (int) $tab->id
+        );
+
+        Db::getInstance()->execute(
+            '
+                UPDATE `' . _DB_PREFIX_ . 'tab`
+                SET `position` = ' . $position . '
+                WHERE `id_tab` = ' . (int) $tab->id
+        );
     }
 }

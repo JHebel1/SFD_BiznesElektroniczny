@@ -1219,10 +1219,6 @@ return array (
   array (
     0 => 'EC$',
   ),
-  'XCG' => 
-  array (
-    0 => 'Cg.',
-  ),
   'XEU' => 
   array (
     0 => 'XEU',
@@ -1308,10 +1304,6 @@ return array (
     0 => 'ZWD',
     1 => 0,
     2 => 0,
-  ),
-  'ZWG' => 
-  array (
-    0 => 'ZWG',
   ),
   'ZWL' => 
   array (

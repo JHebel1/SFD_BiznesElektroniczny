@@ -26,11 +26,7 @@
 
 namespace PrestaShop\PrestaShop\Core\Cart;
 
-use Countable;
-use Iterator;
-use ReturnTypeWillChange;
-
-class CartRowCollection implements Iterator, Countable
+class CartRowCollection implements \Iterator, \Countable
 {
     /**
      * @var CartRow[]
@@ -43,7 +39,7 @@ class CartRowCollection implements Iterator, Countable
         $this->cartRows[] = $cartRow;
     }
 
-    public function rewind(): void
+    public function rewind()
     {
         $this->iteratorPosition = 0;
     }
@@ -51,24 +47,22 @@ class CartRowCollection implements Iterator, Countable
     /**
      * @return CartRow
      */
-    #[ReturnTypeWillChange]
     public function current()
     {
         return $this->cartRows[$this->getKey($this->iteratorPosition)];
     }
 
-    #[ReturnTypeWillChange]
     public function key()
     {
         return $this->getKey($this->iteratorPosition);
     }
 
-    public function next(): void
+    public function next()
     {
         ++$this->iteratorPosition;
     }
 
-    public function valid(): bool
+    public function valid()
     {
         return $this->getKey($this->iteratorPosition) !== null
                && array_key_exists(
@@ -87,7 +81,7 @@ class CartRowCollection implements Iterator, Countable
         }
     }
 
-    public function count(): int
+    public function count()
     {
         return count($this->cartRows);
     }

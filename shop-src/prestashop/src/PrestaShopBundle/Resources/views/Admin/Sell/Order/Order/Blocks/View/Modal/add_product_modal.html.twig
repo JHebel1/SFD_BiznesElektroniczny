@@ -1,4 +1,4 @@
-{# **
+{#**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
  *
@@ -21,11 +21,11 @@
  * @author    PrestaShop SA and Contributors <contact@prestashop.com>
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
- * #}
+ *#}
 
 <div class="modal fade" id="addOrderProductModal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
-    {{ form_start(addProductToOrderForm, {action: '#'}) }}
+    {{ form_start(addProductToOrderForm, {'action': '#'}) }}
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
@@ -36,19 +36,28 @@
           </button>
         </div>
         <div class="modal-body">
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label class="form-control-label" for="{{ addProductToOrderForm.product_id.vars.id }}">
+                  {{ 'Product'|trans({}, 'Admin.Global') }}
+                </label>
 
-          <div class="form-group">
-            <label class="form-control-label" for="{{ addProductToOrderForm.product_id.vars.id }}">
-              {{ 'Product'|trans({}, 'Admin.Global') }}
-            </label>
-            {{ form_widget(addProductToOrderForm.product_id) }}
+                {{ form_widget(addProductToOrderForm.product_id) }}
+              </div>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-control-label" for="{{ addProductToOrderForm.combination_id.vars.id }}">
-              {{ 'Combination'|trans({}, 'Admin.Global') }}
-            </label>
-            {{ form_widget(addProductToOrderForm.combination_id) }}
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label class="form-control-label" for="{{ addProductToOrderForm.combination_id.vars.id }}">
+                  {{ 'Combination'|trans({}, 'Admin.Global') }}
+                </label>
+
+                {{ form_widget(addProductToOrderForm.combination_id) }}
+              </div>
+            </div>
           </div>
 
           <div class="row">
@@ -82,13 +91,17 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-control-label" for="{{ addProductToOrderForm.quantity.vars.id }}">
-              {{ 'Quantity'|trans({}, 'Admin.Global') }}
-            </label>
-            {{ form_widget(addProductToOrderForm.quantity) }}
-          </div>
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label class="form-control-label" for="{{ addProductToOrderForm.quantity.vars.id }}">
+                  {{ 'Quantity'|trans({}, 'Admin.Global') }}
+                </label>
 
+                {{ form_widget(addProductToOrderForm.quantity) }}
+              </div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">

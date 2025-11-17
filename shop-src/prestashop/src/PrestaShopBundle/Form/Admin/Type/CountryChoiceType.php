@@ -31,31 +31,53 @@ use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Class CountryChoiceType is responsible for providing country choices with -- symbol in front of array.
  */
 class CountryChoiceType extends AbstractType
 {
-    private array $countriesAttr = [];
-    private bool $needDni = false;
-    private bool $needPostcode = false;
+    /**
+     * @var FormChoiceProviderInterface
+     */
+    private $countriesChoiceProvider;
 
-    public function __construct(
-        private readonly FormChoiceProviderInterface&FormChoiceAttributeProviderInterface $countriesChoiceProvider,
-        private readonly TranslatorInterface $translator,
-    ) {
+    /**
+     * @var FormChoiceAttributeProviderInterface
+     */
+    private $countriesAttrChoicesProvider;
+
+    /**
+     * @var array
+     */
+    private $countriesAttr = [];
+
+    /**
+     * @var bool
+     */
+    private $needDni = false;
+
+    /**
+     * @var bool
+     */
+    private $needPostcode = false;
+
+    /**
+     * @param FormChoiceProviderInterface $countriesChoiceProvider
+     */
+    public function __construct(FormChoiceProviderInterface $countriesChoiceProvider, FormChoiceAttributeProviderInterface $countriesAttrChoicesProvider)
+    {
+        $this->countriesChoiceProvider = $countriesChoiceProvider;
+        $this->countriesAttrChoicesProvider = $countriesAttrChoicesProvider;
     }
 
-    public function buildForm(FormBuilderInterface $builder, array $options): void
+    public function buildForm(FormBuilderInterface $builder, array $options)
     {
         if ($options['with_dni_attr'] || $options['with_postcode_attr']) {
             $this->needDni = $options['with_dni_attr'];
             $this->needPostcode = $options['with_postcode_attr'];
-            $this->countriesAttr = $this->countriesChoiceProvider->getChoicesAttributes();
+            $this->countriesAttr = $this->countriesAttrChoicesProvider->getChoicesAttributes();
         }
         parent::buildForm($builder, $options);
     }
@@ -63,29 +85,19 @@ class CountryChoiceType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function configureOptions(OptionsResolver $resolver): void
+    public function configureOptions(OptionsResolver $resolver)
     {
+        $choices = array_merge(
+            ['--' => ''],
+            $this->countriesChoiceProvider->getChoices()
+        );
+
         $resolver->setDefaults([
-            'choices' => [],
+            'choices' => $choices,
             'choice_attr' => [$this, 'getChoiceAttr'],
-            'placeholder' => '--',
-            'add_all_countries_option' => false,
             'with_dni_attr' => false,
             'with_postcode_attr' => false,
         ]);
-
-        $resolver->addNormalizer('choices', function (Options $options) {
-            $countries = $this->countriesChoiceProvider->getChoices();
-
-            if ($options['add_all_countries_option']) {
-                return array_merge(
-                    [$this->translator->trans('All countries', [], 'Admin.Global') => 0],
-                    $countries
-                );
-            }
-
-            return $countries;
-        });
 
         $resolver
             ->setAllowedTypes('with_dni_attr', 'boolean')
@@ -108,7 +120,7 @@ class CountryChoiceType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function getParent(): string
+    public function getParent()
     {
         return ChoiceType::class;
     }

@@ -30,9 +30,9 @@ use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchContext;
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchProviderInterface;
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchQuery;
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchResult;
-use PrestaShop\PrestaShop\Core\Product\Search\SortOrdersCollection;
+use PrestaShop\PrestaShop\Core\Product\Search\SortOrderFactory;
 use Supplier;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class responsible of retrieving products in Suppliers page of Front Office.
@@ -52,9 +52,9 @@ class SupplierProductSearchProvider implements ProductSearchProviderInterface
     private $supplier;
 
     /**
-     * @var SortOrdersCollection
+     * @var SortOrderFactory
      */
-    private $sortOrdersCollection;
+    private $sortOrderFactory;
 
     public function __construct(
         TranslatorInterface $translator,
@@ -62,7 +62,7 @@ class SupplierProductSearchProvider implements ProductSearchProviderInterface
     ) {
         $this->translator = $translator;
         $this->supplier = $supplier;
-        $this->sortOrdersCollection = new SortOrdersCollection($this->translator);
+        $this->sortOrderFactory = new SortOrderFactory($this->translator);
     }
 
     /**
@@ -70,26 +70,22 @@ class SupplierProductSearchProvider implements ProductSearchProviderInterface
      * @param ProductSearchQuery $query
      * @param string $type
      *
-     * @return int|array
+     * @return array|bool
      */
     private function getProductsOrCount(
         ProductSearchContext $context,
         ProductSearchQuery $query,
         $type = 'products'
     ) {
-        $isTypeProducts = $type === 'products';
-
-        $result = $this->supplier->getProducts(
+        return $this->supplier->getProducts(
             $this->supplier->id,
             $context->getIdLang(),
             $query->getPage(),
             $query->getResultsPerPage(),
             $query->getSortOrder()->toLegacyOrderBy(),
             $query->getSortOrder()->toLegacyOrderWay(),
-            !$isTypeProducts
+            $type !== 'products'
         );
-
-        return $isTypeProducts ? $result : (int) $result;
     }
 
     /**
@@ -109,9 +105,8 @@ class SupplierProductSearchProvider implements ProductSearchProviderInterface
                 ->setProducts($products)
                 ->setTotalProductsCount($count);
 
-            // We use only default set of sort orders
             $result->setAvailableSortOrders(
-                $this->sortOrdersCollection->getDefaults()
+                $this->sortOrderFactory->getDefaultSortOrders()
             );
         }
 

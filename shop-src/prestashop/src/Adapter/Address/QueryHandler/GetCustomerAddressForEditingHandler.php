@@ -28,7 +28,6 @@ namespace PrestaShop\PrestaShop\Adapter\Address\QueryHandler;
 
 use Customer;
 use PrestaShop\PrestaShop\Adapter\Address\AbstractCustomerAddressHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Address\Exception\AddressException;
 use PrestaShop\PrestaShop\Core\Domain\Address\Exception\AddressNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Address\Query\GetCustomerAddressForEditing;
@@ -40,14 +39,12 @@ use PrestaShop\PrestaShop\Core\Domain\Customer\Exception\CustomerException;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Exception\CustomerNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Customer\ValueObject\CustomerId;
 use PrestaShop\PrestaShop\Core\Domain\State\Exception\StateConstraintException;
-use PrestaShop\PrestaShop\Core\Domain\State\ValueObject\NoStateId;
 use PrestaShop\PrestaShop\Core\Domain\State\ValueObject\StateId;
 use PrestaShopException;
 
 /**
  * Handles query which gets customer address for editing
  */
-#[AsQueryHandler]
 final class GetCustomerAddressForEditingHandler extends AbstractCustomerAddressHandler implements GetCustomerAddressForEditingHandlerInterface
 {
     /**
@@ -73,7 +70,7 @@ final class GetCustomerAddressForEditingHandler extends AbstractCustomerAddressH
         }
 
         if ($customer->id !== $customerId->getValue()) {
-            throw new CustomerNotFoundException(sprintf('Customer with id "%d" was not found.', $customerId->getValue()));
+            throw new CustomerNotFoundException($customerId, sprintf('Customer with id "%s" was not found.', $customerId->getValue()));
         }
 
         $editableCustomerAddress = new EditableCustomerAddress(
@@ -91,7 +88,7 @@ final class GetCustomerAddressForEditingHandler extends AbstractCustomerAddressH
             $address->company,
             $address->vat_number,
             $address->address2,
-            (int) $address->id_state !== NoStateId::NO_STATE_ID_VALUE ? new StateId($address->id_state) : new NoStateId(),
+            new StateId($address->id_state),
             $address->phone,
             $address->phone_mobile,
             $address->other,

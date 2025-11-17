@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Backup;
 
 use PrestaShop\PrestaShop\Adapter\Entity\PrestaShopBackup;
-use PrestaShop\PrestaShop\Core\Backup\BackupInterface;
 use PrestaShop\PrestaShop\Core\Backup\Exception\BackupException;
 use PrestaShop\PrestaShop\Core\Backup\Exception\DirectoryIsNotWritableException;
 use PrestaShop\PrestaShop\Core\Backup\Manager\BackupCreatorInterface;
@@ -42,9 +41,9 @@ final class DatabaseBackupCreator implements BackupCreatorInterface
     /**
      * {@inheritdoc}
      */
-    public function createBackup(): BackupInterface
+    public function createBackup()
     {
-        ini_set('max_execution_time', '0');
+        ini_set('max_execution_time', 0);
 
         if (!is_writable(PrestaShopBackup::getBackupPath())) {
             throw new DirectoryIsNotWritableException('To create backup, its directory must be writable');

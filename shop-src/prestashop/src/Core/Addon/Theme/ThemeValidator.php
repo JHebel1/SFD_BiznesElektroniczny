@@ -27,14 +27,14 @@
 namespace PrestaShop\PrestaShop\Core\Addon\Theme;
 
 use PrestaShop\PrestaShop\Core\ConfigurationInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class ThemeValidator
 {
     /**
      * Translator.
      *
-     * @var TranslatorInterface
+     * @var \Symfony\Component\Translation\TranslatorInterface
      */
     private $translator;
     private $appConfiguration;
@@ -68,7 +68,7 @@ class ThemeValidator
                     $this->errors[$themeName] = [];
                 }
 
-                $this->errors[$themeName][] = $this->translator->trans(
+                $this->errors[$themeName] = $this->translator->trans(
                     'An error occurred. The information "%s" is missing.',
                     [$prop],
                     'Admin.Design.Notification'
@@ -115,7 +115,7 @@ class ThemeValidator
                     $this->errors[$themeName] = [];
                 }
 
-                $this->errors[$themeName][] = $this->translator->trans('An error occurred. The template "%s" is missing.', [$file], 'Admin.Design.Notification');
+                $this->errors[$themeName] = $this->translator->trans('An error occurred. The template "%s" is missing.', [$file], 'Admin.Design.Notification');
             }
         }
 
@@ -134,30 +134,30 @@ class ThemeValidator
             'templates/catalog/product.tpl',
             'templates/catalog/listing/product-list.tpl',
             'templates/checkout/cart.tpl',
-            'templates/checkout/cart-empty.tpl',
             'templates/checkout/checkout.tpl',
-            'templates/checkout/order-confirmation.tpl',
             'templates/cms/category.tpl',
             'templates/cms/page.tpl',
-            'templates/cms/sitemap.tpl',
-            'templates/cms/stores.tpl',
-            'templates/contact.tpl',
             'templates/customer/address.tpl',
             'templates/customer/addresses.tpl',
-            'templates/customer/authentication.tpl',
             'templates/customer/guest-tracking.tpl',
             'templates/customer/guest-login.tpl',
             'templates/customer/history.tpl',
             'templates/customer/identity.tpl',
+            'templates/index.tpl',
             'templates/customer/my-account.tpl',
+            'templates/checkout/order-confirmation.tpl',
             'templates/customer/order-detail.tpl',
             'templates/customer/order-follow.tpl',
             'templates/customer/order-return.tpl',
             'templates/customer/order-slip.tpl',
-            'templates/customer/registration.tpl',
             'templates/errors/404.tpl',
             'templates/errors/forbidden.tpl',
-            'templates/index.tpl',
+            'templates/checkout/cart-empty.tpl',
+            'templates/cms/sitemap.tpl',
+            'templates/cms/stores.tpl',
+            'templates/customer/authentication.tpl',
+            'templates/customer/registration.tpl',
+            'templates/contact.tpl',
         ];
     }
 }

@@ -26,27 +26,14 @@
 
 namespace PrestaShopBundle\Controller\Admin\Configure\AdvancedParameters;
 
-use PrestaShop\PrestaShop\Adapter\LegacyContext;
-use PrestaShop\PrestaShop\Core\Import\Configuration\ImportConfigFactoryInterface;
-use PrestaShop\PrestaShop\Core\Import\Configuration\ImportRuntimeConfigFactoryInterface;
-use PrestaShop\PrestaShop\Core\Import\EntityField\Provider\EntityFieldsProviderFinder;
 use PrestaShop\PrestaShop\Core\Import\Exception\NotSupportedImportEntityException;
 use PrestaShop\PrestaShop\Core\Import\Exception\UnavailableImportFileException;
-use PrestaShop\PrestaShop\Core\Import\File\FileFinder;
-use PrestaShop\PrestaShop\Core\Import\File\FileRemoval;
-use PrestaShop\PrestaShop\Core\Import\File\FileUploader;
-use PrestaShop\PrestaShop\Core\Import\Handler\ImportHandlerFinderInterface;
 use PrestaShop\PrestaShop\Core\Import\ImportDirectory;
-use PrestaShop\PrestaShop\Core\Import\ImporterInterface;
-use PrestaShop\PrestaShop\Core\Import\Sample\SampleFileProvider;
-use PrestaShop\PrestaShop\Core\Import\Validator\ImportRequestValidatorInterface;
-use PrestaShop\PrestaShop\Core\Security\Permission;
-use PrestaShopBundle\Controller\Admin\PrestaShopAdminController;
+use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
 use PrestaShopBundle\Exception\FileUploadException;
-use PrestaShopBundle\Form\Admin\Configure\AdvancedParameters\Import\ImportFormHandlerInterface;
-use PrestaShopBundle\Security\Attribute\AdminSecurity;
-use PrestaShopBundle\Security\Attribute\DemoRestricted;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use PrestaShopBundle\Security\Annotation\AdminSecurity;
+use PrestaShopBundle\Security\Annotation\DemoRestricted;
+use PrestaShopBundle\Security\Voter\PageVoter;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -56,28 +43,24 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 /**
- * Responsible for "Configure > Advanced Parameters > Import" page display.
+ * Responsible of "Configure > Advanced Parameters > Import" page display.
  */
-class ImportController extends PrestaShopAdminController
+class ImportController extends FrameworkBundleAdminController
 {
     /**
      * Show import form & handle forwarding to legacy controller.
      *
      * @param Request $request
      *
-     * @return RedirectResponse|Response
+     * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))")
+     *
+     * @return array|RedirectResponse|Response
      */
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))")]
-    public function importAction(
-        Request $request,
-        ImportDirectory $importDir,
-        #[Autowire(service: 'prestashop.admin.import.form_handler')]
-        ImportFormHandlerInterface $formHandler,
-        FileFinder $finder,
-        ImportConfigFactoryInterface $importConfigFactory,
-        LegacyContext $legacyContext,
-    ): RedirectResponse|Response {
+    public function importAction(Request $request)
+    {
         $legacyController = $request->attributes->get('_legacy_controller');
+
+        $importDir = $this->get('prestashop.core.import.dir');
 
         if (!$this->checkImportDirectory($importDir)) {
             return $this->render(
@@ -85,6 +68,11 @@ class ImportController extends PrestaShopAdminController
                 $this->getTemplateParams($request)
             );
         }
+
+        $formHandler = $this->get('prestashop.admin.import.form_handler');
+        $finder = $this->get('prestashop.core.import.file_finder');
+        $iniConfiguration = $this->get('prestashop.core.configuration.ini_configuration');
+        $importConfigFactory = $this->get('prestashop.core.import.config_factory');
 
         $importConfig = $importConfigFactory->buildFromRequest($request);
         $form = $formHandler->getForm($importConfig);
@@ -96,6 +84,7 @@ class ImportController extends PrestaShopAdminController
             }
 
             $data = $form->getData();
+
             if (!$errors = $formHandler->save($data)) {
                 // WIP import page 2 redirect
                 /*return $this->redirectToRoute(
@@ -103,10 +92,10 @@ class ImportController extends PrestaShopAdminController
                     [],
                     Response::HTTP_TEMPORARY_REDIRECT
                 );*/
-                return $this->forwardRequestToLegacyResponse($request, $legacyContext);
+                return $this->forwardRequestToLegacyResponse($request);
             }
 
-            $this->addFlashErrors($errors);
+            $this->flashErrors($errors);
         }
 
         $params = [
@@ -114,7 +103,7 @@ class ImportController extends PrestaShopAdminController
             'importFileUploadUrl' => $this->generateUrl('admin_import_file_upload'),
             'importFileNames' => $finder->getImportFileNames(),
             'importDirectory' => $importDir->getDir(),
-            'maxFileUploadSize' => $this->getIniConfiguration()->getPostMaxSizeInBytes(),
+            'maxFileUploadSize' => $iniConfiguration->getPostMaxSizeInBytes(),
         ];
 
         return $this->render(
@@ -130,36 +119,35 @@ class ImportController extends PrestaShopAdminController
      *
      * @return JsonResponse
      */
-    public function uploadAction(
-        Request $request,
-        FileUploader $fileUploader,
-    ): JsonResponse {
+    public function uploadAction(Request $request)
+    {
         $legacyController = $request->attributes->get('_legacy_controller');
 
         if ($this->isDemoModeEnabled()) {
             return $this->json([
-                'error' => $this->trans('This functionality has been disabled.', [], 'Admin.Notifications.Error'),
+                'error' => $this->trans('This functionality has been disabled.', 'Admin.Notifications.Error'),
             ]);
         }
 
-        if (!in_array($this->getAuthorizationLevel($legacyController), [
-            Permission::LEVEL_CREATE,
-            Permission::LEVEL_UPDATE,
-            Permission::LEVEL_DELETE,
+        if (!in_array($this->authorizationLevel($legacyController), [
+            PageVoter::LEVEL_CREATE,
+            PageVoter::LEVEL_UPDATE,
+            PageVoter::LEVEL_DELETE,
         ])) {
             return $this->json([
-                'error' => $this->trans('You do not have permission to update this.', [], 'Admin.Notifications.Error'),
+                'error' => $this->trans('You do not have permission to update this.', 'Admin.Notifications.Error'),
             ]);
         }
 
         $uploadedFile = $request->files->get('file');
         if (!$uploadedFile instanceof UploadedFile) {
             return $this->json([
-                'error' => $this->trans('No file was uploaded.', [], 'Admin.Advparameters.Notification'),
+                'error' => $this->trans('No file was uploaded.', 'Admin.Advparameters.Notification'),
             ]);
         }
 
         try {
+            $fileUploader = $this->get('prestashop.core.import.file_uploader');
             $file = $fileUploader->upload($uploadedFile);
         } catch (FileUploadException $e) {
             return $this->json(['error' => $e->getMessage()]);
@@ -176,18 +164,18 @@ class ImportController extends PrestaShopAdminController
     /**
      * Delete import file.
      *
+     * @AdminSecurity("is_granted('delete', request.get('_legacy_controller'))", message="You do not have permission to update this.", redirectRoute="admin_import")
+     * @DemoRestricted(redirectRoute="admin_import")
+     *
      * @param Request $request
      *
      * @return RedirectResponse
      */
-    #[DemoRestricted(redirectRoute: 'admin_import')]
-    #[AdminSecurity("is_granted('delete', request.get('_legacy_controller'))", message: 'You do not have permission to update this.', redirectRoute: 'admin_import')]
-    public function deleteAction(
-        Request $request,
-        FileRemoval $fileRemoval,
-    ): RedirectResponse {
+    public function deleteAction(Request $request)
+    {
         $filename = $request->query->get('filename', $request->query->get('csvfilename'));
         if ($filename) {
+            $fileRemoval = $this->get('prestashop.core.import.file_removal');
             $fileRemoval->remove($filename);
         }
 
@@ -197,17 +185,18 @@ class ImportController extends PrestaShopAdminController
     /**
      * Download import file from history.
      *
+     * @AdminSecurity("is_granted(['read','update', 'create','delete'], request.get('_legacy_controller'))", message="You do not have permission to update this.", redirectRoute="admin_import")
+     * @DemoRestricted(redirectRoute="admin_import")
+     *
      * @param Request $request
      *
-     * @return RedirectResponse|BinaryFileResponse
+     * @return Response
      */
-    #[DemoRestricted(redirectRoute: 'admin_import')]
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller')) && is_granted('update', request.get('_legacy_controller')) && is_granted('create', request.get('_legacy_controller')) && is_granted('delete', request.get('_legacy_controller'))", message: 'You do not have permission to update this.', redirectRoute: 'admin_import')]
-    public function downloadAction(
-        Request $request,
-        ImportDirectory $importDirectory,
-    ): RedirectResponse|BinaryFileResponse {
+    public function downloadAction(Request $request)
+    {
         if ($filename = $request->query->get('filename')) {
+            $importDirectory = $this->get('prestashop.core.import.dir');
+
             $response = new BinaryFileResponse($importDirectory . $filename);
             $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $filename);
 
@@ -220,15 +209,15 @@ class ImportController extends PrestaShopAdminController
     /**
      * Download import sample file.
      *
+     * @AdminSecurity("is_granted(['read'], request.get('_legacy_controller'))", redirectRoute="admin_import")
+     *
      * @param string $sampleName
      *
-     * @return RedirectResponse|BinaryFileResponse
+     * @return Response
      */
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))", redirectRoute: 'admin_import')]
-    public function downloadSampleAction(
-        string $sampleName,
-        SampleFileProvider $sampleFileProvider,
-    ): RedirectResponse|BinaryFileResponse {
+    public function downloadSampleAction($sampleName)
+    {
+        $sampleFileProvider = $this->get('prestashop.core.import.sample.file_provider');
         $sampleFile = $sampleFileProvider->getFile($sampleName);
 
         if (null === $sampleFile) {
@@ -244,20 +233,23 @@ class ImportController extends PrestaShopAdminController
     /**
      * Get available entity fields.
      *
+     * @AdminSecurity(
+     *     "is_granted('read', request.get('_legacy_controller'))",
+     *     redirectRoute="admin_import"
+     * )
+     *
      * @param Request $request
      *
      * @return JsonResponse
      */
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))", redirectRoute: 'admin_import')]
-    public function getAvailableEntityFieldsAction(
-        Request $request,
-        EntityFieldsProviderFinder $fieldsProviderFinder,
-    ): JsonResponse {
+    public function getAvailableEntityFieldsAction(Request $request)
+    {
+        $fieldsProviderFinder = $this->get('prestashop.core.import.fields_provider_finder');
         try {
             $fieldsProvider = $fieldsProviderFinder->find($request->get('entity'));
             $fieldsCollection = $fieldsProvider->getCollection();
             $entityFields = $fieldsCollection->toArray();
-        } catch (NotSupportedImportEntityException) {
+        } catch (NotSupportedImportEntityException $e) {
             $entityFields = [];
         }
 
@@ -267,25 +259,22 @@ class ImportController extends PrestaShopAdminController
     /**
      * Process the import.
      *
+     * @AdminSecurity("is_granted(['update', 'create', 'delete'], request.get('_legacy_controller'))", redirectRoute="admin_import")
+     * @DemoRestricted(redirectRoute="admin_import")
+     *
      * @param Request $request
      *
      * @return JsonResponse
      */
-    #[DemoRestricted(redirectRoute: 'admin_import')]
-    #[AdminSecurity("is_granted('update', request.get('_legacy_controller')) && is_granted('create', request.get('_legacy_controller')) && is_granted('delete', request.get('_legacy_controller'))", redirectRoute: 'admin_import')]
-    public function processImportAction(
-        Request $request,
-        ImportRequestValidatorInterface $requestValidator,
-        ImporterInterface $importer,
-        ImportConfigFactoryInterface $importConfigFactory,
-        ImportRuntimeConfigFactoryInterface $runtimeConfigFactory,
-        ImportHandlerFinderInterface $importHandlerFinder,
-    ): JsonResponse {
+    public function processImportAction(Request $request)
+    {
         $errors = [];
+        $requestValidator = $this->get('prestashop.core.import.request_validator');
+
         try {
             $requestValidator->validate($request);
-        } catch (UnavailableImportFileException) {
-            $errors[] = $this->trans('To proceed, please upload a file first.', [], 'Admin.Advparameters.Notification');
+        } catch (UnavailableImportFileException $e) {
+            $errors[] = $this->trans('To proceed, please upload a file first.', 'Admin.Advparameters.Notification');
         }
 
         if (!empty($errors)) {
@@ -294,6 +283,11 @@ class ImportController extends PrestaShopAdminController
                 'isFinished' => true,
             ]);
         }
+
+        $importer = $this->get('prestashop.core.import.importer');
+        $importConfigFactory = $this->get('prestashop.core.import.config_factory');
+        $runtimeConfigFactory = $this->get('prestashop.core.import.runtime_config_factory');
+        $importHandlerFinder = $this->get('prestashop.adapter.import.handler_finder');
 
         $importConfig = $importConfigFactory->buildFromRequest($request);
         $runtimeConfig = $runtimeConfigFactory->buildFromRequest($request);
@@ -314,13 +308,14 @@ class ImportController extends PrestaShopAdminController
      *
      * @return array
      */
-    protected function getTemplateParams(Request $request): array
+    protected function getTemplateParams(Request $request)
     {
         $legacyController = $request->attributes->get('_legacy_controller');
 
         return [
             'layoutHeaderToolbarBtn' => [],
-            'layoutTitle' => $this->trans('Import', [], 'Admin.Navigation.Menu'),
+            'layoutTitle' => $this->get('translator')->trans('Import', [], 'Admin.Navigation.Menu'),
+            'requireAddonsSearch' => true,
             'requireBulkActions' => false,
             'showContentHeader' => true,
             'enableSidebar' => true,
@@ -335,14 +330,13 @@ class ImportController extends PrestaShopAdminController
      *
      * @return bool
      */
-    private function checkImportFormSubmitPermissions($legacyController): bool
+    private function checkImportFormSubmitPermissions($legacyController)
     {
         if ($this->isDemoModeEnabled()) {
             $this->addFlash(
                 'error',
                 $this->trans(
                     'This functionality has been disabled.',
-                    [],
                     'Admin.Notifications.Error'
                 )
             );
@@ -350,16 +344,15 @@ class ImportController extends PrestaShopAdminController
             return false;
         }
 
-        if (!in_array($this->getAuthorizationLevel($legacyController), [
-            Permission::LEVEL_CREATE,
-            Permission::LEVEL_UPDATE,
-            Permission::LEVEL_DELETE,
+        if (!in_array($this->authorizationLevel($legacyController), [
+            PageVoter::LEVEL_CREATE,
+            PageVoter::LEVEL_UPDATE,
+            PageVoter::LEVEL_DELETE,
         ])) {
             $this->addFlash(
                 'error',
                 $this->trans(
                     'You do not have permission to update this.',
-                    [],
                     'Admin.Notifications.Error'
                 )
             );
@@ -377,14 +370,13 @@ class ImportController extends PrestaShopAdminController
      *
      * @return bool
      */
-    private function checkImportDirectory(ImportDirectory $importDir): bool
+    private function checkImportDirectory(ImportDirectory $importDir)
     {
         if (!$importDir->exists()) {
             $this->addFlash(
                 'error',
                 $this->trans(
                     'The import directory doesn\'t exist. Please check your file path.',
-                    [],
                     'Admin.Advparameters.Notification'
                 )
             );
@@ -397,7 +389,6 @@ class ImportController extends PrestaShopAdminController
                 'warning',
                 $this->trans(
                     'The import directory must be writable (CHMOD 755 / 777).',
-                    [],
                     'Admin.Advparameters.Notification'
                 )
             );
@@ -414,9 +405,11 @@ class ImportController extends PrestaShopAdminController
      *
      * @return RedirectResponse
      */
-    private function forwardRequestToLegacyResponse(Request $request, LegacyContext $legacyContext): RedirectResponse
+    private function forwardRequestToLegacyResponse(Request $request)
     {
         $legacyController = $request->attributes->get('_legacy_controller');
+        $legacyContext = $this->get('prestashop.adapter.legacy.context');
+
         $legacyImportUrl = $legacyContext->getLegacyAdminLink($legacyController);
 
         return $this->redirect($legacyImportUrl, Response::HTTP_TEMPORARY_REDIRECT);

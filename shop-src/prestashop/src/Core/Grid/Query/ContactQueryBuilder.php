@@ -78,7 +78,7 @@ final class ContactQueryBuilder extends AbstractDoctrineQueryBuilder
     {
         $qb = $this->getQueryBuilder($searchCriteria->getFilters());
         $qb
-            ->select('c.id_contact, c.email, cl.name, cl.description, c.customer_service')
+            ->select('c.id_contact, c.email, cl.name, cl.description')
             ->groupBy('c.id_contact');
 
         $this->searchCriteriaApplicator
@@ -113,7 +113,6 @@ final class ContactQueryBuilder extends AbstractDoctrineQueryBuilder
             'name',
             'email',
             'description',
-            'customer_service',
         ];
 
         $qb = $this->connection

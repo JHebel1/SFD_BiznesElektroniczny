@@ -28,8 +28,6 @@ namespace PrestaShop\PrestaShop\Core\Domain\Order\Command;
 
 use PrestaShop\PrestaShop\Core\Domain\Cart\ValueObject\CartId;
 use PrestaShop\PrestaShop\Core\Domain\Employee\ValueObject\EmployeeId;
-use PrestaShop\PrestaShop\Core\Domain\Employee\ValueObject\EmployeeIdInterface;
-use PrestaShop\PrestaShop\Core\Domain\Employee\ValueObject\NoEmployeeId;
 use PrestaShop\PrestaShop\Core\Domain\Order\Exception\InvalidOrderStateException;
 use PrestaShopBundle\Exception\InvalidModuleException;
 
@@ -59,7 +57,7 @@ class AddOrderFromBackOfficeCommand
     private $orderStateId;
 
     /**
-     * @var EmployeeIdInterface
+     * @var EmployeeId
      */
     private $employeeId;
 
@@ -76,7 +74,7 @@ class AddOrderFromBackOfficeCommand
         $this->assertOrderStateIsPositiveInt($orderStateId);
 
         $this->cartId = new CartId($cartId);
-        $this->employeeId = $employeeId === NoEmployeeId::NO_EMPLOYEE_ID_VALUE ? new NoEmployeeId() : new EmployeeId($employeeId);
+        $this->employeeId = new EmployeeId($employeeId);
         $this->orderMessage = $orderMessage;
         $this->paymentModuleName = $paymentModuleName;
         $this->orderStateId = $orderStateId;
@@ -115,7 +113,7 @@ class AddOrderFromBackOfficeCommand
     }
 
     /**
-     * @return EmployeeIdInterface
+     * @return EmployeeId
      */
     public function getEmployeeId()
     {

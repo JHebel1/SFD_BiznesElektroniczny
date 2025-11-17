@@ -44,9 +44,8 @@ final class FeatureFormDataHandler implements FormDataHandlerInterface
     /**
      * @param CommandBusInterface $commandBus
      */
-    public function __construct(
-        CommandBusInterface $commandBus
-    ) {
+    public function __construct(CommandBusInterface $commandBus)
+    {
         $this->commandBus = $commandBus;
     }
 
@@ -58,7 +57,7 @@ final class FeatureFormDataHandler implements FormDataHandlerInterface
         /** @var FeatureId $featureId */
         $featureId = $this->commandBus->handle(new AddFeatureCommand(
             $data['name'],
-            $data['shop_association']
+            $data['shop_association'] ?? []
         ));
 
         return $featureId->getValue();
@@ -69,10 +68,12 @@ final class FeatureFormDataHandler implements FormDataHandlerInterface
      */
     public function update($id, array $data)
     {
-        $command = (new EditFeatureCommand($id))
-            ->setLocalizedNames($data['name'])
-            ->setAssociatedShopIds($data['shop_association'])
-        ;
+        $command = new EditFeatureCommand($id);
+        $command->setLocalizedNames($data['name']);
+
+        if (isset($data['shop_association'])) {
+            $command->setAssociatedShopIds($data['shop_association']);
+        }
 
         $this->commandBus->handle($command);
     }

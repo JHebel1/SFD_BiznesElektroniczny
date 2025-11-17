@@ -21,12 +21,12 @@ use Twig\Node\Node;
  */
 class ArrowFunctionExpression extends AbstractExpression
 {
-    public function __construct(AbstractExpression $expr, Node $names, $lineno)
+    public function __construct(AbstractExpression $expr, Node $names, $lineno, $tag = null)
     {
-        parent::__construct(['expr' => $expr, 'names' => $names], [], $lineno);
+        parent::__construct(['expr' => $expr, 'names' => $names], [], $lineno, $tag);
     }
 
-    public function compile(Compiler $compiler): void
+    public function compile(Compiler $compiler)
     {
         $compiler
             ->addDebugInfo($this)
@@ -44,7 +44,7 @@ class ArrowFunctionExpression extends AbstractExpression
             ;
         }
         $compiler
-            ->raw(') use ($context, $macros) { ')
+            ->raw(') use ($context) { ')
         ;
         foreach ($this->getNode('names') as $name) {
             $compiler

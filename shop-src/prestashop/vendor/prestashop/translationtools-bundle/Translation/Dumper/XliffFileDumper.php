@@ -1,11 +1,28 @@
 <?php
+
 /**
- * This file is authored by PrestaShop SA and Contributors <contact@prestashop.com>
+ * 2007-2016 PrestaShop.
  *
- * It is distributed under MIT license.
+ * NOTICE OF LICENSE
  *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * This source file is subject to the Open Software License (OSL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/osl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+ * versions in the future. If you wish to customize PrestaShop for your
+ * needs please refer to http://www.prestashop.com for more information.
+ *
+ * @author    PrestaShop SA <contact@prestashop.com>
+ * @copyright 2007-2015 PrestaShop SA
+ * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ * International Registered Trademark & Property of PrestaShop SA
  */
 
 namespace PrestaShop\TranslationToolsBundle\Translation\Dumper;
@@ -40,15 +57,9 @@ class XliffFileDumper extends BaseXliffFileDumper
     }
 
     /**
-     * Options array:
-     *   'path' => Path where the XLIFF files are dumped,
-     *   'root_dir' => Root folder for PrestaShop,
-     *   'default_locale' => Default locale (en by default),
-     *   'split_files' => Boolean, indicates of th XLIFF files must split the trans units into separate files nodes (default: true),
-     *
-     * @return void
+     * {@inheritdoc}
      */
-    public function dump(MessageCatalogue $messages, array $options = [])
+    public function dump(MessageCatalogue $messages, $options = [])
     {
         if (!array_key_exists('path', $options)) {
             throw new \InvalidArgumentException('The file dumper needs a path option.');
@@ -68,105 +79,43 @@ class XliffFileDumper extends BaseXliffFileDumper
         }
     }
 
-    public function formatCatalogue(MessageCatalogue $messages, $domain, array $options = []): string
+    /**
+     * {@inheritdoc}
+     */
+    public function formatCatalogue(MessageCatalogue $messages, $domain, array $options = [])
     {
         if (array_key_exists('default_locale', $options)) {
             $defaultLocale = $options['default_locale'];
         } else {
-            $defaultLocale = \Locale::getDefault();
+            $defaultLocale = Locale::getDefault();
         }
 
-        if (array_key_exists('split_files', $options)) {
-            $splitFiles = $options['split_files'];
-        } else {
-            $splitFiles = true;
-        }
-
-        $rootDir = !empty($options['root_dir']) ? realpath($options['root_dir']) : null;
-
-        if ($splitFiles) {
-            return $this->formatSplitFiles($messages, $domain, $defaultLocale, $rootDir);
-        }
-
-        return $this->formatSingleFile($messages, $domain, $defaultLocale, $rootDir);
-    }
-
-    /**
-     * The historic format of PrestaShop XLIFF catalog splits the trans units messages into separate
-     * files node representing the file where they were extracted from.
-     */
-    private function formatSplitFiles(MessageCatalogue $messages, string $domain, string $defaultLocale, ?string $rootDir): string
-    {
         $xliffBuilder = new XliffBuilder();
         $xliffBuilder->setVersion('1.2');
 
         foreach ($messages->all($domain) as $source => $target) {
             if (!empty($source)) {
-                $metadata = $this->getMetadata($messages, $source, $domain, $rootDir);
+                $metadata = $messages->getMetadata($source, $domain);
+
+                /*
+                 * Handle original file information from xliff file.
+                 * This is needed if at least part of the catalogue was read from xliff files
+                 */
+                if (is_array($metadata['file']) && !empty($metadata['file']['original'])) {
+                    $metadata['file'] = $metadata['file']['original'];
+                }
+
+                $metadata['file'] = Configuration::getRelativePath(
+                    $metadata['file'],
+                    !empty($options['root_dir']) ? realpath($options['root_dir']) : false
+                );
+
                 $xliffBuilder->addFile($metadata['file'], $defaultLocale, $messages->getLocale());
                 $xliffBuilder->addTransUnit($metadata['file'], $source, $target, $this->getNote($metadata));
             }
         }
 
         return html_entity_decode($xliffBuilder->build()->saveXML());
-    }
-
-    /**
-     * The new PrestaShop format (starting from V9) uses a single file node not linked to any particular existing code file
-     * (we use a common placeholder) that stores all the trans units, the units are also sorted alphabetically. The purpose
-     * is to have some extracts that are less prone to changes because of code evolution.
-     *
-     * We also remove the note part that contained the line in the original file, since the file is not indicated anymore the
-     * line is not relevant anymore. Besides just giving a file and a line did not give much context for the translators anyway.
-     */
-    private function formatSingleFile(MessageCatalogue $messages, string $domain, string $defaultLocale, ?string $rootDir): string
-    {
-        $xliffBuilder = new XliffBuilder();
-        $xliffBuilder->setVersion('1.2');
-
-        $transUnits = [];
-        foreach ($messages->all($domain) as $source => $target) {
-            if (!empty($source)) {
-                $transUnits[$source] = $target;
-            }
-        }
-        // Sort alphabetically based on the source key
-        ksort($transUnits);
-
-        $singleFileName = $domain . '.xlf';
-        $xliffBuilder->addFile($singleFileName, $defaultLocale, $messages->getLocale());
-        foreach ($transUnits as $source => $target) {
-            $metadata = $this->getMetadata($messages, $source, $domain, $rootDir);
-            if (!empty($metadata['file']) && !empty($metadata['line'])) {
-                $note = sprintf('File: %s [Line: %s]', $metadata['file'], $metadata['line']);
-            } else {
-                $note = '';
-            }
-
-            $xliffBuilder->addTransUnit($singleFileName, $source, $target, $note);
-        }
-
-        return html_entity_decode($xliffBuilder->build()->saveXML());
-    }
-
-    private function getMetadata(MessageCatalogue $messages, string $source, string $domain, ?string $rootDir): array
-    {
-        $metadata = $messages->getMetadata($source, $domain);
-
-        /*
-         * Handle original file information from xliff file.
-         * This is needed if at least part of the catalogue was read from xliff files
-         */
-        if (is_array($metadata['file']) && !empty($metadata['file']['original'])) {
-            $metadata['file'] = $metadata['file']['original'];
-        }
-
-        $metadata['file'] = Configuration::getRelativePath(
-            $metadata['file'],
-            $rootDir
-        );
-
-        return $metadata;
     }
 
     /**
@@ -196,7 +145,10 @@ class XliffFileDumper extends BaseXliffFileDumper
         return implode(PHP_EOL, $notes);
     }
 
-    public function getExtension(): string
+    /**
+     * {@inheritdoc}
+     */
+    public function getExtension()
     {
         return 'xlf';
     }

@@ -26,9 +26,7 @@
 
 namespace PrestaShop\PrestaShop\Core\Product;
 
-use Exception;
 use PrestaShopBundle\Service\Hook\HookFinder;
-use Product;
 
 /**
  * This class gets the extra content to display on the product page
@@ -45,13 +43,13 @@ class ProductExtraContentFinder extends HookFinder
      *
      * @return array
      *
-     * @throws Exception
+     * @throws \Exception
      */
     public function find()
     {
         // Check first that we have a product to send as params
-        if (!array_key_exists('product', $this->params) || !$this->params['product'] instanceof Product) {
-            throw new Exception('Required product param not found.');
+        if (!array_key_exists('product', $this->params) || !$this->params['product'] instanceof \Product) {
+            throw new \Exception('Required product param not found.');
         }
 
         return parent::find();

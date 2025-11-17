@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -29,7 +30,7 @@ namespace PrestaShop\PrestaShop\Core\Localization\Currency\DataLayer;
 use PrestaShop\PrestaShop\Core\Data\Layer\AbstractDataLayer;
 use PrestaShop\PrestaShop\Core\Localization\CLDR\CurrencyInterface as CldrCurrency;
 use PrestaShop\PrestaShop\Core\Localization\CLDR\LocaleRepository as CldrLocaleRepository;
-use PrestaShop\PrestaShop\Core\Localization\Currency\CurrencyData;
+use PrestaShop\PrestaShop\Core\Localization\Currency\CurrencyData as CurrencyData;
 use PrestaShop\PrestaShop\Core\Localization\Currency\CurrencyDataLayerInterface;
 use PrestaShop\PrestaShop\Core\Localization\Currency\LocalizedCurrencyId;
 use PrestaShop\PrestaShop\Core\Localization\Exception\LocalizationException;

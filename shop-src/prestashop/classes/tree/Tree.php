@@ -23,16 +23,13 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
-
-use PrestaShopBundle\Translation\TranslatorComponent;
-
 class TreeCore
 {
-    public const DEFAULT_TEMPLATE_DIRECTORY = 'helpers/tree';
-    public const DEFAULT_TEMPLATE = 'tree.tpl';
-    public const DEFAULT_HEADER_TEMPLATE = 'tree_header.tpl';
-    public const DEFAULT_NODE_FOLDER_TEMPLATE = 'tree_node_folder.tpl';
-    public const DEFAULT_NODE_ITEM_TEMPLATE = 'tree_node_item.tpl';
+    const DEFAULT_TEMPLATE_DIRECTORY = 'helpers/tree';
+    const DEFAULT_TEMPLATE = 'tree.tpl';
+    const DEFAULT_HEADER_TEMPLATE = 'tree_header.tpl';
+    const DEFAULT_NODE_FOLDER_TEMPLATE = 'tree_node_folder.tpl';
+    const DEFAULT_NODE_ITEM_TEMPLATE = 'tree_node_item.tpl';
 
     protected $_attributes;
     private $_context;
@@ -45,15 +42,15 @@ class TreeCore
     protected $_node_item_template;
     protected $_template;
 
-    /** @var string|array|null */
+    /** @var string */
     private $_template_directory;
     private $_title;
     private $_no_js;
 
-    /** @var TreeToolbar|ITreeToolbarCore|null */
+    /** @var TreeToolbar|ITreeToolbar */
     private $_toolbar;
 
-    /** @var TranslatorComponent */
+    /** @var Translator */
     public $translator;
 
     public function __construct($id, $data = null)
@@ -104,7 +101,7 @@ class TreeCore
 
     public function getAttribute($name)
     {
-        return $this->_attributes[$name] ?? null;
+        return $this->hasAttribute($name) ? $this->_attributes[$name] : null;
     }
 
     public function setAttributes($value)
@@ -272,9 +269,9 @@ class TreeCore
     }
 
     /**
-     * @param array|string $value
+     * @param $value
      *
-     * @return self
+     * @return Tree
      */
     public function setTemplateDirectory($value)
     {
@@ -304,12 +301,12 @@ class TreeCore
         }
 
         if ($this->getContext()->controller instanceof ModuleAdminController && isset($controller_name) && file_exists($this->_normalizeDirectory(
-            $this->getContext()->controller->getTemplatePath()
+                $this->getContext()->controller->getTemplatePath()
         ) . $controller_name . DIRECTORY_SEPARATOR . $this->getTemplateDirectory() . $template)) {
             return $this->_normalizeDirectory($this->getContext()->controller->getTemplatePath()) .
                 $controller_name . DIRECTORY_SEPARATOR . $this->getTemplateDirectory() . $template;
         } elseif ($this->getContext()->controller instanceof ModuleAdminController && file_exists($this->_normalizeDirectory(
-            $this->getContext()->controller->getTemplatePath()
+                $this->getContext()->controller->getTemplatePath()
         ) . $this->getTemplateDirectory() . $template)) {
             return $this->_normalizeDirectory($this->getContext()->controller->getTemplatePath())
                 . $this->getTemplateDirectory() . $template;
@@ -319,11 +316,11 @@ class TreeCore
             return $this->_normalizeDirectory($this->getContext()->smarty->getTemplateDir(0)) . 'controllers'
                 . DIRECTORY_SEPARATOR . $controller_name . DIRECTORY_SEPARATOR . $this->getTemplateDirectory() . $template;
         } elseif (file_exists($this->_normalizeDirectory($this->getContext()->smarty->getTemplateDir(1))
-            . $this->getTemplateDirectory() . $template)) {
+                . $this->getTemplateDirectory() . $template)) {
             return $this->_normalizeDirectory($this->getContext()->smarty->getTemplateDir(1))
-                . $this->getTemplateDirectory() . $template;
+                    . $this->getTemplateDirectory() . $template;
         } elseif (file_exists($this->_normalizeDirectory($this->getContext()->smarty->getTemplateDir(0))
-            . $this->getTemplateDirectory() . $template)) {
+                . $this->getTemplateDirectory() . $template)) {
             return $this->_normalizeDirectory($this->getContext()->smarty->getTemplateDir(0))
                 . $this->getTemplateDirectory() . $template;
         } else {
@@ -404,7 +401,7 @@ class TreeCore
 
     public function render($data = null)
     {
-        // Adding tree.js
+        //Adding tree.js
         $admin_webpath = str_ireplace(_PS_CORE_DIR_, '', _PS_ADMIN_DIR_);
         $admin_webpath = preg_replace('/^' . preg_quote(DIRECTORY_SEPARATOR, '/') . '/', '', $admin_webpath);
         $bo_theme = ((Validate::isLoadedObject($this->getContext()->employee)
@@ -423,14 +420,14 @@ class TreeCore
             $this->getContext()->controller->addJs($js_path);
         }
 
-        // Create Tree Template
+        //Create Tree Template
         $template = $this->getContext()->smarty->createTemplate(
             $this->getTemplateFile($this->getTemplate()),
             $this->getContext()->smarty
         );
 
-        if ($this->getTitle() !== null && trim($this->getTitle()) != '' || $this->useToolbar()) {
-            // Create Tree Header Template
+        if (trim($this->getTitle()) != '' || $this->useToolbar()) {
+            //Create Tree Header Template
             $headerTemplate = $this->getContext()->smarty->createTemplate(
                 $this->getTemplateFile($this->getHeaderTemplate()),
                 $this->getContext()->smarty
@@ -441,11 +438,11 @@ class TreeCore
                         'title' => $this->getTitle(),
                         'toolbar' => $this->useToolbar() ? $this->renderToolbar() : null,
                     ]
-                );
+            );
             $template->assign('header', $headerTemplate->fetch());
         }
 
-        // Assign Tree nodes
+        //Assign Tree nodes
         $template->assign($this->getAttributes())->assign([
             'id' => $this->getId(),
             'nodes' => $this->renderNodes($data),
@@ -495,19 +492,9 @@ class TreeCore
         return $this->getToolbar()->render();
     }
 
-    /**
-     * @return bool
-     *
-     * @deprecated Since 9.0 and will be removed in 10.0
-     */
     public function useInput()
     {
-        @trigger_error(sprintf(
-            '%s is deprecated since 9.0 and will be removed in 10.0.',
-            __METHOD__
-        ), E_USER_DEPRECATED);
-
-        return false;
+        return isset($this->_input_type);
     }
 
     public function useToolbar()
@@ -515,11 +502,6 @@ class TreeCore
         return isset($this->_toolbar);
     }
 
-    /**
-     * @param string|array $directory
-     *
-     * @return string|array
-     */
     private function _normalizeDirectory($directory)
     {
         $last = $directory[strlen($directory) - 1];

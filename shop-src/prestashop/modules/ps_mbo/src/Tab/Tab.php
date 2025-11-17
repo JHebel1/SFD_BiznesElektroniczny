@@ -17,25 +17,41 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-declare(strict_types=1);
 
 namespace PrestaShop\Module\Mbo\Tab;
+
+use PrestaShop\Module\Mbo\RecommendedModule\RecommendedModuleCollection;
+use PrestaShop\Module\Mbo\RecommendedModule\RecommendedModuleCollectionInterface;
 
 class Tab implements TabInterface
 {
     /**
      * @var string class name of the tab
      */
-    protected $legacyClassName;
+    private $legacyClassName;
+
     /**
      * @var string class name of the tab
      */
-    protected $displayMode;
+    private $displayMode;
+
+    /**
+     * @var RecommendedModuleCollectionInterface recommended modules of the tab
+     */
+    private $recommendedModules;
+
+    /**
+     * Tab constructor.
+     */
+    public function __construct()
+    {
+        $this->recommendedModules = new RecommendedModuleCollection();
+    }
 
     /**
      * {@inheritdoc}
      */
-    public function getLegacyClassName(): string
+    public function getLegacyClassName()
     {
         return $this->legacyClassName;
     }
@@ -43,7 +59,7 @@ class Tab implements TabInterface
     /**
      * {@inheritdoc}
      */
-    public function setLegacyClassName(string $legacyClassName): TabInterface
+    public function setLegacyClassName($legacyClassName)
     {
         $this->legacyClassName = $legacyClassName;
 
@@ -53,7 +69,7 @@ class Tab implements TabInterface
     /**
      * {@inheritdoc}
      */
-    public function getDisplayMode(): string
+    public function getDisplayMode()
     {
         return $this->displayMode;
     }
@@ -61,7 +77,7 @@ class Tab implements TabInterface
     /**
      * {@inheritdoc}
      */
-    public function setDisplayMode(string $displayMode): TabInterface
+    public function setDisplayMode($displayMode)
     {
         $this->displayMode = $displayMode;
 
@@ -71,17 +87,72 @@ class Tab implements TabInterface
     /**
      * {@inheritdoc}
      */
-    public function shouldDisplayAfterContent(): bool
+    public function getRecommendedModules()
     {
-        return in_array($this->legacyClassName, static::TABS_WITH_RECOMMENDED_MODULES_AFTER_CONTENT);
+        return $this->recommendedModules;
     }
 
     /**
      * {@inheritdoc}
      */
-    public static function mayDisplayRecommendedModules(string $controllerName): bool
+    public function setRecommendedModules(RecommendedModuleCollectionInterface $recommendedModules)
     {
-        return in_array($controllerName, static::TABS_WITH_RECOMMENDED_MODULES_AFTER_CONTENT)
-            || in_array($controllerName, static::TABS_WITH_RECOMMENDED_MODULES_BUTTON);
+        $this->recommendedModules = $recommendedModules;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function hasRecommendedModules()
+    {
+        return !$this->recommendedModules->isEmpty();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getRecommendedModulesInstalled()
+    {
+        $recommendedModulesInstalled = $this->getRecommendedModules();
+
+        if ($this->hasRecommendedModules()) {
+            return $recommendedModulesInstalled->getInstalled();
+        }
+
+        return $recommendedModulesInstalled;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getRecommendedModulesNotInstalled()
+    {
+        $recommendedModulesNotInstalled = $this->getRecommendedModules();
+
+        if ($this->hasRecommendedModules()) {
+            return $recommendedModulesNotInstalled->getNotInstalled();
+        }
+
+        return $recommendedModulesNotInstalled;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function shouldDisplayButton()
+    {
+        return $this->hasRecommendedModules()
+            && TabInterface::DISPLAY_MODE_MODAL === $this->getDisplayMode();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function shouldDisplayAfterContent()
+    {
+        return $this->hasRecommendedModules()
+            && TabInterface::DISPLAY_MODE_AFTER_CONTENT === $this->getDisplayMode();
     }
 }

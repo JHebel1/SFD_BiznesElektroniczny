@@ -80,7 +80,6 @@ class CustomerThreadCore extends ObjectModel
                 'type' => self::TYPE_STRING,
                 'validate' => 'isGenericName',
                 'required' => true,
-                'size' => 12,
             ],
             'status' => [
                 'type' => self::TYPE_STRING,
@@ -152,12 +151,13 @@ class CustomerThreadCore extends ObjectModel
                 if (!Validate::isLoadedObject($message)) {
                     $return = false;
                 } else {
-                    $return = $return && $message->delete();
+                    $return &= $message->delete();
                 }
             }
         }
+        $return &= parent::delete();
 
-        return $return && parent::delete();
+        return $return;
     }
 
     public static function getCustomerMessages($id_customer, $read = null, $id_order = null)
@@ -279,9 +279,9 @@ class CustomerThreadCore extends ObjectModel
 			FROM ' . _DB_PREFIX_ . 'customer_thread ct
 			LEFT JOIN ' . _DB_PREFIX_ . 'customer_message cm
 				ON ct.id_customer_thread = cm.id_customer_thread
-            LEFT JOIN `' . _DB_PREFIX_ . 'customer` c
+            LEFT JOIN `' . _DB_PREFIX_ . 'customer` c 
                 ON ct.`id_customer` = c.`id_customer`
-            LEFT OUTER JOIN `' . _DB_PREFIX_ . 'employee` e
+            LEFT OUTER JOIN `' . _DB_PREFIX_ . 'employee` e 
                 ON e.`id_employee` = cm.`id_employee`
 			WHERE ct.id_customer = ' . (int) $id_customer .
                 ' AND ct.`id_order` = ' . (int) $id_order . '

@@ -26,7 +26,6 @@
 
 namespace PrestaShopBundle\Controller\Api;
 
-use PrestaShop\PrestaShop\Core\Security\Permission;
 use PrestaShopBundle\Api\QueryStockParamsCollection;
 use PrestaShopBundle\Api\Stock\Movement;
 use PrestaShopBundle\Api\Stock\MovementsCollection;
@@ -35,21 +34,28 @@ use PrestaShopBundle\Entity\ProductIdentity;
 use PrestaShopBundle\Entity\Repository\StockRepository;
 use PrestaShopBundle\Exception\InvalidPaginationParamsException;
 use PrestaShopBundle\Exception\ProductNotFoundException;
+use PrestaShopBundle\Security\Voter\PageVoter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 class StockController extends ApiController
 {
-    public function __construct(
-        private readonly TranslatorInterface $translator,
-        private readonly StockRepository $stockRepository,
-        private readonly QueryStockParamsCollection $queryParams,
-        private readonly MovementsCollection $movements,
-    ) {
-    }
+    /**
+     * @var StockRepository
+     */
+    public $stockRepository;
+
+    /**
+     * @var QueryStockParamsCollection
+     */
+    public $queryParams;
+
+    /**
+     * @var MovementsCollection;
+     */
+    public $movements;
 
     /**
      * @param Request $request
@@ -58,19 +64,11 @@ class StockController extends ApiController
      */
     public function listProductsAction(Request $request)
     {
-        if (!$this->isGranted(Permission::READ, $request->get('_legacy_controller'))) {
+        if (!$this->isGranted([PageVoter::READ], $request->get('_legacy_controller'))) {
             return new JsonResponse(null, Response::HTTP_FORBIDDEN);
         }
 
         try {
-            $queryParams = $request->query->all();
-
-            if (isset($queryParams['keywords']) && !is_array($queryParams['keywords'])) {
-                // 'keywords' exists in the parameters and is not array, so it must be converted into an array
-                $queryParams['keywords'] = explode(',', $queryParams['keywords']);
-                $request->query->replace($queryParams);
-            }
-
             $queryParamsCollection = $this->queryParams->fromRequest($request);
         } catch (InvalidPaginationParamsException $exception) {
             return $this->handleException(new BadRequestHttpException($exception->getMessage(), $exception));
@@ -94,7 +92,7 @@ class StockController extends ApiController
      */
     public function editProductAction(Request $request)
     {
-        if (!$this->isGranted(Permission::UPDATE, $request->get('_legacy_controller'))) {
+        if (!$this->isGranted([PageVoter::UPDATE], $request->get('_legacy_controller'))) {
             return new JsonResponse(null, Response::HTTP_FORBIDDEN);
         }
 
@@ -127,7 +125,7 @@ class StockController extends ApiController
      */
     public function bulkEditProductsAction(Request $request)
     {
-        if (!$this->isGranted(Permission::UPDATE, $request->get('_legacy_controller'))) {
+        if (!$this->isGranted([PageVoter::UPDATE], $request->get('_legacy_controller'))) {
             return new JsonResponse(null, Response::HTTP_FORBIDDEN);
         }
 
@@ -156,9 +154,10 @@ class StockController extends ApiController
      */
     public function listProductsExportAction(Request $request)
     {
-        if (!$this->isGranted(Permission::READ, $request->get('_legacy_controller'))) {
+        if (!$this->isGranted([PageVoter::READ], $request->get('_legacy_controller'))) {
             return new JsonResponse(null, Response::HTTP_FORBIDDEN);
         }
+
         try {
             $queryParamsCollection = $this->queryParams->fromRequest($request);
         } catch (InvalidPaginationParamsException $exception) {
@@ -169,21 +168,23 @@ class StockController extends ApiController
             return $this->stockRepository->getDataExport($page, $limit, $queryParamsCollection);
         };
 
+        $translator = $this->container->get('translator');
+
         // headers columns
         $headersData = [
             'product_id' => 'Product ID',
             'combination_id' => 'Combination ID',
-            'product_reference' => $this->translator->trans('Product reference', [], 'Admin.Advparameters.Feature'),
-            'combination_reference' => $this->translator->trans('Combination reference', [], 'Admin.Advparameters.Feature'),
-            'product_name' => $this->translator->trans('Product name', [], 'Admin.Catalog.Feature'),
-            'combination_name' => $this->translator->trans('Combination name', [], 'Admin.Catalog.Feature'),
-            'supplier_name' => $this->translator->trans('Supplier', [], 'Admin.Global'),
-            'active' => $this->translator->trans('Status', [], 'Admin.Global'),
-            'product_physical_quantity' => $this->translator->trans('Physical quantity', [], 'Admin.Catalog.Feature'),
-            'product_reserved_quantity' => $this->translator->trans('Reserved quantity', [], 'Admin.Catalog.Feature'),
-            'product_available_quantity' => $this->translator->trans('Available quantity', [], 'Admin.Catalog.Feature'),
-            'product_low_stock_threshold' => $this->translator->trans('Low stock level', [], 'Admin.Catalog.Feature'),
-            'product_low_stock_alert' => $this->translator->trans('Send me an email when the quantity is below or equals this level', [], 'Admin.Catalog.Feature'),
+            'product_reference' => $translator->trans('Product reference', [], 'Admin.Advparameters.Feature'),
+            'combination_reference' => $translator->trans('Combination reference', [], 'Admin.Advparameters.Feature'),
+            'product_name' => $translator->trans('Product name', [], 'Admin.Catalog.Feature'),
+            'combination_name' => $translator->trans('Combination name', [], 'Admin.Catalog.Feature'),
+            'supplier_name' => $translator->trans('Supplier', [], 'Admin.Global'),
+            'active' => $translator->trans('Status', [], 'Admin.Global'),
+            'product_physical_quantity' => $translator->trans('Physical quantity', [], 'Admin.Catalog.Feature'),
+            'product_reserved_quantity' => $translator->trans('Reserved quantity', [], 'Admin.Catalog.Feature'),
+            'product_available_quantity' => $translator->trans('Available quantity', [], 'Admin.Catalog.Feature'),
+            'product_low_stock_threshold' => $translator->trans('Low stock level', [], 'Admin.Catalog.Feature'),
+            'product_low_stock_alert' => $translator->trans('Send me an email when the quantity is below or equals this level', [], 'Admin.Catalog.Feature'),
         ];
 
         return (new CsvResponse())
@@ -198,7 +199,7 @@ class StockController extends ApiController
      *
      * @return void
      */
-    private function guardAgainstMissingDeltaParameter(Request $request): void
+    private function guardAgainstMissingDeltaParameter(Request $request)
     {
         $message = 'The "delta" parameter is required';
 
@@ -219,7 +220,7 @@ class StockController extends ApiController
      *
      * @return array
      */
-    private function guardAgainstInvalidRequestContent(string $content, string $message): array
+    private function guardAgainstInvalidRequestContent($content, $message)
     {
         $decodedContent = $this->guardAgainstInvalidJsonBody($content);
 
@@ -232,8 +233,10 @@ class StockController extends ApiController
 
     /**
      * @param Request $request
+     *
+     * @return mixed
      */
-    private function guardAgainstInvalidBulkEditionRequest(Request $request): void
+    private function guardAgainstInvalidBulkEditionRequest(Request $request)
     {
         if (strlen($request->getContent()) == 0) {
             $message = 'The request body should contain a JSON-encoded array of product identifiers and deltas';
@@ -246,26 +249,20 @@ class StockController extends ApiController
 
     /**
      * @param Request $request
+     *
+     * @return mixed
      */
-    private function guardAgainstMissingParametersInBulkEditionRequest(Request $request): void
+    private function guardAgainstMissingParametersInBulkEditionRequest(Request $request)
     {
         $decodedContent = $this->guardAgainstInvalidJsonBody($request->getContent());
 
-        $messageMissingParameters = 'Each item of JSON-encoded array in the request body should contain ' .
+        $message = 'Each item of JSON-encoded array in the request body should contain ' .
             'a product id ("product_id"), a quantity delta ("delta"). ' .
             'The item of index #%d is invalid.';
-        $messageEmptyData = $this->translator->trans(
-            'Value cannot be 0.',
-            [],
-            'Admin.Notifications.Error'
-        );
 
-        array_walk($decodedContent, function ($item, $index) use ($messageMissingParameters, $messageEmptyData) {
-            if (!array_key_exists('product_id', $item) || !array_key_exists('delta', $item)) {
-                throw new BadRequestHttpException(sprintf($messageMissingParameters, $index));
-            }
-            if ($item['delta'] == 0) {
-                throw new BadRequestHttpException(sprintf($messageEmptyData, $index));
+        array_walk($decodedContent, function ($item, $index) use ($message) {
+            if (!array_key_exists('product_id', $item) || !array_key_exists('delta', $item) || $item['delta'] == 0) {
+                throw new BadRequestHttpException(sprintf($message, $index));
             }
         });
     }

@@ -29,7 +29,7 @@ class NumberFormat
     /**
      * @var array
      */
-    protected $leadingDigitsPattern = [];
+    protected $leadingDigitsPattern = array();
 
     /**
      * @var string
@@ -76,7 +76,7 @@ class NumberFormat
         $this->hasFormat = false;
         $this->format = null;
 
-        $this->leadingDigitsPattern = [];
+        $this->leadingDigitsPattern = array();
 
         $this->hasNationalPrefixFormattingRule = false;
         $this->nationalPrefixFormattingRule = '';
@@ -230,7 +230,7 @@ class NumberFormat
     public function setNationalPrefixFormattingRule($value)
     {
         $this->hasNationalPrefixFormattingRule = true;
-        $this->nationalPrefixFormattingRule = (string) $value;
+        $this->nationalPrefixFormattingRule = (string)$value;
 
         return $this;
     }
@@ -268,12 +268,13 @@ class NumberFormat
     public function setDomesticCarrierCodeFormattingRule($value)
     {
         $this->hasDomesticCarrierCodeFormattingRule = true;
-        $this->domesticCarrierCodeFormattingRule = (string) $value;
+        $this->domesticCarrierCodeFormattingRule = (string)$value;
 
         return $this;
     }
 
     /**
+     * @param NumberFormat $other
      * @return NumberFormat
      */
     public function mergeFrom(NumberFormat $other)
@@ -306,7 +307,7 @@ class NumberFormat
      */
     public function toArray()
     {
-        $output = [];
+        $output = array();
         $output['pattern'] = $this->getPattern();
         $output['format'] = $this->getFormat();
 
@@ -328,6 +329,7 @@ class NumberFormat
     }
 
     /**
+     * @param array $input
      */
     public function fromArray(array $input)
     {

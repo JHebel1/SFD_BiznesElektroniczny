@@ -28,15 +28,17 @@ namespace PrestaShop\PrestaShop\Core\Grid\Definition\Factory;
 
 use PrestaShop\PrestaShop\Core\Grid\Action\Bulk\BulkActionCollection;
 use PrestaShop\PrestaShop\Core\Grid\Action\GridActionCollection;
+use PrestaShop\PrestaShop\Core\Grid\Action\Row\AccessibilityChecker\AccessibilityCheckerInterface;
 use PrestaShop\PrestaShop\Core\Grid\Action\Row\RowActionCollection;
 use PrestaShop\PrestaShop\Core\Grid\Action\Row\Type\LinkRowAction;
 use PrestaShop\PrestaShop\Core\Grid\Action\Type\SimpleGridAction;
 use PrestaShop\PrestaShop\Core\Grid\Column\ColumnCollection;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ActionColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\BulkActionColumn;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn;
+use PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn;
 use PrestaShop\PrestaShop\Core\Grid\Filter\Filter;
 use PrestaShop\PrestaShop\Core\Grid\Filter\FilterCollection;
+use PrestaShop\PrestaShop\Core\Hook\HookDispatcherInterface;
 use PrestaShopBundle\Form\Admin\Type\SearchAndResetType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 
@@ -48,14 +50,45 @@ final class ProfileGridDefinitionFactory extends AbstractGridDefinitionFactory
     use BulkDeleteActionTrait;
     use DeleteActionTrait;
 
-    public const GRID_ID = 'profile';
+    /**
+     * @var string
+     */
+    private $resetActionUrl;
+
+    /**
+     * @var string
+     */
+    private $redirectionUrl;
+
+    /**
+     * @var AccessibilityCheckerInterface
+     */
+    private $deleteProfileAccessibilityChecker;
+
+    /**
+     * @param HookDispatcherInterface $hookDispatcher
+     * @param string $resetActionUrl
+     * @param string $redirectionUrl
+     * @param AccessibilityCheckerInterface $deleteProfileAccessibilityChecker
+     */
+    public function __construct(
+        HookDispatcherInterface $hookDispatcher,
+        $resetActionUrl,
+        $redirectionUrl,
+        AccessibilityCheckerInterface $deleteProfileAccessibilityChecker
+    ) {
+        parent::__construct($hookDispatcher);
+        $this->resetActionUrl = $resetActionUrl;
+        $this->redirectionUrl = $redirectionUrl;
+        $this->deleteProfileAccessibilityChecker = $deleteProfileAccessibilityChecker;
+    }
 
     /**
      * {@inheritdoc}
      */
     protected function getId()
     {
-        return self::GRID_ID;
+        return 'profile';
     }
 
     /**
@@ -63,7 +96,7 @@ final class ProfileGridDefinitionFactory extends AbstractGridDefinitionFactory
      */
     protected function getName()
     {
-        return $this->trans('Roles', [], 'Admin.Navigation.Menu');
+        return $this->trans('Profiles', [], 'Admin.Navigation.Menu');
     }
 
     /**
@@ -73,44 +106,44 @@ final class ProfileGridDefinitionFactory extends AbstractGridDefinitionFactory
     {
         return (new ColumnCollection())
             ->add((new BulkActionColumn('bulk'))
-                ->setOptions([
-                    'bulk_field' => 'id_profile',
-                ])
+            ->setOptions([
+                'bulk_field' => 'id_profile',
+            ])
             )
             ->add((new DataColumn('id_profile'))
-                ->setName($this->trans('ID', [], 'Admin.Global'))
-                ->setOptions([
-                    'field' => 'id_profile',
-                ])
+            ->setName($this->trans('ID', [], 'Admin.Global'))
+            ->setOptions([
+                'field' => 'id_profile',
+            ])
             )
             ->add((new DataColumn('name'))
-                ->setName($this->trans('Name', [], 'Admin.Global'))
-                ->setOptions([
-                    'field' => 'name',
-                ])
+            ->setName($this->trans('Name', [], 'Admin.Global'))
+            ->setOptions([
+                'field' => 'name',
+            ])
             )
             ->add((new ActionColumn('actions'))
-                ->setName($this->trans('Actions', [], 'Admin.Global'))
-                ->setOptions([
-                    'actions' => (new RowActionCollection())
-                        ->add((new LinkRowAction('edit'))
-                            ->setIcon('edit')
-                            ->setName($this->trans('Edit', [], 'Admin.Actions'))
-                            ->setOptions([
-                                'route' => 'admin_profiles_edit',
-                                'route_param_name' => 'profileId',
-                                'route_param_field' => 'id_profile',
-                                'clickable_row' => true,
-                            ])
+            ->setName($this->trans('Actions', [], 'Admin.Global'))
+            ->setOptions([
+                'actions' => (new RowActionCollection())
+                    ->add((new LinkRowAction('edit'))
+                    ->setIcon('edit')
+                    ->setName($this->trans('Edit', [], 'Admin.Actions'))
+                    ->setOptions([
+                        'route' => 'admin_profiles_edit',
+                        'route_param_name' => 'profileId',
+                        'route_param_field' => 'id_profile',
+                        'clickable_row' => true,
+                    ])
+                    )
+                    ->add(
+                        $this->buildDeleteAction(
+                            'admin_profiles_delete',
+                            'profileId',
+                            'id_profile'
                         )
-                        ->add(
-                            $this->buildDeleteAction(
-                                'admin_profiles_delete',
-                                'profileId',
-                                'id_profile'
-                            )
-                        ),
-                ])
+                    ),
+            ])
             )
         ;
     }
@@ -122,16 +155,16 @@ final class ProfileGridDefinitionFactory extends AbstractGridDefinitionFactory
     {
         return (new GridActionCollection())
             ->add((new SimpleGridAction('common_refresh_list'))
-                ->setName($this->trans('Refresh list', [], 'Admin.Advparameters.Feature'))
-                ->setIcon('refresh')
+            ->setName($this->trans('Refresh list', [], 'Admin.Advparameters.Feature'))
+            ->setIcon('refresh')
             )
             ->add((new SimpleGridAction('common_show_query'))
-                ->setName($this->trans('Show SQL query', [], 'Admin.Actions'))
-                ->setIcon('code')
+            ->setName($this->trans('Show SQL query', [], 'Admin.Actions'))
+            ->setIcon('code')
             )
             ->add((new SimpleGridAction('common_export_sql_manager'))
-                ->setName($this->trans('Export to SQL Manager', [], 'Admin.Actions'))
-                ->setIcon('storage')
+            ->setName($this->trans('Export to SQL Manager', [], 'Admin.Actions'))
+            ->setIcon('storage')
             )
         ;
     }
@@ -143,33 +176,32 @@ final class ProfileGridDefinitionFactory extends AbstractGridDefinitionFactory
     {
         return (new FilterCollection())
             ->add((new Filter('id_profile', TextType::class))
-                ->setTypeOptions([
-                    'required' => false,
-                    'size' => 'small',
-                    'attr' => [
-                        'placeholder' => $this->trans('Search ID', [], 'Admin.Actions'),
-                    ],
-                ])
-                ->setAssociatedColumn('id_profile')
+            ->setTypeOptions([
+                'required' => false,
+                'size' => 'small',
+                'attr' => [
+                    'placeholder' => $this->trans('Search ID', [], 'Admin.Actions'),
+                ],
+            ])
+            ->setAssociatedColumn('id_profile')
             )
             ->add((new Filter('name', TextType::class))
-                ->setTypeOptions([
-                    'required' => false,
-                    'attr' => [
-                        'placeholder' => $this->trans('Search name', [], 'Admin.Actions'),
-                    ],
-                ])
-                ->setAssociatedColumn('name')
+            ->setTypeOptions([
+                'required' => false,
+                'attr' => [
+                    'placeholder' => $this->trans('Search name', [], 'Admin.Actions'),
+                ],
+            ])
+            ->setAssociatedColumn('name')
             )
             ->add((new Filter('actions', SearchAndResetType::class))
-                ->setTypeOptions([
-                    'reset_route' => 'admin_common_reset_search_by_filter_id',
-                    'reset_route_params' => [
-                        'filterId' => self::GRID_ID,
-                    ],
-                    'redirect_route' => 'admin_profiles_index',
-                ])
-                ->setAssociatedColumn('actions')
+            ->setTypeOptions([
+                'attr' => [
+                    'data-url' => $this->resetActionUrl,
+                    'data-redirect' => $this->redirectionUrl,
+                ],
+            ])
+            ->setAssociatedColumn('actions')
             )
         ;
     }

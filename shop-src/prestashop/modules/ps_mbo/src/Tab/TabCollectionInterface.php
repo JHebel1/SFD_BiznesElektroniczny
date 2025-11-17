@@ -20,10 +20,11 @@
 
 namespace PrestaShop\Module\Mbo\Tab;
 
+use ArrayAccess;
 use Countable;
 use IteratorAggregate;
 
-interface TabCollectionInterface extends \ArrayAccess, IteratorAggregate, Countable
+interface TabCollectionInterface extends ArrayAccess, IteratorAggregate, Countable
 {
     /**
      * Add a tab to this collection.
@@ -32,24 +33,24 @@ interface TabCollectionInterface extends \ArrayAccess, IteratorAggregate, Counta
      *
      * @return self
      */
-    public function addTab(TabInterface $tab): TabCollectionInterface;
+    public function addTab(TabInterface $tab);
 
     /**
      * @param string $tabClassName
      *
      * @return TabInterface
      */
-    public function getTab($tabClassName): TabInterface;
+    public function getTab($tabClassName);
 
     /**
      * @param mixed $offset
      *
      * @return TabInterface
      */
-    public function offsetGet($offset): TabInterface;
+    public function offsetGet($offset);
 
     /**
      * @return bool
      */
-    public function isEmpty(): bool;
+    public function isEmpty();
 }

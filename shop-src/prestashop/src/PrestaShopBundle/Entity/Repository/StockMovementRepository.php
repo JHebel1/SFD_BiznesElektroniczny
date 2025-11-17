@@ -26,7 +26,7 @@
 
 namespace PrestaShopBundle\Entity\Repository;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Connection;
 use Doctrine\ORM\EntityManager;
 use PDO;
 use PrestaShop\PrestaShop\Adapter\ImageManager;
@@ -37,11 +37,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class StockMovementRepository extends StockManagementRepository
 {
     /**
-     * @var string
-     */
-    protected $dateFormatFull;
-
-    /**
      * StockMovementRepository constructor.
      *
      * @param ContainerInterface $container
@@ -50,7 +45,6 @@ class StockMovementRepository extends StockManagementRepository
      * @param ContextAdapter $contextAdapter
      * @param ImageManager $imageManager
      * @param string $tablePrefix
-     * @param string $dateFormatFull
      */
     public function __construct(
         ContainerInterface $container,
@@ -58,8 +52,7 @@ class StockMovementRepository extends StockManagementRepository
         EntityManager $entityManager,
         ContextAdapter $contextAdapter,
         ImageManager $imageManager,
-        $tablePrefix,
-        string $dateFormatFull
+        $tablePrefix
     ) {
         parent::__construct(
             $container,
@@ -69,8 +62,6 @@ class StockMovementRepository extends StockManagementRepository
             $imageManager,
             $tablePrefix
         );
-
-        $this->dateFormatFull = $dateFormatFull;
     }
 
     /**
@@ -129,14 +120,6 @@ class StockMovementRepository extends StockManagementRepository
                   CONCAT(p.reference, " ", pa.reference)
               )                                           AS product_reference,
               pl.name                                     AS product_name,
-              p.ean13                                     AS product_ean13,
-              p.isbn                                      AS product_isbn,
-              p.upc                                       AS product_upc,
-              p.mpn                                       AS product_mpn,
-              pa.ean13                                    AS combination_ean13,
-              pa.isbn                                     AS combination_isbn,
-              pa.upc                                      AS combination_upc,
-              pa.mpn                                      AS combination_mpn,
               p.id_supplier                               AS supplier_id,
               COALESCE(s.name, "N/A")                     AS supplier_name,
               COALESCE(ic.id_image, 0)                    AS product_cover_id,
@@ -203,9 +186,9 @@ class StockMovementRepository extends StockManagementRepository
      */
     protected function addAdditionalData(array $rows)
     {
-        $rows = parent::addAdditionalData($rows);
+        $rows = $this->addCombinationsAndFeatures($rows);
+        $rows = $this->addImageThumbnailPaths($rows);
         $rows = $this->addOrderLink($rows);
-        $rows = $this->addFormattedDate($rows);
 
         return $rows;
     }
@@ -219,7 +202,7 @@ class StockMovementRepository extends StockManagementRepository
     {
         foreach ($rows as &$row) {
             if ($row['id_order']) {
-                $row['order_link'] = $this->getCurrentContext()->link->getAdminLink(
+                $row['order_link'] = $this->contextAdapter->getContext()->link->getAdminLink(
                     'AdminOrders',
                     true,
                     [],
@@ -252,11 +235,11 @@ class StockMovementRepository extends StockManagementRepository
         );
 
         $statement = $this->connection->prepare($query);
-        $statement->bindValue('shop_id', $this->getContextualShopId(), PDO::PARAM_INT);
-        $result = $statement->executeQuery();
+        $statement->bindValue('shop_id', $this->shopId, PDO::PARAM_INT);
+        $statement->execute();
 
-        $rows = $result->fetchAllAssociative();
-        $result->free();
+        $rows = $statement->fetchAll();
+        $statement->closeCursor();
         $employees = $this->castNumericToInt($rows);
 
         return $employees;
@@ -295,12 +278,12 @@ class StockMovementRepository extends StockManagementRepository
         );
 
         $statement = $this->connection->prepare($query);
-        $statement->bindValue('language_id', $this->getCurrentLanguageId(), PDO::PARAM_INT);
-        $statement->bindValue('shop_id', $this->getContextualShopId(), PDO::PARAM_INT);
-        $result = $statement->executeQuery();
+        $statement->bindValue('language_id', $this->languageId, PDO::PARAM_INT);
+        $statement->bindValue('shop_id', $this->shopId, PDO::PARAM_INT);
+        $statement->execute();
 
-        $rows = $result->fetchAllAssociative();
-        $result->free();
+        $rows = $statement->fetchAll();
+        $statement->closeCursor();
 
         if ($grouped) {
             $types = $this->castIdsToArray($rows);
@@ -322,17 +305,5 @@ class StockMovementRepository extends StockManagementRepository
         $this->em->flush();
 
         return $stockMvt->getIdStockMvt();
-    }
-
-    protected function addFormattedDate(array $rows): array
-    {
-        foreach ($rows as &$row) {
-            $row['date_add_formatted'] = date(
-                $this->dateFormatFull,
-                strtotime($row['date_add'])
-            );
-        }
-
-        return $rows;
     }
 }

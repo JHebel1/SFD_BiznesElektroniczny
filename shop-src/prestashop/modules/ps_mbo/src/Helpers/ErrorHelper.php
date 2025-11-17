@@ -26,15 +26,18 @@ use PrestaShop\Module\Mbo\Handler\ErrorHandler\ErrorHandlerInterface;
 
 class ErrorHelper
 {
-    private static ?ErrorHandlerInterface $errorHandler = null;
+    /**
+     * @var ErrorHandlerInterface
+     */
+    private static $errorHandler;
 
     /**
-     * @param \Throwable $error
+     * @param \Exception $error
      * @param array|null $data
      *
      * @return void
      */
-    public static function reportError(\Throwable $error, ?array $data = null): void
+    public static function reportError(\Exception $error, ?array $data = null): void
     {
         if (!self::$errorHandler instanceof ErrorHandlerInterface) {
             self::$errorHandler = new ErrorHandler();

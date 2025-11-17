@@ -35,7 +35,7 @@ use Psr\Log\LoggerInterface;
  */
 class LegacyLogger implements LoggerInterface
 {
-    public function emergency($message, array $context = []): void
+    public function emergency($message, array $context = [])
     {
         $this->log(Logger::EMERGENCY, $message, $context);
     }
@@ -49,7 +49,7 @@ class LegacyLogger implements LoggerInterface
      * @param string $message
      * @param array $context
      */
-    public function alert($message, array $context = []): void
+    public function alert($message, array $context = [])
     {
         $this->log(Logger::ALERT, $message, $context);
     }
@@ -62,7 +62,7 @@ class LegacyLogger implements LoggerInterface
      * @param string $message
      * @param array $context
      */
-    public function critical($message, array $context = []): void
+    public function critical($message, array $context = [])
     {
         $this->log(Logger::CRITICAL, $message, $context);
     }
@@ -74,7 +74,7 @@ class LegacyLogger implements LoggerInterface
      * @param string $message
      * @param array $context
      */
-    public function error($message, array $context = []): void
+    public function error($message, array $context = [])
     {
         $this->log(Logger::ERROR, $message, $context);
     }
@@ -88,7 +88,7 @@ class LegacyLogger implements LoggerInterface
      * @param string $message
      * @param array $context
      */
-    public function warning($message, array $context = []): void
+    public function warning($message, array $context = [])
     {
         $this->log(Logger::WARNING, $message, $context);
     }
@@ -99,7 +99,7 @@ class LegacyLogger implements LoggerInterface
      * @param string $message
      * @param array $context
      */
-    public function notice($message, array $context = []): void
+    public function notice($message, array $context = [])
     {
         $this->log(Logger::NOTICE, $message, $context);
     }
@@ -112,7 +112,7 @@ class LegacyLogger implements LoggerInterface
      * @param string $message
      * @param array $context
      */
-    public function info($message, array $context = []): void
+    public function info($message, array $context = [])
     {
         $this->log(Logger::INFO, $message, $context);
     }
@@ -123,7 +123,7 @@ class LegacyLogger implements LoggerInterface
      * @param string $message
      * @param array $context
      */
-    public function debug($message, array $context = []): void
+    public function debug($message, array $context = [])
     {
         $this->log(Logger::DEBUG, $message, $context);
     }
@@ -135,27 +135,27 @@ class LegacyLogger implements LoggerInterface
      * @param string $message
      * @param array $context
      */
-    public function log($level, $message, array $context = []): void
+    public function log($level, $message, array $context = [])
     {
         switch ($level) {
             case Logger::EMERGENCY:
             case Logger::ALERT:
             case Logger::CRITICAL:
-                $pslevel = PrestaShopLogger::LOG_SEVERITY_LEVEL_MAJOR;
+                $pslevel = 4;
                 break;
             case Logger::ERROR:
-                $pslevel = PrestaShopLogger::LOG_SEVERITY_LEVEL_ERROR;
+                $pslevel = 3;
                 break;
             case Logger::WARNING:
-                $pslevel = PrestaShopLogger::LOG_SEVERITY_LEVEL_WARNING;
+                $pslevel = 2;
                 break;
             case Logger::NOTICE:
             case Logger::INFO:
-                $pslevel = PrestaShopLogger::LOG_SEVERITY_LEVEL_INFORMATIVE;
-                break;
             case Logger::DEBUG:
+                $pslevel = 1;
+                break;
             default:
-                $pslevel = PrestaShopLogger::LOG_SEVERITY_LEVEL_DEBUG;
+                $pslevel = 0;
         }
 
         $error_code = !empty($context['error_code']) ? $context['error_code'] : null;

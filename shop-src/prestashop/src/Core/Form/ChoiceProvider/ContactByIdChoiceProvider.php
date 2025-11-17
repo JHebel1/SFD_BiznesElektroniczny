@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Core\Form\ChoiceProvider;
 
-use PrestaShop\PrestaShop\Core\Form\FormChoiceFormatter;
 use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 use PrestaShop\PrestaShop\Core\Support\ContactRepositoryInterface;
 
@@ -62,10 +61,13 @@ final class ContactByIdChoiceProvider implements FormChoiceProviderInterface
      */
     public function getChoices()
     {
-        return FormChoiceFormatter::formatFormChoices(
-            $this->contactRepository->findAllByLangId($this->langId),
-            'id_contact',
-            'name'
-        );
+        $choices = [];
+        $contacts = $this->contactRepository->findAllByLangId($this->langId);
+
+        foreach ($contacts as $contact) {
+            $choices[$contact['name']] = $contact['id_contact'];
+        }
+
+        return $choices;
     }
 }

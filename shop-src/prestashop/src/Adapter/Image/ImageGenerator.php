@@ -28,10 +28,10 @@ declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Adapter\Image;
 
+use Configuration;
 use ImageManager;
 use ImageType;
 use PrestaShop\PrestaShop\Core\Image\Exception\ImageOptimizationException;
-use PrestaShop\PrestaShop\Core\Image\ImageFormatConfiguration;
 use PrestaShop\PrestaShop\Core\Image\Uploader\Exception\ImageUploadException;
 use PrestaShopException;
 
@@ -40,30 +40,24 @@ use PrestaShopException;
  */
 class ImageGenerator
 {
-    public function __construct(
-        private readonly ImageFormatConfiguration $imageFormatConfiguration
-    ) {
-    }
-
     /**
      * @param string $imagePath
      * @param ImageType[] $imageTypes
-     * @param int $imageId
      *
      * @return bool
      *
      * @throws ImageOptimizationException
      * @throws ImageUploadException
      */
-    public function generateImagesByTypes(string $imagePath, array $imageTypes, int $imageId = 0): bool
+    public function generateImagesByTypes(string $imagePath, array $imageTypes): bool
     {
         $resized = true;
 
         try {
             foreach ($imageTypes as $imageType) {
-                $resized &= $this->resize($imagePath, $imageType, $imageId);
+                $resized &= $this->resize($imagePath, $imageType);
             }
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new ImageOptimizationException('Unable to resize one or more of your pictures.');
         }
 
@@ -79,37 +73,35 @@ class ImageGenerator
      *
      * @param string $filePath
      * @param ImageType $imageType
-     * @param int $imageId
      *
      * @return bool
      */
-    protected function resize(string $filePath, ImageType $imageType, int $imageId = 0): bool
+    protected function resize(string $filePath, ImageType $imageType): bool
     {
+        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+
         if (!is_file($filePath)) {
             throw new ImageUploadException(sprintf('File "%s" does not exist', $filePath));
         }
 
-        /*
-         * Let's resolve which formats we will use for image generation.
-         *
-         * In case of .jpg images, the actual format inside is decided by ImageManager.
-         */
-        $configuredImageFormats = $this->imageFormatConfiguration->getGenerationFormats();
+        //@todo: hardcoded extension as it was in legacy code. Changing it would be a huge BC break.
+        //@todo: in future we should consider using extension by mimeType
+        $destinationExtension = '.jpg';
+        $width = $imageType->width;
+        $height = $imageType->height;
 
-        $result = true;
-
-        foreach ($configuredImageFormats as $imageFormat) {
-            if (!ImageManager::resize(
-                $filePath,
-                sprintf('%s-%s.%s', dirname($filePath) . DIRECTORY_SEPARATOR . $imageId, stripslashes($imageType->name), $imageFormat),
-                $imageType->width,
-                $imageType->height,
-                $imageFormat
-            )) {
-                $result = false;
-            }
+        if (Configuration::get('PS_HIGHT_DPI')) {
+            $destinationExtension = '2x' . $destinationExtension;
+            $width *= 2;
+            $height *= 2;
         }
 
-        return $result;
+        return ImageManager::resize(
+            $filePath,
+            sprintf('%s-%s%s', rtrim($filePath, '.' . $fileExtension), stripslashes($imageType->name), $destinationExtension),
+            $width,
+            $height,
+            trim(mime_content_type($filePath), 'image/')
+        );
     }
 }

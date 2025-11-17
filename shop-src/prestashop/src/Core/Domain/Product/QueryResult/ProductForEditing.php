@@ -28,7 +28,6 @@ declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Core\Domain\Product\QueryResult;
 
-use PrestaShop\PrestaShop\Core\Domain\Attachment\QueryResult\AttachmentInformation;
 use PrestaShop\PrestaShop\Core\Domain\Product\VirtualProductFile\QueryResult\VirtualProductFileForEditing;
 
 /**
@@ -36,24 +35,114 @@ use PrestaShop\PrestaShop\Core\Domain\Product\VirtualProductFile\QueryResult\Vir
  */
 class ProductForEditing
 {
+    /**
+     * @var int
+     */
+    private $productId;
+
+    /**
+     * @var string
+     */
+    private $type;
+
+    /**
+     * @var ProductBasicInformation
+     */
+    private $basicInformation;
+
+    /**
+     * @var ProductCategoriesInformation
+     */
+    private $categoriesInformation;
+
+    /**
+     * @var ProductPricesInformation
+     */
+    private $pricesInformation;
+
+    /**
+     * @var ProductOptions
+     */
+    private $options;
+
+    /**
+     * @var ProductDetails
+     */
+    private $details;
+
+    /**
+     * @var ProductCustomizationOptions
+     */
+    private $customizationOptions;
+
+    /**
+     * @var ProductShippingInformation
+     */
+    private $shippingInformation;
+
+    /**
+     * @var ProductSeoOptions
+     */
+    private $productSeoOptions;
+
+    /**
+     * @var int[]
+     */
+    private $associatedAttachmentIds;
+
+    /**
+     * @var ProductStockInformation
+     */
+    private $stockInformation;
+
+    /**
+     * @var VirtualProductFileForEditing|null
+     */
+    private $virtualProductFile;
+
+    /**
+     * @param int $productId
+     * @param string $type
+     * @param ProductCustomizationOptions $customizationOptions
+     * @param ProductBasicInformation $basicInformation
+     * @param ProductCategoriesInformation $categoriesInformation
+     * @param ProductPricesInformation $pricesInformation
+     * @param ProductOptions $options
+     * @param ProductDetails $details
+     * @param ProductShippingInformation $shippingInformation
+     * @param ProductSeoOptions $productSeoOptions
+     * @param array $associatedAttachmentIds
+     * @param ProductStockInformation $stockInformation
+     * @param VirtualProductFileForEditing|null $virtualProductFile
+     */
     public function __construct(
-        private int $productId,
-        private string $type,
-        private bool $isActive,
-        private ProductCustomizationOptions $customizationOptions,
-        private ProductBasicInformation $basicInformation,
-        private CategoriesInformation $categoriesInformation,
-        private ProductPricesInformation $pricesInformation,
-        private ProductOptions $options,
-        private ProductDetails $details,
-        private ProductShippingInformation $shippingInformation,
-        private ProductSeoOptions $productSeoOptions,
-        private array $associatedAttachments,
-        private ProductStockInformation $stockInformation,
-        private ?VirtualProductFileForEditing $virtualProductFile,
-        private string $coverThumbnailUrl,
-        private array $shopIds,
+        int $productId,
+        string $type,
+        ProductCustomizationOptions $customizationOptions,
+        ProductBasicInformation $basicInformation,
+        ProductCategoriesInformation $categoriesInformation,
+        ProductPricesInformation $pricesInformation,
+        ProductOptions $options,
+        ProductDetails $details,
+        ProductShippingInformation $shippingInformation,
+        ProductSeoOptions $productSeoOptions,
+        array $associatedAttachmentIds,
+        ProductStockInformation $stockInformation,
+        ?VirtualProductFileForEditing $virtualProductFile
     ) {
+        $this->productId = $productId;
+        $this->type = $type;
+        $this->customizationOptions = $customizationOptions;
+        $this->basicInformation = $basicInformation;
+        $this->categoriesInformation = $categoriesInformation;
+        $this->pricesInformation = $pricesInformation;
+        $this->options = $options;
+        $this->details = $details;
+        $this->shippingInformation = $shippingInformation;
+        $this->productSeoOptions = $productSeoOptions;
+        $this->associatedAttachmentIds = $associatedAttachmentIds;
+        $this->stockInformation = $stockInformation;
+        $this->virtualProductFile = $virtualProductFile;
     }
 
     /**
@@ -73,14 +162,6 @@ class ProductForEditing
     }
 
     /**
-     * @return bool
-     */
-    public function isActive(): bool
-    {
-        return $this->isActive;
-    }
-
-    /**
      * @return ProductCustomizationOptions
      */
     public function getCustomizationOptions(): ProductCustomizationOptions
@@ -97,9 +178,9 @@ class ProductForEditing
     }
 
     /**
-     * @return CategoriesInformation
+     * @return ProductCategoriesInformation
      */
-    public function getCategoriesInformation(): CategoriesInformation
+    public function getCategoriesInformation(): ProductCategoriesInformation
     {
         return $this->categoriesInformation;
     }
@@ -145,11 +226,11 @@ class ProductForEditing
     }
 
     /**
-     * @return AttachmentInformation[]
+     * @return int[]
      */
-    public function getAssociatedAttachments(): array
+    public function getAssociatedAttachmentIds(): array
     {
-        return $this->associatedAttachments;
+        return $this->associatedAttachmentIds;
     }
 
     /**
@@ -166,21 +247,5 @@ class ProductForEditing
     public function getVirtualProductFile(): ?VirtualProductFileForEditing
     {
         return $this->virtualProductFile;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCoverThumbnailUrl(): string
-    {
-        return $this->coverThumbnailUrl;
-    }
-
-    /**
-     * @return int[]
-     */
-    public function getShopIds(): array
-    {
-        return $this->shopIds;
     }
 }

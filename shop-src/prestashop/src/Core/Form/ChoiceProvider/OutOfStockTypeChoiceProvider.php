@@ -27,10 +27,9 @@ declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Core\Form\ChoiceProvider;
 
-use PrestaShop\PrestaShop\Core\Domain\Configuration\ShopConfigurationInterface;
 use PrestaShop\PrestaShop\Core\Domain\Product\Stock\ValueObject\OutOfStockType;
 use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Provides form choices for "when product is out of stock" behavior
@@ -43,20 +42,20 @@ final class OutOfStockTypeChoiceProvider implements FormChoiceProviderInterface
     private $translator;
 
     /**
-     * @var ShopConfigurationInterface
+     * @var bool
      */
-    private $configuration;
+    private $outOfStockProductOrderingAvailableByDefault;
 
     /**
      * @param TranslatorInterface $translator
-     * @param ShopConfigurationInterface $configuration
+     * @param bool $outOfStockProductOrderingAvailableByDefault
      */
     public function __construct(
         TranslatorInterface $translator,
-        ShopConfigurationInterface $configuration
+        bool $outOfStockProductOrderingAvailableByDefault
     ) {
         $this->translator = $translator;
-        $this->configuration = $configuration;
+        $this->outOfStockProductOrderingAvailableByDefault = $outOfStockProductOrderingAvailableByDefault;
     }
 
     /**
@@ -70,7 +69,7 @@ final class OutOfStockTypeChoiceProvider implements FormChoiceProviderInterface
         $defaultLabel = sprintf(
             '%s (%s)',
             $this->translator->trans('Use default behavior', [], 'Admin.Catalog.Feature'),
-            $this->configuration->get('PS_ORDER_OUT_OF_STOCK') ? $allowOrdersLabel : $denyOrdersLabel
+            $this->outOfStockProductOrderingAvailableByDefault ? $allowOrdersLabel : $denyOrdersLabel
         );
 
         return [

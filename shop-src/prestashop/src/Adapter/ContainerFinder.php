@@ -27,6 +27,7 @@
 namespace PrestaShop\PrestaShop\Adapter;
 
 use Context;
+use Controller;
 use PrestaShop\PrestaShop\Core\Exception\ContainerNotFoundException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -62,7 +63,7 @@ class ContainerFinder
             return $this->context->container;
         }
         if (isset($this->context->controller)
-            && method_exists($this->context->controller, 'getContainer')
+            && $this->context->controller instanceof Controller
             && ($container = $this->context->controller->getContainer())
             && null !== $container
         ) {

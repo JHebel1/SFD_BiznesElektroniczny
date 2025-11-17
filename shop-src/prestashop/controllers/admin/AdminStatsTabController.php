@@ -33,11 +33,6 @@ abstract class AdminStatsTabControllerCore extends AdminController
         $this->display = 'view';
     }
 
-    /**
-     * AdminController::initContent() override.
-     *
-     * @see AdminController::initContent()
-     */
     public function initContent()
     {
         if ($this->ajax) {
@@ -172,24 +167,17 @@ abstract class AdminStatsTabControllerCore extends AdminController
         return $tpl->fetch();
     }
 
-    public function checkModulesNames($a, $b): int
+    public function checkModulesNames($a, $b)
     {
-        return strcasecmp($a['displayName'], $b['displayName']);
+        return (bool) ($a['displayName'] > $b['displayName']);
     }
 
     protected function getModules()
     {
-        $moduleList = Hook::getHookModuleExecList('displayAdminStatsModules');
-        if (true === is_array($moduleList)) {
-            return array_map(
-                function ($moduleArray) {
-                    return ['name' => $moduleArray['module']];
-                },
-                $moduleList
-            );
-        }
-
-        return [];
+        return array_map(
+            function ($moduleArray) {return ['name' => $moduleArray['module']]; },
+            Hook::getHookModuleExecList('displayAdminStatsModules')
+        );
     }
 
     public function displayStats()
@@ -208,8 +196,7 @@ abstract class AdminStatsTabControllerCore extends AdminController
             }
 
             if ($module_instance && $module_instance->active) {
-                // Hook called only for the module concerned
-                $hook = Hook::exec('displayAdminStatsModules', [], $module_instance->id);
+                $hook = Hook::exec('displayAdminStatsModules', null, $module_instance->id);
             }
         }
 
@@ -303,7 +290,7 @@ abstract class AdminStatsTabControllerCore extends AdminController
                         'has_errors' => false,
                         'date_from' => $this->context->employee->stats_date_from,
                         'date_to' => $this->context->employee->stats_date_to, ]
-                ));
+                    ));
             }
         }
     }

@@ -30,7 +30,6 @@ use Configuration;
 use CustomizationField;
 use ImageManager;
 use PrestaShop\PrestaShop\Adapter\Cart\AbstractCartHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Command\AddCustomizationCommand;
 use PrestaShop\PrestaShop\Core\Domain\Cart\CommandHandler\AddCustomizationHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Cart\Exception\CartNotFoundException;
@@ -47,7 +46,6 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 /**
  * Handles @var AddCustomizationCommand using legacy object model.
  */
-#[AsCommandHandler]
 final class AddCustomizationHandler extends AbstractCartHandler implements AddCustomizationHandlerInterface
 {
     /**
@@ -112,7 +110,7 @@ final class AddCustomizationHandler extends AbstractCartHandler implements AddCu
                 if (false === $customizationId) {
                     throw new CustomizationException(sprintf('Failed to add customized data for customization field with id "%s"', $customizationFieldId));
                 }
-            } catch (PrestaShopException) {
+            } catch (PrestaShopException $e) {
                 throw new CustomizationException(sprintf('An error occurred while trying to add customized data for customization field with id "%s"', $customizationFieldId));
             }
         }
@@ -121,7 +119,7 @@ final class AddCustomizationHandler extends AbstractCartHandler implements AddCu
             return null;
         }
 
-        return new CustomizationId((int) $customizationId);
+        return new CustomizationId($customizationId);
     }
 
     /**
@@ -137,14 +135,14 @@ final class AddCustomizationHandler extends AbstractCartHandler implements AddCu
     {
         $this->validateUpload($file);
 
-        // @todo: check if copy is okay to use instead of move_uploaded_file(this fails creating new request from global later)
-        // @todo: implement UploadedFile::move() instead of copy();
+        //@todo: check if copy is okay to use instead of move_uploaded_file(this fails creating new request from global later)
+        //@todo: implement UploadedFile::move() instead of copy();
         if (!($tmpName = tempnam(_PS_TMP_IMG_DIR_, 'PS')) || !copy($file->getPathname(), $tmpName)) {
             throw new FileUploadException('An error occurred during the image upload process.');
         }
         $fileName = md5(uniqid('', true));
-        $resized = ImageManager::resize($tmpName, _PS_UPLOAD_DIR_ . $fileName)
-            && ImageManager::resize(
+        $resized = ImageManager::resize($tmpName, _PS_UPLOAD_DIR_ . $fileName) &&
+            ImageManager::resize(
                 $tmpName,
                 _PS_UPLOAD_DIR_ . $fileName . '_small',
                 (int) Configuration::get('PS_PRODUCT_PICTURE_WIDTH'),

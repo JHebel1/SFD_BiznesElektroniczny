@@ -1,4 +1,4 @@
-{# **
+{#**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
  *
@@ -21,18 +21,33 @@
  * @author    PrestaShop SA and Contributors <contact@prestashop.com>
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
- * #}
+ *#}
+
 {% extends '@PrestaShop/Admin/layout.html.twig' %}
 
+{% set layoutTitle = 'Add new'|trans({}, 'Admin.Actions') %}
+
 {% block content %}
-  {{ include('@PrestaShop/Admin/Configure/AdvancedParameters/Employee/Blocks/form.html.twig', {
-    employeeForm: employeeForm,
-    isRestrictedAccess: false,
-  }) }}
+  <div class="row justify-content-center">
+    <div class="col">
+      {% include '@PrestaShop/Admin/Configure/AdvancedParameters/Employee/Blocks/form.html.twig' with {
+        employeeForm: employeeForm,
+        level: level,
+        errorMessage: errorMessage,
+        isRestrictedAccess: false,
+        superAdminProfileId: superAdminProfileId,
+        getTabsUrl: getTabsUrl,
+        avatarUrl: employeeForm.vars.defaultAvatarUrl
+      } %}
+    </div>
+  </div>
 {% endblock %}
 
 {% block javascripts %}
   {{ parent() }}
+
+  {# Password generation plugin #}
+  <script src="{{ asset('themes/default/js/vendor/jquery-passy.js') }}"></script>
 
   <script src="{{ asset('themes/new-theme/public/employee_form.bundle.js') }}"></script>
 {% endblock %}

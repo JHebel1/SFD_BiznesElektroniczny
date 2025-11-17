@@ -51,7 +51,7 @@ class AddonListFilter
     /**
      * @param int $origin
      *
-     * @return AddonListFilter
+     * @return \PrestaShop\PrestaShop\Core\Addon\AddonListFilter
      */
     public function addOrigin($origin)
     {
@@ -63,7 +63,7 @@ class AddonListFilter
     /**
      * @param int $status
      *
-     * @return AddonListFilter
+     * @return \PrestaShop\PrestaShop\Core\Addon\AddonListFilter
      */
     public function addStatus($status)
     {
@@ -75,7 +75,7 @@ class AddonListFilter
     /**
      * @param int $type
      *
-     * @return AddonListFilter
+     * @return \PrestaShop\PrestaShop\Core\Addon\AddonListFilter
      */
     public function addType($type)
     {
@@ -117,7 +117,7 @@ class AddonListFilter
     /**
      * @param int $origin
      *
-     * @return AddonListFilter
+     * @return \PrestaShop\PrestaShop\Core\Addon\AddonListFilter
      */
     public function removeOrigin($origin)
     {
@@ -127,7 +127,7 @@ class AddonListFilter
     /**
      * @param int $status
      *
-     * @return AddonListFilter
+     * @return \PrestaShop\PrestaShop\Core\Addon\AddonListFilter
      */
     public function removeStatus($status)
     {
@@ -137,7 +137,7 @@ class AddonListFilter
     /**
      * @param int $type
      *
-     * @return AddonListFilter
+     * @return \PrestaShop\PrestaShop\Core\Addon\AddonListFilter
      */
     public function removeType($type)
     {
@@ -147,7 +147,7 @@ class AddonListFilter
     /**
      * @param int $origin
      *
-     * @return AddonListFilter
+     * @return \PrestaShop\PrestaShop\Core\Addon\AddonListFilter
      */
     public function setOrigin($origin)
     {
@@ -159,7 +159,7 @@ class AddonListFilter
     /**
      * @param int $type
      *
-     * @return AddonListFilter
+     * @return \PrestaShop\PrestaShop\Core\Addon\AddonListFilter
      */
     public function setType($type)
     {
@@ -171,7 +171,7 @@ class AddonListFilter
     /**
      * @param int $status
      *
-     * @return AddonListFilter
+     * @return \PrestaShop\PrestaShop\Core\Addon\AddonListFilter
      */
     public function setStatus($status)
     {

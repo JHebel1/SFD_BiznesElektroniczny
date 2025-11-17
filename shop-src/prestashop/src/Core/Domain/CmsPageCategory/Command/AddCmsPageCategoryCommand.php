@@ -71,6 +71,11 @@ class AddCmsPageCategoryCommand extends AbstractCmsPageCategoryCommand
     private $localisedMetaDescription;
 
     /**
+     * @var string[]
+     */
+    private $localisedMetaKeywords;
+
+    /**
      * @var int[]
      */
     private $shopAssociation;
@@ -191,6 +196,29 @@ class AddCmsPageCategoryCommand extends AbstractCmsPageCategoryCommand
     {
         $this->assertIsGenericNameForMetaDescription($localisedMetaDescription);
         $this->localisedMetaDescription = $localisedMetaDescription;
+
+        return $this;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getLocalisedMetaKeywords()
+    {
+        return $this->localisedMetaKeywords;
+    }
+
+    /**
+     * @param string[] $localisedMetaKeywords
+     *
+     * @return self
+     *
+     * @throws CmsPageCategoryConstraintException
+     */
+    public function setLocalisedMetaKeywords(array $localisedMetaKeywords)
+    {
+        $this->assertIsGenericNameForMetaKeywords($localisedMetaKeywords);
+        $this->localisedMetaKeywords = $localisedMetaKeywords;
 
         return $this;
     }

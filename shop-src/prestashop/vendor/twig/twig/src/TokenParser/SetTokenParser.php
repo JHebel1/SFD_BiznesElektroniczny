@@ -12,7 +12,6 @@
 namespace Twig\TokenParser;
 
 use Twig\Error\SyntaxError;
-use Twig\Node\Node;
 use Twig\Node\SetNode;
 use Twig\Token;
 
@@ -26,11 +25,11 @@ use Twig\Token;
  *  {% set foo, bar = 'foo', 'bar' %}
  *  {% set foo %}Some content{% endset %}
  *
- * @internal
+ * @final
  */
-final class SetTokenParser extends AbstractTokenParser
+class SetTokenParser extends AbstractTokenParser
 {
-    public function parse(Token $token): Node
+    public function parse(Token $token)
     {
         $lineno = $token->getLine();
         $stream = $this->parser->getStream();
@@ -58,16 +57,18 @@ final class SetTokenParser extends AbstractTokenParser
             $stream->expect(Token::BLOCK_END_TYPE);
         }
 
-        return new SetNode($capture, $names, $values, $lineno);
+        return new SetNode($capture, $names, $values, $lineno, $this->getTag());
     }
 
-    public function decideBlockEnd(Token $token): bool
+    public function decideBlockEnd(Token $token)
     {
         return $token->test('endset');
     }
 
-    public function getTag(): string
+    public function getTag()
     {
         return 'set';
     }
 }
+
+class_alias('Twig\TokenParser\SetTokenParser', 'Twig_TokenParser_Set');

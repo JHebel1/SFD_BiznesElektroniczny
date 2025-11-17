@@ -26,65 +26,75 @@
 
 namespace PrestaShopBundle\Controller\Admin\Configure\ShopParameters;
 
-use PrestaShop\PrestaShop\Core\Form\FormHandlerInterface;
-use PrestaShopBundle\Controller\Admin\PrestaShopAdminController;
-use PrestaShopBundle\Security\Attribute\AdminSecurity;
-use PrestaShopBundle\Security\Attribute\DemoRestricted;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
+use PrestaShopBundle\Security\Annotation\AdminSecurity;
+use PrestaShopBundle\Security\Annotation\DemoRestricted;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Controller responsible for "Configure > Shop Parameters > Customer Settings" page.
+ * Controller responsible of "Configure > Shop Parameters > Customer Settings" page.
  */
-class CustomerPreferencesController extends PrestaShopAdminController
+class CustomerPreferencesController extends FrameworkBundleAdminController
 {
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))", message: 'Access denied.')]
-    public function indexAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.admin.customer_preferences.form_handler')]
-        FormHandlerInterface $customerFormHandler,
-    ): Response {
+    /**
+     * Show customer preferences page.
+     *
+     * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))", message="Access denied.")
+     *
+     * @param Request $request
+     *
+     * @return Response
+     */
+    public function indexAction(Request $request)
+    {
         $legacyController = $request->attributes->get('_legacy_controller');
 
-        $form = $customerFormHandler->getForm();
+        $form = $this->get('prestashop.admin.customer_preferences.form_handler')->getForm();
 
         return $this->render('@PrestaShop/Admin/Configure/ShopParameters/customer_preferences.html.twig', [
-            'layoutTitle' => $this->trans('Customer settings', [], 'Admin.Navigation.Menu'),
+            'layoutTitle' => $this->trans('Customers', 'Admin.Navigation.Menu'),
+            'requireAddonsSearch' => true,
             'enableSidebar' => true,
             'help_link' => $this->generateSidebarLink($legacyController),
             'generalForm' => $form->createView(),
         ]);
     }
 
-    #[DemoRestricted(redirectRoute: 'admin_customer_preferences')]
-    #[AdminSecurity("is_granted('update', request.get('_legacy_controller')) && is_granted('create', request.get('_legacy_controller')) && is_granted('delete', request.get('_legacy_controller'))", message: 'You do not have permission to update this.', redirectRoute: 'admin_customer_preferences')]
-    public function processAction(
-        Request $request,
-        #[Autowire(service: 'prestashop.admin.customer_preferences.form_handler')]
-        FormHandlerInterface $customerFormHandler,
-    ): Response {
-        $form = $customerFormHandler->getForm();
+    /**
+     * Process the Customer Preferences configuration form.
+     *
+     * @AdminSecurity("is_granted(['update', 'create','delete'], request.get('_legacy_controller'))", message="You do not have permission to update this.", redirectRoute="admin_customer_preferences")
+     * @DemoRestricted(redirectRoute="admin_customer_preferences")
+     *
+     * @param Request $request
+     *
+     * @return Response
+     */
+    public function processAction(Request $request)
+    {
+        $formHandler = $this->get('prestashop.admin.customer_preferences.form_handler');
+
+        $form = $formHandler->getForm();
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
 
-            if ($errors = $customerFormHandler->save($data)) {
-                $this->addFlashErrors($errors);
+            if ($errors = $formHandler->save($data)) {
+                $this->flashErrors($errors);
 
                 return $this->redirectToRoute('admin_customer_preferences');
             }
 
-            $this->addFlash('success', $this->trans('Update successful', [], 'Admin.Notifications.Success'));
-
-            return $this->redirectToRoute('admin_customer_preferences');
+            $this->addFlash('success', $this->trans('Update successful', 'Admin.Notifications.Success'));
         }
 
         $legacyController = $request->attributes->get('_legacy_controller');
 
         return $this->render('@PrestaShop/Admin/Configure/ShopParameters/customer_preferences.html.twig', [
-            'layoutTitle' => $this->trans('Customers', [], 'Admin.Navigation.Menu'),
+            'layoutTitle' => $this->trans('Customers', 'Admin.Navigation.Menu'),
+            'requireAddonsSearch' => true,
             'enableSidebar' => true,
             'help_link' => $this->generateSidebarLink($legacyController),
             'generalForm' => $form->createView(),

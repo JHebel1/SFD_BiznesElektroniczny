@@ -31,7 +31,6 @@ namespace PrestaShop\PrestaShop\Adapter\Product\Customization\CommandHandler;
 use PrestaShop\PrestaShop\Adapter\Product\Customization\Update\CustomizationFieldDeleter;
 use PrestaShop\PrestaShop\Adapter\Product\Customization\Update\ProductCustomizationFieldUpdater;
 use PrestaShop\PrestaShop\Adapter\Product\Repository\ProductRepository;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Product\Customization\Command\RemoveAllCustomizationFieldsFromProductCommand;
 use PrestaShop\PrestaShop\Core\Domain\Product\Customization\CommandHandler\RemoveAllCustomizationFieldsFromProductHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Product\Customization\ValueObject\CustomizationFieldId;
@@ -39,7 +38,6 @@ use PrestaShop\PrestaShop\Core\Domain\Product\Customization\ValueObject\Customiz
 /**
  * Handles @see RemoveAllCustomizationFieldsFromProductCommand using legacy object model
  */
-#[AsCommandHandler]
 final class RemoveAllCustomizationFieldsFromProductHandler implements RemoveAllCustomizationFieldsFromProductHandlerInterface
 {
     /**
@@ -77,13 +75,13 @@ final class RemoveAllCustomizationFieldsFromProductHandler implements RemoveAllC
      */
     public function handle(RemoveAllCustomizationFieldsFromProductCommand $command): void
     {
-        $product = $this->productRepository->getProductByDefaultShop($command->getProductId());
+        $product = $this->productRepository->get($command->getProductId());
 
         $customizationFieldIds = array_map(function (array $field): CustomizationFieldId {
             return new CustomizationFieldId((int) $field['id_customization_field']);
         }, $product->getCustomizationFieldIds());
 
         $this->customizationFieldDeleter->bulkDelete($customizationFieldIds);
-        $this->productCustomizationFieldUpdater->refreshProductCustomizability($command->getProductId());
+        $this->productCustomizationFieldUpdater->refreshProductCustomizability($product);
     }
 }

@@ -27,7 +27,6 @@
 namespace PrestaShopBundle\Controller\Api;
 
 use Exception;
-use PrestaShop\PrestaShop\Adapter\Cache\Clearer\SymfonyCacheClearer;
 use PrestaShopBundle\Api\QueryParamsCollection;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -35,27 +34,30 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 abstract class ApiController
 {
-    protected LoggerInterface $logger;
-    protected ContainerInterface $container;
-    protected AuthorizationCheckerInterface $authorizationChecker;
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
 
+    /**
+     * @param LoggerInterface $logger
+     */
     public function setLogger(LoggerInterface $logger)
     {
         $this->logger = $logger;
     }
 
+    /**
+     * @var ContainerInterface
+     */
+    protected $container;
+
     public function setContainer(ContainerInterface $container)
     {
         $this->container = $container;
-    }
-
-    public function setAuthorizationChecker(AuthorizationCheckerInterface $authorizationChecker)
-    {
-        $this->authorizationChecker = $authorizationChecker;
     }
 
     /**
@@ -92,11 +94,11 @@ abstract class ApiController
      */
     protected function clearCache()
     {
-        /** @var SymfonyCacheClearer $cacheClearer */
-        $cacheClearer = $this->container->get(SymfonyCacheClearer::class);
+        $cacheRefresh = $this->container->get('prestashop.cache.refresh');
 
         try {
-            $cacheClearer->clear();
+            $cacheRefresh->addCacheClear();
+            $cacheRefresh->execute();
         } catch (Exception $exception) {
             $this->container->get('logger')->error($exception->getMessage());
         }
@@ -113,7 +115,7 @@ abstract class ApiController
      */
     protected function addAdditionalInfo(
         Request $request,
-        ?QueryParamsCollection $queryParams = null,
+        QueryParamsCollection $queryParams = null,
         $headers = []
     ) {
         $router = $this->container->get('router');
@@ -146,9 +148,9 @@ abstract class ApiController
             $info['previous_url'] = $router->generate($request->attributes->get('_route'), $previousParams);
         }
 
-        if (array_key_exists('Total-Pages', $headers)
-            && array_key_exists('page_index', $allParams)
-            && $headers['Total-Pages'] > $allParams['page_index']) {
+        if (array_key_exists('Total-Pages', $headers) &&
+            array_key_exists('page_index', $allParams) &&
+            $headers['Total-Pages'] > $allParams['page_index']) {
             $nextParams = $allParams;
             if (array_key_exists('page_index', $nextParams)) {
                 ++$nextParams['page_index'];
@@ -180,7 +182,7 @@ abstract class ApiController
     protected function jsonResponse(
         $data,
         Request $request,
-        ?QueryParamsCollection $queryParams = null,
+        QueryParamsCollection $queryParams = null,
         $status = 200,
         $headers = []
     ) {
@@ -195,14 +197,14 @@ abstract class ApiController
     /**
      * Checks if access is granted.
      *
-     * @param mixed $accessLevel
+     * @param array $accessLevel
      * @param string $controller name of the controller
      *
      * @return bool
      */
-    protected function isGranted($accessLevel, $controller)
+    protected function isGranted(array $accessLevel, $controller)
     {
-        return $this->authorizationChecker->isGranted(
+        return $this->container->get('security.authorization_checker')->isGranted(
             $accessLevel,
             $controller . '_'
         );

@@ -26,6 +26,8 @@
 
 namespace PrestaShop\PrestaShop\Adapter;
 
+use AdminController;
+use AdminLegacyLayoutControllerCore;
 use Context;
 use Currency;
 use Employee;
@@ -60,7 +62,7 @@ class LegacyContext
      */
     public function __construct(
         $mailThemesUri = null,
-        ?Tools $tools = null
+        Tools $tools = null
     ) {
         $this->mailThemesUri = $mailThemesUri;
         $this->tools = null !== $tools ? $tools : new Tools();
@@ -70,14 +72,21 @@ class LegacyContext
      * To be used only in Adapters. Should not been called by Core classes. Prefer to use Core\context class,
      * that will contains all you need in the Core architecture.
      *
-     * @return Context the Legacy context, for Adapter use only
-     *
      * @throws LogicException If legacy context is not set properly
+     *
+     * @return Context the Legacy context, for Adapter use only
      */
     public function getContext()
     {
         if (null === static::$instance) {
-            static::$instance = Context::getContext();
+            $legacyContext = Context::getContext();
+
+            if ($legacyContext && !empty($legacyContext->shop) && !isset($legacyContext->controller) && isset($legacyContext->employee)) {
+                //init real legacy shop context
+                $adminController = new AdminController();
+                $adminController->initShopContext();
+            }
+            static::$instance = $legacyContext;
         }
 
         return static::$instance;
@@ -103,17 +112,12 @@ class LegacyContext
         return __PS_BASE_URI__ . basename(_PS_ADMIN_DIR_) . '/';
     }
 
-    public function getCountryId(): int
-    {
-        return $this->getContext()->country->id;
-    }
-
     /**
      * Adapter to get Admin HTTP link.
      *
      * @param string $controller the controller name
      * @param bool $withToken
-     * @param array $extraParams
+     * @param array<string> $extraParams
      *
      * @return string
      */
@@ -190,6 +194,54 @@ class LegacyContext
     public function setupLegacyTranslationContext($legacyController = 'AdminTab')
     {
         Context::getContext()->override_controller_name_for_translations = $legacyController;
+    }
+
+    /**
+     * Adapter to get admin legacy layout into legacy controller context.
+     *
+     * @param string $controllerName The legacy controller name
+     * @param string $title The page title to override default one
+     * @param array $headerToolbarBtn The header toolbar to override
+     * @param string $displayType The legacy display type variable
+     * @param bool $showContentHeader can force header toolbar (buttons and title) to be hidden with false value
+     * @param string $headerTabContent
+     * @param bool $enableSidebar Allow to use right sidebar to display docs for instance
+     * @param string $helpLink If specified, will be used instead of legacy one
+     * @param string[] $jsRouterMetadata array to provide base_url and security token for JS Router
+     * @param string $metaTitle
+     * @param bool $useRegularH1Structure allows complex <h1> structure if set to false
+     *
+     * @return string The html layout
+     */
+    public function getLegacyLayout(
+        $controllerName,
+        $title,
+        $headerToolbarBtn,
+        $displayType,
+        $showContentHeader,
+        $headerTabContent,
+        $enableSidebar,
+        $helpLink = '',
+        $jsRouterMetadata = [],
+        $metaTitle = '',
+        $useRegularH1Structure = true
+    ) {
+        $originCtrl = new AdminLegacyLayoutControllerCore(
+            $controllerName,
+            $title,
+            $headerToolbarBtn,
+            $displayType,
+            $showContentHeader,
+            $headerTabContent,
+            $enableSidebar,
+            $helpLink,
+            $jsRouterMetadata,
+            $metaTitle,
+            $useRegularH1Structure
+        );
+        $originCtrl->run();
+
+        return $originCtrl->outPutHtml;
     }
 
     /**

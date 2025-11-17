@@ -27,7 +27,7 @@ class GroupCore extends ObjectModel
 {
     public $id;
 
-    /** @var string|array<int, string> */
+    /** @var string Lastname */
     public $name;
 
     /** @var string Reduction */
@@ -37,7 +37,7 @@ class GroupCore extends ObjectModel
     public $price_display_method;
 
     /** @var bool Show prices */
-    public $show_prices = true;
+    public $show_prices = 1;
 
     /** @var string Object creation date */
     public $date_add;
@@ -209,7 +209,7 @@ class GroupCore extends ObjectModel
             Configuration::updateGlobalValue('PS_GROUP_FEATURE_ACTIVE', 1);
         }
 
-        return parent::update($null_values);
+        return parent::update($autodate, $null_values);
     }
 
     public function delete()
@@ -254,6 +254,8 @@ class GroupCore extends ObjectModel
     /**
      * This method is allow to know if a feature is used or active.
      *
+     * @since 1.5.0.1
+     *
      * @return bool
      */
     public static function isFeatureActive()
@@ -268,8 +270,10 @@ class GroupCore extends ObjectModel
     /**
      * This method is allow to know if there are other groups than the default ones.
      *
-     * @param string|null $table Name of table linked to entity
-     * @param bool $has_active_column True if the table has an active column
+     * @since 1.5.0.1
+     *
+     * @param $table
+     * @param $has_active_column
      *
      * @return bool
      */
@@ -309,8 +313,8 @@ class GroupCore extends ObjectModel
     /**
      * Adding restrictions modules to the group with id $id_group.
      *
-     * @param int $id_group
-     * @param array $modules
+     * @param $id_group
+     * @param $modules
      * @param array $shops
      *
      * @return bool
@@ -326,7 +330,7 @@ class GroupCore extends ObjectModel
             'DELETE FROM `' . _DB_PREFIX_ . 'module_group`
             WHERE `id_group` = ' . (int) $id_group . '
             AND `id_shop` IN ('
-              . implode(',', array_map('intval', $shops))
+              . (implode(',', array_map('intval', $shops)))
             . ')'
         );
 
@@ -358,7 +362,7 @@ class GroupCore extends ObjectModel
 
         $res = true;
         foreach ($shops as $shop) {
-            $res = $res && Db::getInstance()->execute('
+            $res &= Db::getInstance()->execute('
 			INSERT INTO `' . _DB_PREFIX_ . 'module_group` (`id_module`, `id_shop`, `id_group`)
 			(SELECT ' . (int) $id_module . ', ' . (int) $shop . ', id_group FROM `' . _DB_PREFIX_ . 'group`)');
         }
@@ -401,19 +405,6 @@ class GroupCore extends ObjectModel
         }
 
         return self::$groups[$id_group];
-    }
-
-    public static function getAllGroupIds(): array
-    {
-        $query = new DbQuery();
-        $query
-            ->select('g.`id_group`')
-            ->from('group', 'g')
-            ->orderby('g.`id_group` ASC')
-        ;
-        $result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
-
-        return array_column($result, 'id_group');
     }
 
     /**

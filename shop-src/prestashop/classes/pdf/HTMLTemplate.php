@@ -23,6 +23,10 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
+
+/**
+ * @since 1.5
+ */
 abstract class HTMLTemplateCore
 {
     /**
@@ -49,11 +53,6 @@ abstract class HTMLTemplateCore
      * @var Shop
      */
     public $shop;
-
-    /**
-     * @var Order|null
-     */
-    public $order;
 
     /**
      * Returns the template's HTML header.
@@ -97,7 +96,14 @@ abstract class HTMLTemplateCore
      */
     protected function getShopAddress()
     {
-        return AddressFormat::generateAddress($this->shop->getAddress(), [], ' - ', ' ');
+        $shop_address = '';
+
+        $shop_address_obj = $this->shop->getAddress();
+        if (isset($shop_address_obj) && $shop_address_obj instanceof Address) {
+            $shop_address = AddressFormat::generateAddress($shop_address_obj, [], ' - ', ' ');
+        }
+
+        return $shop_address;
     }
 
     /**
@@ -207,7 +213,7 @@ abstract class HTMLTemplateCore
      * If the template is not present in the theme directory, it will return the default template
      * in _PS_PDF_DIR_ directory.
      *
-     * @param string $template_name
+     * @param $template_name
      *
      * @return string
      */

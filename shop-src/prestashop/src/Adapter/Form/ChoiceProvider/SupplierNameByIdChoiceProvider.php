@@ -28,13 +28,9 @@ declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Adapter\Form\ChoiceProvider;
 
-use PrestaShop\PrestaShop\Core\Form\FormChoiceFormatter;
 use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 use Supplier;
 
-/**
- * Returns the list of selectable suppliers, including those which are disabled.
- */
 final class SupplierNameByIdChoiceProvider implements FormChoiceProviderInterface
 {
     /**
@@ -42,10 +38,11 @@ final class SupplierNameByIdChoiceProvider implements FormChoiceProviderInterfac
      */
     public function getChoices()
     {
-        return FormChoiceFormatter::formatFormChoices(
-            Supplier::getSuppliers(false, 0, false),
-            'id_supplier',
-            'name'
-        );
+        $choices = [];
+        foreach (Supplier::getSuppliers() as $supplier) {
+            $choices[$supplier['name']] = (int) $supplier['id_supplier'];
+        }
+
+        return $choices;
     }
 }

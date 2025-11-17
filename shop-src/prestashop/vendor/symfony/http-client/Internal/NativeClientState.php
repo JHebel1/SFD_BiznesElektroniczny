@@ -20,24 +20,19 @@ namespace Symfony\Component\HttpClient\Internal;
  */
 final class NativeClientState extends ClientState
 {
-    public int $id;
-    public int $maxHostConnections = \PHP_INT_MAX;
-    public int $responseCount = 0;
+    /** @var int */
+    public $id;
+    /** @var int */
+    public $maxHostConnections = \PHP_INT_MAX;
+    /** @var int */
+    public $responseCount = 0;
     /** @var string[] */
-    public array $dnsCache = [];
-    public bool $sleep = false;
-    /** @var int[] */
-    public array $hosts = [];
+    public $dnsCache = [];
+    /** @var bool */
+    public $sleep = false;
 
     public function __construct()
     {
         $this->id = random_int(\PHP_INT_MIN, \PHP_INT_MAX);
-    }
-
-    public function reset(): void
-    {
-        $this->responseCount = 0;
-        $this->dnsCache = [];
-        $this->hosts = [];
     }
 }

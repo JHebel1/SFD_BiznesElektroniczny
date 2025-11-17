@@ -23,15 +23,12 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
-
-use PrestaShopBundle\Form\Admin\Type\FormattedTextareaType;
-
 class OrderMessageCore extends ObjectModel
 {
-    /** @var string|array<int, string> Name */
+    /** @var array<string> Name */
     public $name;
 
-    /** @var string|array<int, string> Message content */
+    /** @var array<string> Message content */
     public $message;
 
     /** @var string Object creation date */
@@ -49,7 +46,7 @@ class OrderMessageCore extends ObjectModel
 
             /* Lang fields */
             'name' => ['type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'required' => true, 'size' => 128],
-            'message' => ['type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isMessage', 'required' => true, 'size' => FormattedTextareaType::LIMIT_MEDIUMTEXT_UTF8_MB4],
+            'message' => ['type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isMessage', 'required' => true, 'size' => 1200],
         ],
     ];
 

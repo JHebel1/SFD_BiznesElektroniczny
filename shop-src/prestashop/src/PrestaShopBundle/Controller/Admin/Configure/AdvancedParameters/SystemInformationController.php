@@ -26,38 +26,35 @@
 
 namespace PrestaShopBundle\Controller\Admin\Configure\AdvancedParameters;
 
-use PrestaShop\PrestaShop\Adapter\Requirement\CheckMissingOrUpdatedFiles;
-use PrestaShop\PrestaShop\Adapter\Requirement\CheckRequirements;
-use PrestaShop\PrestaShop\Adapter\System\SystemInformation;
-use PrestaShopBundle\Controller\Admin\PrestaShopAdminController;
-use PrestaShopBundle\Security\Attribute\AdminSecurity;
+use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
+use PrestaShopBundle\Security\Annotation\AdminSecurity;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Responsible of "Configure > Advanced Parameters > Information" page display.
  */
-class SystemInformationController extends PrestaShopAdminController
+class SystemInformationController extends FrameworkBundleAdminController
 {
     /**
+     * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))", message="Access denied.")
+     * @Template("@PrestaShop/Admin/Configure/AdvancedParameters/system_information.html.twig")
+     *
      * @param Request $request
      *
-     * @return Response
+     * @return array<string, array|bool|string|null>
      */
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))", message: 'Access denied.')]
-    public function indexAction(
-        Request $request,
-        CheckRequirements $checkRequirements,
-        SystemInformation $systemInformation,
-    ): Response {
+    public function indexAction(Request $request)
+    {
         $legacyController = $request->get('_legacy_controller');
-        $requirementsSummary = $checkRequirements->getSummary();
-        $systemInformationSummary = $systemInformation->getSummary();
+        $requirementsSummary = $this->getRequirementsChecker()->getSummary();
+        $systemInformationSummary = $this->getSystemInformation()->getSummary();
 
-        return $this->render('@PrestaShop/Admin/Configure/AdvancedParameters/system_information.html.twig', [
+        return [
             'layoutHeaderToolbarBtn' => [],
-            'layoutTitle' => $this->trans('Information', [], 'Admin.Navigation.Menu'),
+            'layoutTitle' => $this->trans('Information', 'Admin.Navigation.Menu'),
+            'requireAddonsSearch' => true,
             'requireBulkActions' => false,
             'showContentHeader' => true,
             'enableSidebar' => true,
@@ -67,16 +64,40 @@ class SystemInformationController extends PrestaShopAdminController
             'system' => $systemInformationSummary,
             'requirements' => $requirementsSummary,
             'userAgent' => $request->headers->get('User-Agent'),
-        ]);
+        ];
     }
 
     /**
+     * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))", message="Access denied.")
+     *
      * @return JsonResponse
      */
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))", message: 'Access denied.')]
-    public function displayCheckFilesAction(
-        CheckMissingOrUpdatedFiles $requiredFilesChecker,
-    ): JsonResponse {
-        return new JsonResponse($requiredFilesChecker->getListOfUpdatedFiles());
+    public function displayCheckFilesAction()
+    {
+        return new JsonResponse($this->getRequiredFilesChecker()->getListOfUpdatedFiles());
+    }
+
+    /**
+     * @return \PrestaShop\PrestaShop\Adapter\System\SystemInformation
+     */
+    private function getSystemInformation()
+    {
+        return $this->get('prestashop.adapter.system_information');
+    }
+
+    /**
+     * @return \PrestaShop\PrestaShop\Adapter\Requirement\CheckRequirements
+     */
+    private function getRequirementsChecker()
+    {
+        return $this->get('prestashop.adapter.check_requirements');
+    }
+
+    /**
+     * @return \PrestaShop\PrestaShop\Adapter\Requirement\CheckMissingOrUpdatedFiles
+     */
+    private function getRequiredFilesChecker()
+    {
+        return $this->get('prestashop.adapter.check_missing_files');
     }
 }

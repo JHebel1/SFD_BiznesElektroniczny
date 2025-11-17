@@ -30,66 +30,65 @@ namespace PrestaShopBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use InvalidArgumentException;
-use PrestaShop\PrestaShop\Core\FeatureFlag\FeatureFlagSettings;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
- * @ORM\Entity(repositoryClass="PrestaShopBundle\Entity\Repository\FeatureFlagRepository")
- *
+ * @ORM\Entity()
  * @ORM\Table()
- *
  * @UniqueEntity("name")
  */
 class FeatureFlag
 {
     /**
+     * @var int
+     *
      * @ORM\Id
-     *
      * @ORM\Column(name="id_feature_flag", type="integer", options={"unsigned":true})
-     *
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private int $id;
+    private $id;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="name", type="string", length=191, unique=true)
      */
-    private string $name;
+    private $name;
 
     /**
-     * @ORM\Column(name="type", type="string", length=64, options={"default": FeatureFlagSettings::TYPE_DEFAULT})
-     */
-    private string $type;
-
-    /**
+     * @var bool
+     *
      * @ORM\Column(name="state", type="boolean", options={"default":0, "unsigned":true})
      */
-    private bool $state;
+    private $state;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="label_wording", type="string", length=191, options={"default":""})
      */
-    private string $labelWording;
+    private $labelWording;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="label_domain", type="string", length=255, options={"default":""})
      */
-    private string $labelDomain;
+    private $labelDomain;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="description_wording", type="string", length=191, options={"default":""})
      */
-    private string $descriptionWording;
+    private $descriptionWording;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="description_domain", type="string", length=255, options={"default":""})
      */
-    private string $descriptionDomain;
-
-    /**
-     * @ORM\Column(name="stability", type="string", length=64, options={"default":"beta"})
-     */
-    private string $stability;
+    private $descriptionDomain;
 
     /**
      * @param string $name
@@ -100,117 +99,133 @@ class FeatureFlag
             throw new InvalidArgumentException('Feature flag name cannot be empty');
         }
         $this->name = $name;
-        $this->type = FeatureFlagSettings::TYPE_DEFAULT;
         $this->state = false;
         $this->descriptionWording = '';
         $this->descriptionDomain = '';
         $this->labelWording = '';
         $this->labelDomain = '';
-        $this->stability = FeatureFlagSettings::STABILITY_BETA;
     }
 
+    /**
+     * @return int
+     */
     public function getId(): int
     {
         return $this->id;
     }
 
+    /**
+     * @return string
+     */
     public function getName(): string
     {
         return $this->name;
     }
 
+    /**
+     * @return bool
+     */
     public function isEnabled(): bool
     {
         return $this->state;
     }
 
-    public function disable(): static
+    /**
+     * @return self
+     */
+    public function disable(): self
     {
         $this->state = false;
 
         return $this;
     }
 
-    public function enable(): static
+    /**
+     * @return self
+     */
+    public function enable(): self
     {
         $this->state = true;
 
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function getLabelWording(): string
     {
         return $this->labelWording;
     }
 
-    public function setLabelWording(string $labelWording): static
+    /**
+     * @param string $labelWording
+     *
+     * @return self
+     */
+    public function setLabelWording(string $labelWording): self
     {
         $this->labelWording = $labelWording;
 
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function getLabelDomain(): string
     {
         return $this->labelDomain;
     }
 
-    public function setLabelDomain(string $labelDomain): static
+    /**
+     * @param string $labelDomain
+     *
+     * @return self
+     */
+    public function setLabelDomain(string $labelDomain): self
     {
         $this->labelDomain = $labelDomain;
 
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function getDescriptionWording(): string
     {
         return $this->descriptionWording;
     }
 
-    public function setDescriptionWording(string $descriptionWording): static
+    /**
+     * @param string $descriptionWording
+     *
+     * @return self
+     */
+    public function setDescriptionWording(string $descriptionWording): self
     {
         $this->descriptionWording = $descriptionWording;
 
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function getDescriptionDomain(): string
     {
         return $this->descriptionDomain;
     }
 
-    public function setDescriptionDomain(string $descriptionDomain): static
+    /**
+     * @param string $descriptionDomain
+     *
+     * @return self
+     */
+    public function setDescriptionDomain(string $descriptionDomain): self
     {
         $this->descriptionDomain = $descriptionDomain;
-
-        return $this;
-    }
-
-    public function getStability(): string
-    {
-        return $this->stability;
-    }
-
-    public function setStability(string $stability): static
-    {
-        $this->stability = $stability;
-
-        return $this;
-    }
-
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    public function getOrderedTypes(): array
-    {
-        return explode(',', $this->type);
-    }
-
-    public function setType(string $type): static
-    {
-        $this->type = $type;
 
         return $this;
     }

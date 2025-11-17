@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\SqlManager\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Command\AddSqlRequestCommand;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\CommandHandler\AddSqlRequestHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Exception\CannotAddSqlRequestException;
@@ -40,7 +39,6 @@ use RequestSql;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class AddSqlRequestHandler extends AbstractSqlRequestHandler implements AddSqlRequestHandlerInterface
 {
     /**
@@ -64,7 +62,7 @@ final class AddSqlRequestHandler extends AbstractSqlRequestHandler implements Ad
                 throw new CannotAddSqlRequestException(sprintf('Invalid entity id after creation: %s', $entity->id));
             }
 
-            return new SqlRequestId((int) $entity->id);
+            return new SqlRequestId($entity->id);
         } catch (PrestaShopException $e) {
             throw new SqlRequestException('Failed to create SqlRequest', 0, $e);
         }

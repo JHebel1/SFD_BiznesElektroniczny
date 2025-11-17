@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Product;
 
 use Context;
-use PrestaShopDatabaseException;
 use Product;
 
 /**
@@ -79,7 +78,7 @@ class PriceCalculator
         &$specificPriceOutput = null,
         $withEcotax = true,
         $useGroupReduction = true,
-        ?Context $context = null,
+        Context $context = null,
         $useCustomerPrice = true,
         $idCustomization = null
     ) {
@@ -191,7 +190,7 @@ class PriceCalculator
      *
      * @return float|null
      *
-     * @throws PrestaShopDatabaseException
+     * @throws \PrestaShopDatabaseException
      */
     public function getOrderPrice(
         int $orderId,
@@ -199,8 +198,7 @@ class PriceCalculator
         int $combinationId,
         bool $withTaxes,
         bool $useReduction,
-        bool $withEcoTax,
-        int $customizationId = 0
+        bool $withEcoTax
     ): ?float {
         return Product::getPriceFromOrder(
             $orderId,
@@ -208,8 +206,7 @@ class PriceCalculator
             $combinationId,
             $withTaxes,
             $useReduction,
-            $withEcoTax,
-            $customizationId
+            $withEcoTax
         );
     }
 }

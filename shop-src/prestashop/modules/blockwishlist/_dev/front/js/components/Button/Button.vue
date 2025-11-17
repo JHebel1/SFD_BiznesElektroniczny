@@ -1,20 +1,20 @@
 <!--**
- * Copyright since 2007 PrestaShop SA and Contributors
- * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
+ * 2007-2020 PrestaShop and Contributors
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Academic Free License version 3.0
- * that is bundled with this package in the file LICENSE.md.
+ * This source file is subject to the Academic Free License 3.0 (AFL-3.0)
+ * that is bundled with this package in the file LICENSE.txt.
  * It is also available through the world-wide-web at this URL:
  * https://opensource.org/licenses/AFL-3.0
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
  * to license@prestashop.com so we can send you a copy immediately.
  *
- * @author    PrestaShop SA and Contributors <contact@prestashop.com>
- * @copyright Since 2007 PrestaShop SA and Contributors
- * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
+ * @author    PrestaShop SA <contact@prestashop.com>
+ * @copyright 2007-2020 PrestaShop SA and Contributors
+ * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
+ * International Registered Trademark & Property of PrestaShop SA
  *-->
 <template>
   <button
@@ -71,7 +71,6 @@
       return {
         isChecked: this.checked === 'true',
         idList: this.listId,
-        idProductAttribute: this.productAttributeId,
       };
     },
     methods: {
@@ -102,7 +101,7 @@
           EventBus.$emit('showAddToWishList', {
             detail: {
               productId: this.productId,
-              productAttributeId: parseInt(this.idProductAttribute, 10),
+              productAttributeId: parseInt(this.productAttributeId, 10),
               forceOpen: true,
               quantity: quantity ? parseInt(quantity.value, 10) : 0,
             },
@@ -113,7 +112,7 @@
             variables: {
               productId: this.productId,
               url: this.url,
-              productAttributeId: this.idProductAttribute,
+              productAttributeId: this.productAttributeId,
               listId: this.idList ? this.idList : this.listId,
             },
           });
@@ -140,7 +139,7 @@
       EventBus.$on('addedToWishlist', (event) => {
         if (
           event.detail.productId === this.productId
-          && parseInt(event.detail.productAttributeId, 10) === this.idProductAttribute
+          && parseInt(event.detail.productAttributeId, 10) === this.productAttributeId
         ) {
           this.isChecked = true;
           this.idList = event.detail.listId;
@@ -150,7 +149,7 @@
       // eslint-disable-next-line
       const items = productsAlreadyTagged.filter(
         (e) => parseInt(e.id_product, 10) === this.productId
-          && parseInt(e.id_product_attribute, 10) === this.idProductAttribute,
+          && parseInt(e.id_product_attribute, 10) === this.productAttributeId,
       );
 
       if (items.length > 0) {
@@ -170,13 +169,13 @@
             '.product-quantity input#quantity_wanted',
           );
 
-          this.idProductAttribute = parseInt(args.id_product_attribute, 10);
+          this.productAttributeId = parseInt(args.id_product_attribute, 10);
 
           // eslint-disable-next-line
           const itemsFiltered = productsAlreadyTagged.filter(
             (e) => parseInt(e.id_product, 10) === this.productId
               && e.quantity.toString() === quantity.value
-              && parseInt(e.id_product_attribute, 10) === this.idProductAttribute,
+              && parseInt(e.id_product_attribute, 10) === this.productAttributeId,
           );
 
           if (itemsFiltered.length > 0) {

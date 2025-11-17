@@ -48,45 +48,33 @@ class SmtpConfigurationType extends TranslatorAwareType
                 'empty_data' => '',
                 'label' => $this->trans('Email domain name', 'Admin.Advparameters.Feature'),
                 'help' => $this->trans('Fully qualified domain name (keep this field empty if you don\'t know).', 'Admin.Advparameters.Help'),
-                'attr' => [
-                    'autocapitalize' => 'off',
-                ],
             ])
             ->add('server', TextType::class, [
                 'required' => false,
                 'label' => $this->trans('SMTP server', 'Admin.Advparameters.Feature'),
                 'help' => $this->trans('IP address or server name (e.g. smtp.mydomain.com).', 'Admin.Advparameters.Help'),
-                'attr' => [
-                    'autocapitalize' => 'off',
-                ],
             ])
             ->add('username', TextType::class, [
                 'required' => false,
                 'empty_data' => '',
                 'label' => $this->trans('SMTP username', 'Admin.Advparameters.Feature'),
                 'help' => $this->trans('Leave blank if not applicable.', 'Admin.Advparameters.Help'),
-                'attr' => [
-                    'autocapitalize' => 'off',
-                ],
             ])
             ->add('password', PasswordType::class, [
                 'required' => false,
                 'empty_data' => '',
                 'label' => $this->trans('SMTP password', 'Admin.Advparameters.Feature'),
                 'help' => $this->trans('Leave blank if not applicable.', 'Admin.Advparameters.Help'),
-                /* Some browsers (for example Google Chrome) are totally ignoring "off" value, so we use "new-password" - which is working well for this purpose */
-                'attr' => [
-                    'autocomplete' => 'new-password',
-                    'autocapitalize' => 'off',
-                ],
             ])
             ->add('encryption', ChoiceType::class, [
                 'choices' => [
                     'None' => 'off',
                     'TLS' => 'tls',
+                    'SSL' => 'ssl',
                 ],
                 'choice_translation_domain' => 'Admin.Advparameters.Feature',
                 'label' => $this->trans('Encryption', 'Admin.Advparameters.Feature'),
+                'help' => $this->trans('SSL does not seem to be available on your server.', 'Admin.Advparameters.Help'),
             ])
             ->add('port', TextType::class, [
                 'required' => false,

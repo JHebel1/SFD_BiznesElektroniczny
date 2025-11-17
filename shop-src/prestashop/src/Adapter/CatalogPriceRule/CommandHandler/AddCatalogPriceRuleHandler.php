@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\CatalogPriceRule\CommandHandler;
 
 use PrestaShop\PrestaShop\Adapter\CatalogPriceRule\AbstractCatalogPriceRuleHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\CatalogPriceRule\Command\AddCatalogPriceRuleCommand;
 use PrestaShop\PrestaShop\Core\Domain\CatalogPriceRule\CommandHandler\AddCatalogPriceRuleHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\CatalogPriceRule\Exception\CatalogPriceRuleException;
@@ -38,7 +37,6 @@ use SpecificPriceRule;
 /**
  * Handles adding new catalog price rule using legacy object model
  */
-#[AsCommandHandler]
 final class AddCatalogPriceRuleHandler extends AbstractCatalogPriceRuleHandler implements AddCatalogPriceRuleHandlerInterface
 {
     /**

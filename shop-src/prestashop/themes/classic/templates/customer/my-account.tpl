@@ -29,9 +29,6 @@
 {/block}
 
 {block name='page_content'}
-{block name='display_customer_account_top'}
-    {hook h='displayCustomerAccountTop'}
-{/block}
   <div class="row">
     <div class="links">
 

@@ -19,69 +19,114 @@
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
 
-declare(strict_types=1);
-
 namespace PrestaShop\Module\Mbo\Service\View;
 
+use Configuration;
+use Context;
+use Country;
 use Doctrine\Common\Cache\CacheProvider;
+use Language;
 use PrestaShop\Module\Mbo\Accounts\Provider\AccountsDataProvider;
-use PrestaShop\Module\Mbo\Api\Security\AdminAuthenticationProvider;
+use PrestaShop\Module\Mbo\Distribution\AuthenticationProvider;
 use PrestaShop\Module\Mbo\Helpers\Config;
-use PrestaShop\Module\Mbo\Helpers\UrlHelper;
-use PrestaShop\Module\Mbo\Module\Module;
 use PrestaShop\Module\Mbo\Module\ModuleOverrideChecker;
-use PrestaShop\Module\Mbo\Module\Workflow\TransitionInterface;
-use PrestaShop\Module\Mbo\Tab\TabInterface;
+use PrestaShop\PrestaShop\Adapter\LegacyContext as ContextAdapter;
 use PrestaShop\PrestaShop\Adapter\Module\Module as CoreModule;
-use PrestaShop\PrestaShop\Core\Context\CountryContext;
-use PrestaShop\PrestaShop\Core\Context\CurrencyContext;
-use PrestaShop\PrestaShop\Core\Context\EmployeeContext;
-use PrestaShop\PrestaShop\Core\Context\LanguageContext;
-use PrestaShop\PrestaShop\Core\Module\ModuleRepository;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use PrestaShop\PrestaShop\Core\Addon\Module\ModuleRepository;
 use Symfony\Component\Routing\Router;
+use Tools;
 
 class ContextBuilder
 {
-    public const DEFAULT_CURRENCY_CODE = 'EUR';
+    const DEFAULT_CURRENCY_CODE = 'EUR';
+
+    const STATUS_UNINSTALLED = 'uninstalled';
+    const STATUS_ENABLED__MOBILE_ENABLED = 'enabled__mobile_enabled';
+    const STATUS_ENABLED__MOBILE_DISABLED = 'enabled__mobile_disabled';
+    const STATUS_DISABLED__MOBILE_ENABLED = 'disabled__mobile_enabled';
+    const STATUS_DISABLED__MOBILE_DISABLED = 'disabled__mobile_disabled';
+    const STATUS_RESET = 'reset'; //virtual status
+    const STATUS_UPGRADED = 'upgraded'; //virtual status
+    const STATUS_CONFIGURED = 'configured'; //virtual status
+
+    /**
+     * @var ContextAdapter
+     */
+    private $contextAdapter;
+
+    /**
+     * @var ModuleRepository
+     */
+    private $moduleRepository;
+
+    /**
+     * @var Router
+     */
+    private $router;
+
+    /**
+     * @var CacheProvider
+     */
+    private $cacheProvider;
+    /**
+     * @var AuthenticationProvider
+     */
+    private $distributionAuthenticationProvider;
+    /**
+     * @var AccountsDataProvider
+     */
+    private $accountsDataProvider;
 
     public function __construct(
-        private readonly EmployeeContext $employeeContext,
-        private readonly CurrencyContext $currencyContext,
-        private readonly LanguageContext $languageContext,
-        private readonly CountryContext $countryContext,
-        private readonly ModuleRepository $moduleRepository,
-        private readonly Router $router,
-        private readonly CacheProvider $cacheProvider,
-        private readonly AdminAuthenticationProvider $adminAuthenticationProvider,
-        private readonly AccountsDataProvider $accountsDataProvider,
+        ContextAdapter $contextAdapter,
+        ModuleRepository $moduleRepository,
+        Router $router,
+        AuthenticationProvider $distributionAuthenticationProvider,
+        CacheProvider $cacheProvider,
+        AccountsDataProvider $accountsDataProvider
     ) {
+        $this->contextAdapter = $contextAdapter;
+        $this->moduleRepository = $moduleRepository;
+        $this->router = $router;
+        $this->distributionAuthenticationProvider = $distributionAuthenticationProvider;
+        $this->cacheProvider = $cacheProvider;
+        $this->accountsDataProvider = $accountsDataProvider;
     }
 
-    public function getViewContext(): array
+    /**
+     * @return array
+     */
+    public function getViewContext()
     {
         $context = $this->getCommonContextContent();
 
-        $context['prestaShop_controller_class_name'] = \Tools::getValue('controller');
+        $context['prestaShop_controller_class_name'] = Tools::getValue('controller');
 
         return $context;
     }
 
-    public function getRecommendedModulesContext(TabInterface $tab): array
+    /**
+     * @return bool
+     */
+    public function clearCache()
     {
-        $context = $this->getCommonContextContent();
+        $cacheKey = $this->getCacheKey();
 
-        $context['prestaShop_controller_class_name'] = $tab->getLegacyClassName();
+        if ($this->cacheProvider->contains($cacheKey)) {
+            if (!$this->cacheProvider->delete($cacheKey)) {
+                return false;
+            }
+        }
 
-        return $context;
+        return true;
     }
 
     public function getEventContext(): array
     {
         $modules = [];
         // Filter : remove uninstalled modules
-        foreach ($this->listInstalledModulesAndStatuses() as $installedModule) {
-            if ($installedModule['status'] !== TransitionInterface::STATUS_UNINSTALLED) {
+        foreach ($this->getInstalledModules() as $installedModule) {
+            if ($installedModule['status'] !== self::STATUS_UNINSTALLED) {
                 $modules[] = $installedModule['name'];
             }
         }
@@ -93,8 +138,8 @@ class ContextBuilder
             'user_id' => $this->accountsDataProvider->getAccountsUserId(),
             'shop_id' => $this->accountsDataProvider->getAccountsShopId(),
             'accounts_token' => $this->accountsDataProvider->getAccountsToken(),
-            'iso_lang' => $this->getLanguage(),
-            'iso_code' => $this->getCountry(),
+            'iso_lang' => $this->getLanguage()->getIsoCode(),
+            'iso_code' => $this->getCountry()->iso_code,
             'mbo_version' => \ps_mbo::VERSION,
             'ps_version' => _PS_VERSION_,
             'shop_url' => Config::getShopUrl(),
@@ -104,262 +149,196 @@ class ContextBuilder
         ];
     }
 
-    public function clearCache(): bool
+    /**
+     * @return array
+     */
+    private function getCommonContextContent()
     {
-        $installedModulesCacheKey = $this->getInstalledModulesCacheKey();
-        $upgradableModulesCacheKey = $this->getUpgradableModulesCacheKey();
-
-        if (
-            $this->cacheProvider->contains($installedModulesCacheKey)
-            && !$this->cacheProvider->delete($installedModulesCacheKey)
-        ) {
-            return false;
-        }
-
-        if (
-            $this->cacheProvider->contains($upgradableModulesCacheKey)
-            && !$this->cacheProvider->delete($upgradableModulesCacheKey)
-        ) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private function getCommonContextContent(): array
-    {
-        $userId = null;
-        if ($this->employeeContext->getEmployee()) {
-            $userId = $this->employeeContext->getEmployee()->getId();
-        }
-
-        $shopActivity = Config::getShopActivity();
+        $context = $this->getContext();
+        $language = $this->getLanguage();
+        $country = $this->getCountry();
+        $psMbo = \Module::getInstanceByName('ps_mbo');
         $overrideChecker = ModuleOverrideChecker::getInstance();
 
-        $token = \Tools::getValue('_token');
-
-        if (false === $token) {
-            $token = \Tools::getValue('token');
+        $psMboVersion = false;
+        if (\Validate::isLoadedObject($psMbo)) {
+            $psMboVersion = $psMbo->version;
         }
 
-        $mboResetUrl = UrlHelper::transformToAbsoluteUrl(
-            $this->router->generate('admin_module_manage_action', [
-                'action' => 'reset',
-                'module_name' => 'ps_mbo',
-            ])
-        );
+        $token = Tools::getValue('_token');
+
+        if (false === $token) {
+            $token = Tools::getValue('token');
+        }
+
+        $refreshUrl = $this->router->generate('admin_mbo_security');
+
+        $shopUuid = Config::getShopMboUuid();
+        $shopActivity = Config::getShopActivity();
 
         return [
             'currency' => $this->getCurrencyCode(),
-            'iso_lang' => $this->getLanguage(),
-            'iso_code' => $this->getCountry(),
+            'iso_lang' => $language->iso_code,
+            'iso_code' => mb_strtolower($country->iso_code),
             'shop_version' => _PS_VERSION_,
             'shop_url' => Config::getShopUrl(),
-            'shop_uuid' => Config::getShopMboUuid(),
-            'mbo_token' => $this->adminAuthenticationProvider->getMboJWT(),
-            'mbo_version' => \ps_mbo::VERSION,
-            'mbo_reset_url' => $mboResetUrl,
-            'user_id' => $userId,
+            'shop_uuid' => $shopUuid,
+            'mbo_token' => $this->distributionAuthenticationProvider->getMboJWT(),
+            'mbo_version' => $psMboVersion,
+            'mbo_reset_url' => $this->router->generate('admin_module_manage_action', [
+                'action' => 'reset',
+                'module_name' => 'ps_mbo',
+            ]),
+            'user_id' => $context->cookie->id_employee,
             'admin_token' => $token,
-            'refresh_url' => '',
+            'refresh_url' => $refreshUrl,
             'installed_modules' => $this->getInstalledModules(),
-            'upgradable_modules' => $this->getUpgradableModules(),
             'accounts_user_id' => $this->accountsDataProvider->getAccountsUserId(),
             'accounts_shop_id' => $this->accountsDataProvider->getAccountsShopId(),
-            'accounts_token' => $this->accountsDataProvider->getAccountsToken() ?: '',
+            'accounts_token' => $this->accountsDataProvider->getAccountsToken() ?? '',
             'accounts_shop_token_v7' => $this->accountsDataProvider->getShopTokenV7(),
             'accounts_shop_token' => $this->accountsDataProvider->getAccountsShopToken(),
             'accounts_component_loaded' => false,
-            'module_manager_updates_tab_url' => UrlHelper::transformToAbsoluteUrl($this->router->generate('admin_module_updates')),
-            'module_catalog_url' => UrlHelper::transformToAbsoluteUrl($this->router->generate('admin_mbo_catalog_module')),
-            'theme_catalog_url' => UrlHelper::transformToAbsoluteUrl($this->router->generate('admin_mbo_catalog_theme')),
+            'module_catalog_url' => $this->router->generate('admin_mbo_catalog_module'),
+            'theme_catalog_url' => $this->router->generate('admin_mbo_catalog_theme'),
             'php_version' => phpversion(),
             'shop_creation_date' => defined('_PS_CREATION_DATE_') ? _PS_CREATION_DATE_ : null,
             'shop_business_sector_id' => $shopActivity['id'],
             'shop_business_sector' => $shopActivity['name'],
             'overrides_on_shop' => $overrideChecker->listOverridesFromPsDirectory(),
-            'actions_token' => UrlHelper::getQueryParameterValue($mboResetUrl, '_token'),
-            'actions_url' => [
-                'install' => $this->generateActionUrl('install'),
-                'uninstall' => $this->generateActionUrl('uninstall'),
-                'delete' => $this->generateActionUrl('delete'),
-                'enable' => $this->generateActionUrl('enable'),
-                'disable' => $this->generateActionUrl('disable'),
-                'reset' => $this->generateActionUrl('reset'),
-                'upgrade' => $this->generateActionUrl('upgrade'),
-            ],
         ];
     }
 
-    private function generateActionUrl(string $action): string
+    /**
+     * @return Context|null
+     */
+    private function getContext()
     {
-        $params = [
-            'action' => $action,
-            'module_name' => ':module',
-        ];
-
-        if (in_array($action, ['install', 'upgrade'])) {
-            $params['id'] = '_module_id_';
-            $params['source'] = '_download_url_';
-        }
-
-        return UrlHelper::transformToAbsoluteUrl($this->router->generate('admin_module_manage_action', $params));
+        return $this->contextAdapter->getContext();
     }
 
-    private function getLanguage(): string
+    /**
+     * @return Language
+     *
+     * @throws \PrestaShopDatabaseException
+     * @throws \PrestaShopException
+     */
+    private function getLanguage()
     {
-        return $this->languageContext->getIsoCode();
+        return null !== $this->getContext() ? $this->getContext()->language : new Language((int) Configuration::get('PS_LANG_DEFAULT'));
     }
 
-    private function getCountry(): string
+    /**
+     * @return Country
+     *
+     * @throws \PrestaShopDatabaseException
+     * @throws \PrestaShopException
+     */
+    private function getCountry()
     {
-        return mb_strtolower($this->countryContext->getIsoCode());
+        return null !== $this->getContext() ? $this->getContext()->country : new Country((int) Configuration::get('PS_COUNTRY_DEFAULT'));
     }
 
-    private function getCurrencyCode(): string
+    /**
+     * @return string
+     */
+    private function getCurrencyCode()
     {
-        if (!in_array($this->currencyContext->getIsoCode(), ['EUR', 'USD', 'GBP'])) {
+        if (null === $this->getContext()) {
             return self::DEFAULT_CURRENCY_CODE;
         }
 
-        return $this->currencyContext->getIsoCode();
-    }
+        $currency = $this->getContext()->currency;
 
-    /**
-     * @return array<array>
-     */
-    private function listInstalledModulesAndStatuses(): array
-    {
-        $installedModulesCollection = $this->moduleRepository->getList();
-
-        $installedModules = [];
-
-        /** @var CoreModule $installedModule */
-        foreach ($installedModulesCollection as $installedModule) {
-            $moduleAttributes = $installedModule->getAttributes();
-            $moduleDiskAttributes = $installedModule->getDiskAttributes();
-            $moduleDatabaseAttributes = $installedModule->getDatabaseAttributes();
-
-            $module = new Module($moduleAttributes->all(), $moduleDiskAttributes->all(), $moduleDatabaseAttributes->all());
-
-            $moduleName = $module->get('name');
-            $moduleStatus = $module->getStatus();
-
-            $installedModules[] = [
-                'name' => $moduleName,
-                'status' => $moduleStatus,
-            ];
+        if (\Validate::isLoadedObject($currency) || !in_array($currency->iso_code, ['EUR', 'USD', 'GBP'])) {
+            return self::DEFAULT_CURRENCY_CODE;
         }
 
-        return $installedModules;
+        return $currency->iso_code;
     }
 
     /**
      * @return array<array>
      */
-    private function getInstalledModules(): array
+    private function getInstalledModules()
     {
-        $cacheKey = $this->getInstalledModulesCacheKey();
+        $cacheKey = $this->getCacheKey();
 
         if ($this->cacheProvider->contains($cacheKey)) {
             return $this->cacheProvider->fetch($cacheKey);
         }
 
-        $installedModulesCollection = $this->moduleRepository->getList();
+        $installedModulesCollection = $this->moduleRepository->getInstalledModulesCollection();
 
         $installedModules = [];
 
         /** @var CoreModule $installedModule */
         foreach ($installedModulesCollection as $installedModule) {
-            $moduleAttributes = $installedModule->getAttributes();
-            $moduleDiskAttributes = $installedModule->getDiskAttributes();
-            $moduleDatabaseAttributes = $installedModule->getDatabaseAttributes();
+            $moduleAttributes = $installedModule->attributes;
+            $moduleDiskAttributes = $installedModule->disk;
+            $moduleDatabaseAttributes = $installedModule->database;
 
-            $module = new Module(
-                $moduleAttributes->all(),
-                $moduleDiskAttributes->all(),
-                $moduleDatabaseAttributes->all()
-            );
+            $module = $installedModule;
 
-            $moduleId = (int) $moduleAttributes->get('id');
+            $moduleId = (int) $module->get('id');
             $moduleName = $module->get('name');
-            $moduleStatus = $module->getStatus();
+            $moduleStatus = $this->getModuleStatus($module);
             $moduleVersion = $module->get('version');
             $moduleConfigUrl = null;
 
-            if (!$moduleName || !$moduleVersion || !$moduleStatus) {
+            if (!$moduleName || !$moduleVersion) {
                 continue;
             }
 
-            if ($installedModule->isConfigurable()) {
-                $moduleConfigUrl = UrlHelper::transformToAbsoluteUrl(
-                    $this->router->generate(
-                        'admin_module_configure_action',
-                        [
-                            'module_name' => $moduleName,
-                        ],
-                        UrlGeneratorInterface::ABSOLUTE_URL
-                    )
-                );
+            if (true === (bool) $module->get('is_configurable')) {
+                $moduleConfigUrl = $this->router->generate('admin_module_configure_action', [
+                    'module_name' => $moduleName,
+                ]);
             }
-            $installedModules[] = (new InstalledModule(
-                $moduleId,
-                $moduleName,
-                $moduleStatus,
-                (string) $moduleVersion,
-                $moduleConfigUrl,
-                $installedModule->get('download_url'),
-            )
-            )->toArray();
+
+            $installedModules[] = (new InstalledModule($moduleId, $moduleName, $moduleStatus, (string) $moduleVersion, $moduleConfigUrl))->toArray();
         }
 
-        // Lifetime for 24h, will be purged at every action on modules
-        $this->cacheProvider->save($cacheKey, $installedModules, 86400);
+        $this->cacheProvider->save($cacheKey, $installedModules, 86400); // Lifetime for 24h, will be purged at every action on modules
 
         return $this->cacheProvider->fetch($cacheKey);
     }
 
-    private function getInstalledModulesCacheKey(): string
+    /**
+     * @return string
+     */
+    private function getCacheKey()
     {
         return sprintf('mbo_installed_modules_list_%s', Config::getShopMboUuid());
     }
 
-    private function getUpgradableModulesCacheKey(): string
-    {
-        return sprintf('mbo_upgradable_modules_list_%s', Config::getShopMboUuid());
-    }
-
     /**
-     * @return array<array>
+     * @param CoreModule $module
+     *
+     * @return string
      */
-    private function getUpgradableModules(): array
+    private function getModuleStatus(CoreModule $module)
     {
-        $cacheKey = $this->getUpgradableModulesCacheKey();
+        $installed = (bool) $module->database->get('installed');
+        $active = (bool) $module->database->get('active');
+        $activeOnMobile = (bool) $module->database->get('active_on_mobile');
 
-        if ($this->cacheProvider->contains($cacheKey)) {
-            return $this->cacheProvider->fetch($cacheKey);
+        if (!$installed) {
+            return self::STATUS_UNINSTALLED;
         }
 
-        $upgradableModulesCollection = $this->moduleRepository->getUpgradableModules();
-
-        $upgradableModules = [];
-
-        /** @var CoreModule $upgradableModule */
-        foreach ($upgradableModulesCollection as $upgradableModule) {
-            $moduleAttributes = $upgradableModule->getAttributes();
-
-            $moduleName = $moduleAttributes->get('name');
-
-            if (!$moduleName) {
-                continue;
-            }
-
-            $upgradableModules[] = $moduleName;
+        if ($active && $activeOnMobile) {
+            return self::STATUS_ENABLED__MOBILE_ENABLED;
         }
 
-        // Lifetime for 24h, will be purged at every action on modules
-        $this->cacheProvider->save($cacheKey, $upgradableModules, 86400);
+        if ($active && !$activeOnMobile) {
+            return self::STATUS_ENABLED__MOBILE_DISABLED;
+        }
 
-        return $this->cacheProvider->fetch($cacheKey);
+        if (!$active && $activeOnMobile) {
+            return self::STATUS_DISABLED__MOBILE_ENABLED;
+        }
+
+        return self::STATUS_DISABLED__MOBILE_DISABLED;
     }
 }

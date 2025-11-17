@@ -27,14 +27,12 @@
 namespace PrestaShop\PrestaShop\Core\Domain\Theme\CommandHandler;
 
 use PrestaShop\PrestaShop\Core\Addon\Theme\ThemeManager;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Theme\Command\ResetThemeLayoutsCommand;
 use PrestaShop\PrestaShop\Core\Domain\Theme\Exception\CannotResetThemeLayoutsException;
 
 /**
  * Class ResetThemeLayoutsHandler
  */
-#[AsCommandHandler]
 final class ResetThemeLayoutsHandler implements ResetThemeLayoutsHandlerInterface
 {
     /**

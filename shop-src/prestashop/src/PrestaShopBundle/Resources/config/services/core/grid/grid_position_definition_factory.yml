@@ -1,13 +1,6 @@
 services:
   _defaults:
     public: true
-  _instanceof:
-    PrestaShop\PrestaShop\Core\Grid\Position\PositionDefinitionInterface:
-      tags: [ 'core.grid_position_definition' ]
-
-  PrestaShop\PrestaShop\Core\Grid\Position\PositionDefinitionProvider:
-    arguments:
-      $positionDefinitions: !tagged_locator { tag: core.grid_position_definition }
 
   prestashop.core.grid.cms_page_category.position_definition:
     class: 'PrestaShop\PrestaShop\Core\Grid\Position\PositionDefinition'
@@ -43,39 +36,15 @@ services:
   prestashop.core.grid.carrier.position_definition:
     class: 'PrestaShop\PrestaShop\Core\Grid\Position\PositionDefinition'
     arguments:
-      $table: 'carrier'
-      $idField: 'id_carrier'
-      $positionField: 'position'
+        $table: 'carrier'
+        $idField: 'id_carrier'
+        $positionField: 'position'
 
   prestashop.core.grid.image.position_definition:
-    class: 'PrestaShop\PrestaShop\Core\Grid\Position\PositionDefinition'
-    arguments:
-      $table: 'image'
-      $idField: 'id_image'
-      $positionField: 'position'
-      $parentIdField: 'id_product'
-      $firstPosition: 1
-
-  prestashop.core.grid.product.position_definition:
-    class: 'PrestaShop\PrestaShop\Core\Grid\Position\PositionDefinition'
-    arguments:
-      $table: 'category_product'
-      $idField: 'id_product'
-      $positionField: 'position'
-      $parentIdField: 'id_category'
-      $firstPosition: 1
-
-  prestashop.core.grid.feature.position_definition:
-    class: 'PrestaShop\PrestaShop\Core\Grid\Position\PositionDefinition'
-    arguments:
-      $table: 'feature'
-      $idField: 'id_feature'
-      $positionField: 'position'
-
-  prestashop.core.grid.feature_value.position_definition:
-    class: 'PrestaShop\PrestaShop\Core\Grid\Position\PositionDefinition'
-    arguments:
-      $table: 'feature_value'
-      $idField: 'id_feature_value'
-      $positionField: 'position'
-      $parentIdField: 'id_feature'
+      class: 'PrestaShop\PrestaShop\Core\Grid\Position\PositionDefinition'
+      arguments:
+          $table: 'image'
+          $idField: 'id_image'
+          $positionField: 'position'
+          $parentIdField: 'id_product'
+          $firstPosition: 1

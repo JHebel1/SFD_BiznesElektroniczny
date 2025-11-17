@@ -1,12 +1,5 @@
 <?php
-/**
- * This file is authored by PrestaShop SA and Contributors <contact@prestashop.com>
- *
- * It is distributed under MIT license.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+
 $_FIELDS['Customer_342f5c77ed008542e78094607ce1f7f3'] = 'firstname';
 $_FIELDS['Customer_8ad75c5a8821cc294f189181722acb56'] = 'lastname';
 $_FIELDS['Customer_cf673f7ee88828c9fb8f6acf2cb08403'] = 'birthday';
@@ -35,7 +28,7 @@ $_FIELDS['Address_2df2ca5cf808744c2977e4073f6b59c8'] = 'phone_mobile';
 $_FIELDS['Address_eec0a9661213354fa7a52519eea3f827'] = 'vat_number';
 $_FIELDS['Address_d56f5e97524d5d1ad77ec197ae11dad0'] = 'dni';
 
-$catalogue = new Symfony\Component\Translation\MessageCatalogue();
+$catalogue = new \Symfony\Component\Translation\MessageCatalogue();
 
 function addEntry($catalogue, $original, $translation, $domain = 'messages')
 {

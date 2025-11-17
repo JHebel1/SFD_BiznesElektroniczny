@@ -29,5 +29,5 @@ interface TabCollectionFactoryInterface
      *
      * @return TabCollectionInterface
      */
-    public function buildFromArray(array $data): TabCollectionInterface;
+    public function buildFromArray(array $data);
 }

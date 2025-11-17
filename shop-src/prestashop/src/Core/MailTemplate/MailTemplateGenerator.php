@@ -56,7 +56,7 @@ class MailTemplateGenerator
      */
     public function __construct(
         MailTemplateRendererInterface $renderer,
-        ?LoggerInterface $logger = null
+        LoggerInterface $logger = null
     ) {
         $this->renderer = $renderer;
         $this->logger = null !== $logger ? $logger : new NullLogger();
@@ -87,13 +87,9 @@ class MailTemplateGenerator
             throw new FileNotFoundException(sprintf('Invalid modules output folder "%s"', $modulesOutputFolder));
         }
 
-        $this->logger->info(sprintf(
-            'Exporting mail with theme %s for language %s, Core output folder: %s, Modules output folder: %s',
-            $theme->getName(),
-            $language->getName(),
-            $coreOutputFolder,
-            $modulesOutputFolder,
-        ));
+        $this->logger->info(sprintf('Exporting mail with theme %s for language %s', $theme->getName(), $language->getName()));
+        $this->logger->info(sprintf('Core output folder: %s', $coreOutputFolder));
+        $this->logger->info(sprintf('Modules output folder: %s', $modulesOutputFolder));
 
         /** @var LayoutCollectionInterface $layouts */
         $layouts = $theme->getLayouts();
@@ -105,20 +101,20 @@ class MailTemplateGenerator
                 $outputFolder = implode(DIRECTORY_SEPARATOR, [$coreOutputFolder, $language->getIsoCode()]);
             }
 
-            // Generate HTML template
+            //Generate HTML template
             $htmlTemplatePath = $this->generateTemplatePath($layout, MailTemplateInterface::HTML_TYPE, $outputFolder);
             if (!$this->fileSystem->exists($htmlTemplatePath) || $overwriteTemplates) {
                 $generatedTemplate = $this->renderer->renderHtml($layout, $language);
                 $this->fileSystem->dumpFile($htmlTemplatePath, $generatedTemplate);
-                $this->logger->debug(sprintf('Generate html template %s at %s', $layout->getName(), $htmlTemplatePath));
+                $this->logger->info(sprintf('Generate html template %s at %s', $layout->getName(), $htmlTemplatePath));
             }
 
-            // Generate TXT template
+            //Generate TXT template
             $txtTemplatePath = $this->generateTemplatePath($layout, MailTemplateInterface::TXT_TYPE, $outputFolder);
             if (!$this->fileSystem->exists($txtTemplatePath) || $overwriteTemplates) {
                 $generatedTemplate = $this->renderer->renderTxt($layout, $language);
                 $this->fileSystem->dumpFile($txtTemplatePath, $generatedTemplate);
-                $this->logger->debug(sprintf('Generate txt template %s at %s', $layout->getName(), $txtTemplatePath));
+                $this->logger->info(sprintf('Generate txt template %s at %s', $layout->getName(), $txtTemplatePath));
             }
         }
     }

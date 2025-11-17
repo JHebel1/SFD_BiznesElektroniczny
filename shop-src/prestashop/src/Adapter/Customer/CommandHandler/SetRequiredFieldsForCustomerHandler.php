@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Customer\CommandHandler;
 
 use Customer;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Command\SetRequiredFieldsForCustomerCommand;
 use PrestaShop\PrestaShop\Core\Domain\Customer\CommandHandler\SetRequiredFieldsForCustomerHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Exception\CannotSetRequiredFieldsForCustomerException;
@@ -37,7 +36,6 @@ use PrestaShop\PrestaShop\Core\Domain\Customer\Exception\CannotSetRequiredFields
  *
  * @internal
  */
-#[AsCommandHandler]
 final class SetRequiredFieldsForCustomerHandler implements SetRequiredFieldsForCustomerHandlerInterface
 {
     /**

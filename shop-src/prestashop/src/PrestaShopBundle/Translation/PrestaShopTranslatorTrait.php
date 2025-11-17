@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -26,7 +27,6 @@
 
 namespace PrestaShopBundle\Translation;
 
-use Exception;
 use PrestaShop\PrestaShop\Adapter\Localization\LegacyTranslator;
 use Symfony\Component\Translation\Exception\InvalidArgumentException;
 
@@ -47,22 +47,34 @@ trait PrestaShopTranslatorTrait
      *
      * @throws InvalidArgumentException If the locale contains invalid characters
      */
-    public function trans($id, array $parameters = [], $domain = null, $locale = null): string
+    public function trans($id, array $parameters = [], $domain = null, $locale = null)
     {
-        $isSprintf = !empty($parameters) && $this->isSprintfString($id);
+        if (isset($parameters['legacy'])) {
+            $legacy = $parameters['legacy'];
+            unset($parameters['legacy']);
+        }
 
         if (empty($locale)) {
             $locale = null;
         }
 
-        if ($this->shouldFallbackToLegacyModuleTranslation($id, $domain, $locale)) {
+        $translated = parent::trans($id, [], $this->normalizeDomain($domain), $locale);
+
+        // @todo to remove after the legacy translation system has ben phased out
+        if ($this->shouldFallbackToLegacyModuleTranslation($id, $domain, $translated)) {
             return $this->translateUsingLegacySystem($id, $parameters, $domain, $locale);
         }
 
-        $translated = parent::trans($id, $isSprintf ? [] : $parameters, $this->normalizeDomain($domain), $locale);
+        if (isset($legacy) && 'htmlspecialchars' === $legacy) {
+            $translated = call_user_func($legacy, $translated, ENT_NOQUOTES);
+        } elseif (isset($legacy)) {
+            $translated = call_user_func($legacy, $translated);
+        }
 
-        if ($isSprintf) {
+        if (!empty($parameters) && $this->isSprintfString($id)) {
             $translated = vsprintf($translated, $parameters);
+        } elseif (!empty($parameters)) {
+            $translated = strtr($translated, $parameters);
         }
 
         return $translated;
@@ -116,10 +128,10 @@ trait PrestaShopTranslatorTrait
         }
 
         if (!$this->isSprintfString($id)) {
-            return parent::trans($id, array_merge($parameters, ['%count%' => $number]), $domain, $locale);
+            return parent::transChoice($id, $number, $parameters, $domain, $locale);
         }
 
-        return vsprintf(parent::trans($id, ['%count%' => $number], $domain, $locale), $parameters);
+        return vsprintf(parent::transChoice($id, $number, [], $domain, $locale), $parameters);
     }
 
     /**
@@ -143,8 +155,7 @@ trait PrestaShopTranslatorTrait
      *
      * @return mixed|string
      *
-     * @throws InvalidArgumentException If the locale contains invalid characters
-     * @throws Exception
+     * @throws \Exception
      */
     private function translateUsingLegacySystem($message, array $parameters, $domain, $locale = null)
     {
@@ -164,20 +175,21 @@ trait PrestaShopTranslatorTrait
      * Indicates if we should try and translate the provided wording using the legacy system.
      *
      * @param string $message Message to translate
-     * @param ?string $domain Translation domain
-     * @param ?string $locale Translation locale
+     * @param string $domain Translation domain
+     * @param string $translated Message after first translation attempt
      *
      * @return bool
      */
-    private function shouldFallbackToLegacyModuleTranslation(string $message, ?string $domain, ?string $locale): bool
+    private function shouldFallbackToLegacyModuleTranslation($message, $domain, $translated)
     {
         return
-            str_starts_with($domain ?? '', 'Modules.')
+            $message === $translated
+            && 'Modules.' === substr($domain, 0, 8)
             && (
                 !method_exists($this, 'getCatalogue')
-                || !$this->getCatalogue($locale)->has($message, $this->normalizeDomain($domain))
+                || !$this->getCatalogue()->has($message, $this->normalizeDomain($domain))
             )
-        ;
+            ;
     }
 
     /**

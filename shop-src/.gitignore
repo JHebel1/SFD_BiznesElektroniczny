@@ -1,0 +1,8 @@
+prestashop/var/cache/
+prestashop/var/logs/
+prestashop/app/cache/
+prestashop/cache/
+prestashop/admin*/autoupgrade/tmp/
+prestashop/admin*/import/
+prestashop/modules/*/cache/
+prestashop/modules/*/logs/

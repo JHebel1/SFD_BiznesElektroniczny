@@ -2,26 +2,11 @@ services:
   _defaults:
     public: true
 
-  PrestaShop\Module\Mbo\Addons\User\AddonsUser:
-    autowire: true
-    autoconfigure: true
-
-  PrestaShop\Module\Mbo\Addons\User\AddonsUserProvider:
-    autowire: true
-    autoconfigure: true
-
-  PrestaShop\Module\Mbo\Addons\Provider\AddonsDataProvider:
-    autowire: true
-    properties:
-      cacheDir: "%kernel.cache_dir%"
-
   # Addons API Client
-  PrestaShop\Module\Mbo\Addons\ApiClient:
-    autowire: true
+  mbo.addons.client.api:
+    class: PrestaShop\Module\Mbo\Addons\ApiClient
     arguments:
-      $apiUrl: "%env(ADDONS_API_URL)%"
-      $httpClient: '@Psr\Http\Client\ClientInterface'
-      $requestFactory: '@Psr\Http\Message\ServerRequestFactoryInterface'
+      - "@mbo.addons.client.http"
     calls:
       - method: setDefaultParams
         arguments:
@@ -29,6 +14,3 @@ services:
           - "@=service('prestashop.adapter.data_provider.country').getIsoCodebyId()"
           - "@=service('prestashop.adapter.legacy.configuration').get('_PS_BASE_URL_')"
           - "@=service('prestashop.core.foundation.version').getSemVersion()"
-
-  PrestaShop\Module\Mbo\Addons\Toolbar:
-    autowire: true

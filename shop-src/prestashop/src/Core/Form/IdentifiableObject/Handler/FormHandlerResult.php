@@ -119,9 +119,9 @@ class FormHandlerResult implements FormHandlerResultInterface
     }
 
     /**
-     * @return int|mixed|null
+     * @return int|null
      */
-    public function getIdentifiableObjectId(): mixed
+    public function getIdentifiableObjectId()
     {
         return $this->identifiableObjectId;
     }

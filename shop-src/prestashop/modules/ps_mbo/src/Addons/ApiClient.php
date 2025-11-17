@@ -17,33 +17,24 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-declare(strict_types=1);
 
 namespace PrestaShop\Module\Mbo\Addons;
 
-use PrestaShop\Module\Mbo\Addons\Exception\ClientRequestException;
+use Exception;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use PrestaShop\Module\Mbo\Helpers\AddonsApiHelper;
-use PrestaShop\Module\Mbo\Helpers\ErrorHelper;
-use Psr\Http\Client\ClientExceptionInterface;
-use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\RequestFactoryInterface;
+use stdClass;
 
 class ApiClient
 {
-    public const HTTP_METHOD_GET = 'GET';
-    public const HTTP_METHOD_POST = 'POST';
-
-    protected string $apiUrl;
+    const HTTP_METHOD_GET = 'GET';
+    const HTTP_METHOD_POST = 'POST';
 
     /**
-     * @var ClientInterface
+     * @var Client
      */
     protected $httpClient;
-
-    /**
-     * @var RequestFactoryInterface
-     */
-    protected RequestFactoryInterface $requestFactory;
 
     /**
      * @var array<string, string>
@@ -77,16 +68,14 @@ class ApiClient
     ];
 
     /**
-     * @param ClientInterface $httpClient
+     * @param Client $httpClient
      */
-    public function __construct(string $apiUrl, ClientInterface $httpClient, RequestFactoryInterface $requestFactory)
+    public function __construct(Client $httpClient)
     {
-        $this->apiUrl = $apiUrl;
         $this->httpClient = $httpClient;
-        $this->requestFactory = $requestFactory;
     }
 
-    public function setDefaultParams(string $locale, $isoCode, ?string $domain, string $shopVersion): void
+    public function setDefaultParams(string $locale, $isoCode, ?string $domain, string $shopVersion)
     {
         list($isoLang) = explode('-', $locale);
         $this->setQueryParams([
@@ -99,9 +88,9 @@ class ApiClient
     }
 
     /**
-     * In case you reuse the client, you may want to clean the previous parameters.
+     * In case you reuse the Client, you may want to clean the previous parameters.
      */
-    public function reset(): void
+    public function reset()
     {
         $this->queryParameters = $this->defaultQueryParameters;
         $this->headers = [];
@@ -110,12 +99,12 @@ class ApiClient
     /**
      * @return array<string, string>
      */
-    public function getQueryParameters(): array
+    public function getQueryParameters()
     {
         return $this->queryParameters;
     }
 
-    public function getHeaders(): array
+    public function getHeaders()
     {
         return array_merge($this->headers, AddonsApiHelper::addCustomHeaders());
     }
@@ -125,9 +114,9 @@ class ApiClient
      *
      * @param array{username_addons: string, password_addons: string} $params
      *
-     * @return \stdClass
+     * @return stdClass
      */
-    public function getCheckCustomer(array $params): \stdClass
+    public function getCheckCustomer(array $params)
     {
         return $this->setQueryParams([
             'method' => 'check_customer',
@@ -139,9 +128,9 @@ class ApiClient
      *
      * @param array{username_addons: string, password_addons: string, module_name: string, module_key: string} $params
      *
-     * @return \stdClass
+     * @return stdClass
      */
-    public function getCheckModule(array $params): \stdClass
+    public function getCheckModule(array $params)
     {
         return $this->setQueryParams([
             'method' => 'check',
@@ -153,7 +142,7 @@ class ApiClient
      *
      * @return array
      */
-    public function getNativesModules(array $params): array
+    public function getNativesModules(array $params)
     {
         return $this->setQueryParams([
             'method' => 'listing',
@@ -166,7 +155,7 @@ class ApiClient
      *
      * @return array
      */
-    public function getPreInstalledModules(array $params = []): array
+    public function getPreInstalledModules(array $params = [])
     {
         return $this->setQueryParams([
             'method' => 'listing',
@@ -179,7 +168,7 @@ class ApiClient
      *
      * @return array
      */
-    public function getMustHaveModules(array $params = []): array
+    public function getMustHaveModules(array $params = [])
     {
         return $this->setQueryParams([
             'method' => 'listing',
@@ -192,7 +181,7 @@ class ApiClient
      *
      * @return array
      */
-    public function getServices(array $params = []): array
+    public function getServices(array $params = [])
     {
         return $this->setQueryParams([
             'method' => 'listing',
@@ -205,7 +194,7 @@ class ApiClient
      *
      * @return array
      */
-    public function getCategories(array $params = []): array
+    public function getCategories(array $params = [])
     {
         return $this->setQueryParams([
             'method' => 'listing',
@@ -218,14 +207,18 @@ class ApiClient
      *
      * @return object|null
      */
-    public function getModule(array $params): ?object
+    public function getModule(array $params)
     {
         $modules = $this->setQueryParams([
             'method' => 'listing',
             'action' => 'module',
         ] + $params)->processRequestAndReturn('modules');
 
-        return $modules[0] ?? null;
+        if (!isset($modules[0])) {
+            return null;
+        }
+
+        return $modules[0];
     }
 
     /**
@@ -235,7 +228,7 @@ class ApiClient
      *
      * @return string binary content (zip format)
      */
-    public function getModuleZip(array $params): string
+    public function getModuleZip(array $params)
     {
         return $this->setQueryParams([
             'method' => 'module',
@@ -247,7 +240,7 @@ class ApiClient
      *
      * @return array
      */
-    public function getCustomerModules(array $params): array
+    public function getCustomerModules(array $params)
     {
         return $this->setQueryParams([
             'method' => 'listing',
@@ -262,41 +255,12 @@ class ApiClient
      *
      * @return array
      */
-    public function getCustomerThemes(array $params): array
+    public function getCustomerThemes(array $params)
     {
         return $this->setQueryParams([
             'method' => 'listing',
             'action' => 'customer-themes',
-        ] + $params)->processRequestAndReturn('themes', self::HTTP_METHOD_POST, new \stdClass());
-    }
-
-    public function getModuleByName(string $name): ?\stdClass
-    {
-        $url = sprintf('/v2/products/%s', $name);
-        $queryString = !empty($this->queryParameters) ? '?' . http_build_query($this->queryParameters) : '';
-        $request = $this->requestFactory->createRequest(self::HTTP_METHOD_GET, $this->apiUrl . $url . $queryString);
-
-        $headers = $this->getHeaders();
-        foreach ($headers as $name => $value) {
-            $request = $request->withHeader($name, $value);
-        }
-        try {
-            $resp = $this->httpClient->sendRequest($request)->getBody()->getContents();
-        } catch (\Throwable $e) {
-            ErrorHelper::reportError($e, [
-                'url' => $request->getUri(),
-            ]);
-
-            return null;
-        }
-
-        $response = json_decode((string) $resp);
-
-        if (JSON_ERROR_NONE !== json_last_error()) {
-            return null;
-        }
-
-        return $response;
+        ] + $params)->processRequestAndReturn('themes', self::HTTP_METHOD_POST, new stdClass());
     }
 
     /**
@@ -310,9 +274,9 @@ class ApiClient
      * @return mixed
      */
     public function processRequestAndReturn(
-        ?string $attributeToReturn = null,
+        string $attributeToReturn = null,
         string $method = self::HTTP_METHOD_GET,
-        $default = [],
+        $default = []
     ) {
         $response = json_decode($this->processRequest($method));
 
@@ -321,7 +285,11 @@ class ApiClient
         }
 
         if ($attributeToReturn) {
-            return $response->{$attributeToReturn} ?? $default;
+            if (!isset($response->{$attributeToReturn})) {
+                return $default;
+            }
+
+            return $response->{$attributeToReturn};
         }
 
         return $response;
@@ -330,28 +298,44 @@ class ApiClient
     /**
      * Process the request with the current parameters, given the $method, return the body as string
      *
-     * @param string $method
-     *
      * @return string
      *
-     * @throws ClientExceptionInterface
-     * @throws ClientRequestException
+     * @throws RequestException
+     * @throws Exception
      */
-    public function processRequest(string $method = self::HTTP_METHOD_GET): string
+    public function processRequest(string $method = self::HTTP_METHOD_GET)
     {
-        $queryString = !empty($this->queryParameters) ? '?' . http_build_query($this->queryParameters) : '';
+        $options = ['query' => $this->queryParameters];
+
         $headers = $this->getHeaders();
-        $request = $this->requestFactory->createRequest($method, $this->apiUrl . $queryString);
-        foreach ($headers as $name => $value) {
-            $request = $request->withHeader($name, $value);
+        if (!empty($headers)) {
+            $options['headers'] = $headers;
         }
 
-        $response = $this->httpClient->sendRequest($request);
-        if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
-            throw new ClientRequestException($response->getReasonPhrase(), $response->getStatusCode());
+        switch ($method) {
+            case self::HTTP_METHOD_GET:
+                return (string) $this->httpClient
+                    ->get(null, $options)
+                    ->getBody();
+            case self::HTTP_METHOD_POST:
+                return (string) $this->httpClient
+                    ->post(null, $options)
+                    ->getBody();
+            default:
+                throw new Exception("Unknown or Not allowed method '{$method}'.");
         }
+    }
 
-        return $response->getBody()->getContents();
+    /**
+     * @param Client $client
+     *
+     * @return $this
+     */
+    public function setClient(Client $client)
+    {
+        $this->httpClient = $client;
+
+        return $this;
     }
 
     /**
@@ -359,7 +343,7 @@ class ApiClient
      *
      * @return $this
      */
-    public function setQueryParams(array $params): self
+    public function setQueryParams(array $params)
     {
         $filteredParams = array_intersect_key($params, array_flip($this->possibleQueryParameters));
         $this->queryParameters = array_merge($this->queryParameters, $filteredParams);
@@ -367,7 +351,12 @@ class ApiClient
         return $this;
     }
 
-    public function setHeaders(array $headers): self
+    /**
+     * @param array $headers
+     *
+     * @return $this
+     */
+    public function setHeaders(array $headers)
     {
         $this->headers = array_merge($this->headers, $headers);
 

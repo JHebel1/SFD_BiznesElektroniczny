@@ -29,7 +29,6 @@ declare(strict_types=1);
 namespace PrestaShop\PrestaShop\Adapter\Currency\CommandHandler;
 
 use Currency;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Currency\Command\BulkToggleCurrenciesStatusCommand;
 use PrestaShop\PrestaShop\Core\Domain\Currency\CommandHandler\BulkToggleCurrenciesStatusHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Currency\Exception\BulkToggleCurrenciesException;
@@ -41,7 +40,6 @@ use PrestaShopException;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class BulkToggleCurrenciesStatusHandler extends AbstractCurrencyHandler implements BulkToggleCurrenciesStatusHandlerInterface
 {
     /**
@@ -82,7 +80,7 @@ final class BulkToggleCurrenciesStatusHandler extends AbstractCurrencyHandler im
                 try {
                     $this->assertDefaultCurrencyIsNotBeingRemovedOrDisabled($currency->getValue(), $this->defaultCurrencyId);
                     $this->assertDefaultCurrencyIsNotBeingRemovedOrDisabledFromAnyShop($entity);
-                } catch (CurrencyException) {
+                } catch (CurrencyException $e) {
                     $faileds[] = $currency->getValue();
                     continue;
                 }
@@ -92,7 +90,7 @@ final class BulkToggleCurrenciesStatusHandler extends AbstractCurrencyHandler im
                 if (false === $entity->toggleStatus()) {
                     $faileds[] = $currency->getValue();
                 }
-            } catch (PrestaShopException) {
+            } catch (PrestaShopException $e) {
                 $faileds[] = $currency->getValue();
             }
         }

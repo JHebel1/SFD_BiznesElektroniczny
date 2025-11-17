@@ -49,9 +49,9 @@ interface ThemeCatalogInterface
     /**
      * @param string $theme
      *
-     * @return ThemeInterface
-     *
      * @throws InvalidArgumentException
+     *
+     * @return ThemeInterface
      */
     public function getByName($theme);
 }

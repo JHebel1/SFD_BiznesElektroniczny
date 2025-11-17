@@ -36,5 +36,5 @@ interface OptionsCheckerInterface
      *
      * @return bool
      */
-    public function canBeChanged(): bool;
+    public function canBeChanged();
 }

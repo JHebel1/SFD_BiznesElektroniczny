@@ -28,7 +28,6 @@ namespace PrestaShop\PrestaShop\Core\Grid\Collection;
 
 use Countable;
 use Iterator;
-use ReturnTypeWillChange;
 
 /**
  * Class AbstractCollection is responsible for providing base collection implementation.
@@ -43,24 +42,22 @@ abstract class AbstractCollection implements Iterator, Countable
     /**
      * {@inheritdoc}
      */
-    #[ReturnTypeWillChange]
     public function current()
     {
         return current($this->items);
     }
 
     /**
-     * {@inheritdoc}
+     * @return mixed|false
      */
-    public function next(): void
+    public function next()
     {
-        next($this->items);
+        return next($this->items);
     }
 
     /**
      * {@inheritdoc}
      */
-    #[ReturnTypeWillChange]
     public function key()
     {
         return key($this->items);
@@ -69,7 +66,7 @@ abstract class AbstractCollection implements Iterator, Countable
     /**
      * {@inheritdoc}
      */
-    public function valid(): bool
+    public function valid()
     {
         return false !== $this->current();
     }
@@ -77,7 +74,7 @@ abstract class AbstractCollection implements Iterator, Countable
     /**
      * {@inheritdoc}
      */
-    public function rewind(): void
+    public function rewind()
     {
         reset($this->items);
     }
@@ -85,7 +82,7 @@ abstract class AbstractCollection implements Iterator, Countable
     /**
      * {@inheritdoc}
      */
-    public function count(): int
+    public function count()
     {
         return count($this->items);
     }

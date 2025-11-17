@@ -39,11 +39,6 @@ class OrderForViewing
     private $orderId;
 
     /**
-     * @var int
-     */
-    private $cartId;
-
-    /**
      * @var OrderCustomerForViewing
      */
     private $customer;
@@ -203,16 +198,6 @@ class OrderForViewing
     private $note;
 
     /**
-     * @var string
-     */
-    private $paymentName;
-
-    /**
-     * @var string
-     */
-    private $paymentModule;
-
-    /**
      * @param int $orderId
      * @param int $currencyId
      * @param int $carrierId
@@ -246,9 +231,6 @@ class OrderForViewing
      * @param string $shippingAddressFormatted
      * @param string $invoiceAddressFormatted
      * @param string $note
-     * @param string $paymentName
-     * @param string $paymentModule
-     * @param int $cartId
      */
     public function __construct(
         int $orderId,
@@ -283,10 +265,7 @@ class OrderForViewing
         LinkedOrdersForViewing $linkedOrders,
         string $shippingAddressFormatted = '',
         string $invoiceAddressFormatted = '',
-        string $note = '',
-        string $paymentName = '',
-        string $paymentModule = '',
-        int $cartId = 0
+        string $note = ''
     ) {
         $this->reference = $reference;
         $this->customer = $customer;
@@ -321,9 +300,6 @@ class OrderForViewing
         $this->shippingAddressFormatted = $shippingAddressFormatted;
         $this->invoiceAddressFormatted = $invoiceAddressFormatted;
         $this->note = $note;
-        $this->paymentName = $paymentName;
-        $this->paymentModule = $paymentModule;
-        $this->cartId = $cartId;
     }
 
     /**
@@ -332,14 +308,6 @@ class OrderForViewing
     public function getId(): int
     {
         return $this->orderId;
-    }
-
-    /**
-     * @return int
-     */
-    public function getCartId(): int
-    {
-        return $this->cartId;
     }
 
     /**
@@ -616,21 +584,5 @@ class OrderForViewing
     public function getNote(): string
     {
         return $this->note;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPaymentName(): string
-    {
-        return $this->paymentName;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPaymentModule(): string
-    {
-        return $this->paymentModule;
     }
 }

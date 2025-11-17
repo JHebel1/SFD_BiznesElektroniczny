@@ -38,5 +38,5 @@ interface BackupCreatorInterface
      *
      * @return BackupInterface
      */
-    public function createBackup(): BackupInterface;
+    public function createBackup();
 }

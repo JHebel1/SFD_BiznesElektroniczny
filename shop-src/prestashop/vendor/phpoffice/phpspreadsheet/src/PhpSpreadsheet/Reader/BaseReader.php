@@ -2,11 +2,8 @@
 
 namespace PhpOffice\PhpSpreadsheet\Reader;
 
-use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
-use PhpOffice\PhpSpreadsheet\Reader\Exception as ReaderException;
 use PhpOffice\PhpSpreadsheet\Reader\Security\XmlScanner;
 use PhpOffice\PhpSpreadsheet\Shared\File;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 abstract class BaseReader implements IReader
 {
@@ -40,18 +37,9 @@ abstract class BaseReader implements IReader
      * Restrict which sheets should be loaded?
      * This property holds an array of worksheet names to be loaded. If null, then all worksheets will be loaded.
      *
-     * @var null|string[]
+     * @var array of string
      */
     protected $loadSheetsOnly;
-
-    /**
-     * Allow external images. Use with caution.
-     * Improper specification of these within a spreadsheet
-     * can subject the caller to security exploits.
-     *
-     * @var bool
-     */
-    protected $allowExternalImages = false;
 
     /**
      * IReadFilter instance.
@@ -60,11 +48,10 @@ abstract class BaseReader implements IReader
      */
     protected $readFilter;
 
-    /** @var resource */
     protected $fileHandle;
 
     /**
-     * @var ?XmlScanner
+     * @var XmlScanner
      */
     protected $securityScanner;
 
@@ -78,9 +65,9 @@ abstract class BaseReader implements IReader
         return $this->readDataOnly;
     }
 
-    public function setReadDataOnly($readCellValuesOnly)
+    public function setReadDataOnly($pValue)
     {
-        $this->readDataOnly = (bool) $readCellValuesOnly;
+        $this->readDataOnly = (bool) $pValue;
 
         return $this;
     }
@@ -90,9 +77,9 @@ abstract class BaseReader implements IReader
         return $this->readEmptyCells;
     }
 
-    public function setReadEmptyCells($readEmptyCells)
+    public function setReadEmptyCells($pValue)
     {
-        $this->readEmptyCells = (bool) $readEmptyCells;
+        $this->readEmptyCells = (bool) $pValue;
 
         return $this;
     }
@@ -102,9 +89,9 @@ abstract class BaseReader implements IReader
         return $this->includeCharts;
     }
 
-    public function setIncludeCharts($includeCharts)
+    public function setIncludeCharts($pValue)
     {
-        $this->includeCharts = (bool) $includeCharts;
+        $this->includeCharts = (bool) $pValue;
 
         return $this;
     }
@@ -114,13 +101,13 @@ abstract class BaseReader implements IReader
         return $this->loadSheetsOnly;
     }
 
-    public function setLoadSheetsOnly($sheetList)
+    public function setLoadSheetsOnly($value)
     {
-        if ($sheetList === null) {
+        if ($value === null) {
             return $this->setLoadAllSheets();
         }
 
-        $this->loadSheetsOnly = is_array($sheetList) ? $sheetList : [$sheetList];
+        $this->loadSheetsOnly = is_array($value) ? $value : [$value];
 
         return $this;
     }
@@ -137,102 +124,37 @@ abstract class BaseReader implements IReader
         return $this->readFilter;
     }
 
-    public function setReadFilter(IReadFilter $readFilter)
+    public function setReadFilter(IReadFilter $pValue)
     {
-        $this->readFilter = $readFilter;
+        $this->readFilter = $pValue;
 
         return $this;
     }
 
-    public function getSecurityScanner(): ?XmlScanner
+    public function getSecurityScanner()
     {
-        return $this->securityScanner;
-    }
-
-    public function getSecurityScannerOrThrow(): XmlScanner
-    {
-        if ($this->securityScanner === null) {
-            throw new ReaderException('Security scanner is unexpectedly null');
+        if (property_exists($this, 'securityScanner')) {
+            return $this->securityScanner;
         }
 
-        return $this->securityScanner;
-    }
-
-    protected function processFlags(int $flags): void
-    {
-        if (((bool) ($flags & self::LOAD_WITH_CHARTS)) === true) {
-            $this->setIncludeCharts(true);
-        }
-        if (((bool) ($flags & self::READ_DATA_ONLY)) === true) {
-            $this->setReadDataOnly(true);
-        }
-        if (((bool) ($flags & self::SKIP_EMPTY_CELLS) || (bool) ($flags & self::IGNORE_EMPTY_CELLS)) === true) {
-            $this->setReadEmptyCells(false);
-        }
-        if (((bool) ($flags & self::ALLOW_EXTERNAL_IMAGES)) === true) {
-            $this->setAllowExternalImages(true);
-        }
-        if (((bool) ($flags & self::DONT_ALLOW_EXTERNAL_IMAGES)) === true) {
-            $this->setAllowExternalImages(false);
-        }
-    }
-
-    protected function loadSpreadsheetFromFile(string $filename): Spreadsheet
-    {
-        throw new PhpSpreadsheetException('Reader classes must implement their own loadSpreadsheetFromFile() method');
-    }
-
-    /**
-     * Loads Spreadsheet from file.
-     *
-     * @param int $flags the optional second parameter flags may be used to identify specific elements
-     *                       that should be loaded, but which won't be loaded by default, using these values:
-     *                            IReader::LOAD_WITH_CHARTS - Include any charts that are defined in the loaded file
-     */
-    public function load(string $filename, int $flags = 0): Spreadsheet
-    {
-        $this->processFlags($flags);
-
-        try {
-            return $this->loadSpreadsheetFromFile($filename);
-        } catch (ReaderException $e) {
-            throw $e;
-        }
+        return null;
     }
 
     /**
      * Open file for reading.
+     *
+     * @param string $pFilename
+     *
+     * @throws Exception
      */
-    protected function openFile(string $filename): void
+    protected function openFile($pFilename)
     {
-        $fileHandle = false;
-        if ($filename) {
-            File::assertFile($filename);
+        File::assertFile($pFilename);
 
-            // Open file
-            $fileHandle = fopen($filename, 'rb');
+        // Open file
+        $this->fileHandle = fopen($pFilename, 'r');
+        if ($this->fileHandle === false) {
+            throw new Exception('Could not open file ' . $pFilename . ' for reading.');
         }
-        if ($fileHandle === false) {
-            throw new ReaderException('Could not open file ' . $filename . ' for reading.');
-        }
-
-        $this->fileHandle = $fileHandle;
-    }
-
-    /**
-     * Allow external images. Use with caution.
-     * Improper specification of these within a spreadsheet
-     * can subject the caller to security exploits.
-     */
-    public function setAllowExternalImages(bool $allowExternalImages)
-    {
-        $this->allowExternalImages = $allowExternalImages;
-
-        return $this;
-    }
-
-    public function getAllowExternalImages()
-    {
-        return $this->allowExternalImages;
     }
 }

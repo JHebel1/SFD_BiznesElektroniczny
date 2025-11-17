@@ -26,7 +26,7 @@
 
 namespace PrestaShopBundle\Entity\Repository;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Connection;
 use Employee;
 use PrestaShop\PrestaShop\Adapter\LegacyContext as ContextAdapter;
 use PrestaShopBundle\Exception\NotImplementedException;
@@ -141,9 +141,9 @@ class FeatureAttributeRepository
         $statement->bindValue('language_id', $this->languageId);
         $statement->bindValue('shop_id', $this->shopId);
 
-        $result = $statement->executeQuery();
+        $statement->execute();
 
-        $rows = $result->fetchAllAssociative();
+        $rows = $statement->fetchAll();
         $rows = $this->explodeCollections($rows);
 
         return $this->castNumericToInt($rows);
@@ -191,9 +191,9 @@ class FeatureAttributeRepository
         $statement->bindValue('language_id', $this->languageId);
         $statement->bindValue('shop_id', $this->shopId);
 
-        $result = $statement->executeQuery();
+        $statement->execute();
 
-        $rows = $result->fetchAllAssociative();
+        $rows = $statement->fetchAll();
         $rows = $this->explodeCollections($rows);
 
         return $this->castNumericToInt($rows);
@@ -210,7 +210,7 @@ class FeatureAttributeRepository
             $row['values'] = explode(',', $row['values']);
 
             $row['values'] = array_map(function ($value) {
-                if (!str_contains($value, ':')) {
+                if (false === strpos($value, ':')) {
                     return $value;
                 }
 

@@ -61,9 +61,9 @@ class BulkDeleteSqlRequestCommand
     /**
      * @param array $sqlRequestIds
      *
-     * @return self
-     *
      * @throws SqlRequestException
+     *
+     * @return self
      */
     private function setSqlRequestIds(array $sqlRequestIds)
     {

@@ -26,14 +26,12 @@
 
 namespace PrestaShop\PrestaShop\Core\Domain\CustomerService\QueryHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\ConfigurationInterface;
 use PrestaShop\PrestaShop\Core\Domain\CustomerService\Query\GetCustomerServiceSignature;
 
 /**
  * @internal
  */
-#[AsQueryHandler]
 final class GetCustomerServiceSignatureHandler implements GetCustomerServiceSignatureHandlerInterface
 {
     /**

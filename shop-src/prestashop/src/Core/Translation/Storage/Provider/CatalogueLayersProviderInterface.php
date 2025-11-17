@@ -64,9 +64,9 @@ interface CatalogueLayersProviderInterface
      *
      * @param string $locale
      *
-     * @return MessageCatalogue
-     *
      * @throws TranslationFilesNotFoundException
+     *
+     * @return MessageCatalogue
      */
     public function getFileTranslatedCatalogue(string $locale): MessageCatalogue;
 

@@ -74,7 +74,7 @@ abstract class AbstractAddressHandler
     {
         try {
             return $address->delete();
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new AddressException(sprintf('An error occurred when deleting Address object with id "%s".', $address->id));
         }
     }

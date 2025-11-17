@@ -28,7 +28,6 @@ namespace PrestaShop\PrestaShop\Adapter\OrderMessage\CommandHandler;
 
 use OrderMessage;
 use PrestaShop\PrestaShop\Adapter\OrderMessage\AbstractOrderMessageHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\Command\EditOrderMessageCommand;
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\CommandHandler\EditOrderMessageHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\OrderMessage\Exception\OrderMessageException;
@@ -40,7 +39,6 @@ use PrestaShopException;
  *
  * @internal
  */
-#[AsCommandHandler]
 final class EditOrderMessageHandler extends AbstractOrderMessageHandler implements EditOrderMessageHandlerInterface
 {
     /**

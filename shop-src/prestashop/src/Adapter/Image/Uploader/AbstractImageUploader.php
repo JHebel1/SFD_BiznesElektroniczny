@@ -26,6 +26,7 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Image\Uploader;
 
+use Configuration;
 use ImageManager;
 use ImageType;
 use PrestaShop\PrestaShop\Core\Image\Exception\ImageOptimizationException;
@@ -48,7 +49,7 @@ abstract class AbstractImageUploader
      *
      * @throws UploadedImageConstraintException
      */
-    public function checkImageIsAllowedForUpload(UploadedFile $image)
+    protected function checkImageIsAllowedForUpload(UploadedFile $image)
     {
         $maxFileSize = Tools::getMaxUploadSize();
 
@@ -60,14 +61,7 @@ abstract class AbstractImageUploader
             || !ImageManager::isCorrectImageFileExt($image->getClientOriginalName())
             || preg_match('/\%00/', $image->getClientOriginalName()) // prevent null byte injection
         ) {
-            throw new UploadedImageConstraintException(
-                sprintf(
-                    'Image format "%s", not recognized, allowed formats are: %s',
-                    $image->getClientOriginalExtension(),
-                    join(', ', ImageManager::EXTENSIONS_SUPPORTED)
-                ),
-                UploadedImageConstraintException::UNRECOGNIZED_FORMAT
-            );
+            throw new UploadedImageConstraintException(sprintf('Image format "%s", not recognized, allowed formats are: .gif, .jpg, .png', $image->getClientOriginalExtension()), UploadedImageConstraintException::UNRECOGNIZED_FORMAT);
         }
     }
 
@@ -76,9 +70,9 @@ abstract class AbstractImageUploader
      *
      * @param UploadedFile $image
      *
-     * @return string
-     *
      * @throws ImageUploadException
+     *
+     * @return string
      */
     protected function createTemporaryImage(UploadedFile $image)
     {
@@ -134,7 +128,7 @@ abstract class AbstractImageUploader
             foreach ($imageTypes as $imageType) {
                 $resized &= $this->resize($id, $imageDir, $imageType);
             }
-        } catch (PrestaShopException) {
+        } catch (PrestaShopException $e) {
             throw new ImageOptimizationException('Unable to resize one or more of your pictures.');
         }
         if (!$resized) {
@@ -159,15 +153,17 @@ abstract class AbstractImageUploader
         $width = $imageType['width'];
         $height = $imageType['height'];
 
-        if (!ImageManager::resize(
+        if (Configuration::get('PS_HIGHT_DPI')) {
+            $ext = '2x.jpg';
+            $width *= 2;
+            $height *= 2;
+        }
+
+        return ImageManager::resize(
             $imageDir . $id . '.jpg',
             $imageDir . $id . '-' . stripslashes($imageType['name']) . $ext,
             (int) $width,
             (int) $height
-        )) {
-            return false;
-        }
-
-        return true;
+        );
     }
 }

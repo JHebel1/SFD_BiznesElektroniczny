@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -26,9 +27,7 @@
 
 namespace PrestaShopBundle\Exception;
 
-use RuntimeException;
-
-class InvalidLanguageException extends RuntimeException
+class InvalidLanguageException extends \RuntimeException
 {
     public const LOCALE_NOT_FOUND = 1;
 

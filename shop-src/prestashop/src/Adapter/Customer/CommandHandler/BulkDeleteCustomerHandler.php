@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Customer\CommandHandler;
 
 use Customer;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Command\BulkDeleteCustomerCommand;
 use PrestaShop\PrestaShop\Core\Domain\Customer\CommandHandler\BulkDeleteCustomerHandlerInterface;
 
@@ -36,7 +35,6 @@ use PrestaShop\PrestaShop\Core\Domain\Customer\CommandHandler\BulkDeleteCustomer
  *
  * @internal
  */
-#[AsCommandHandler]
 final class BulkDeleteCustomerHandler extends AbstractCustomerHandler implements BulkDeleteCustomerHandlerInterface
 {
     /**

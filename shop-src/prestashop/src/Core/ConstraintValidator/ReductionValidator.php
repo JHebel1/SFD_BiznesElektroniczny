@@ -54,11 +54,6 @@ final class ReductionValidator extends ConstraintValidator
             throw new UnexpectedTypeException($value, 'array');
         }
 
-        if (null === $value['value'] || null === $value['type']) {
-            // when one of these are null, then we assume the ReductionType was disabled, so we skip the validation
-            return;
-        }
-
         if (!$this->isAllowedType($value['type'])) {
             $this->buildViolation(
                 $constraint->invalidTypeMessage,
@@ -71,7 +66,7 @@ final class ReductionValidator extends ConstraintValidator
         }
 
         if (Reduction::TYPE_AMOUNT === $value['type']) {
-            if (!is_numeric($value['value']) || !$this->assertIsValidAmount($value['value'])) {
+            if (!$this->assertIsValidAmount($value['value'])) {
                 $this->buildViolation(
                     $constraint->invalidAmountValueMessage,
                     ['%value%' => $value['value']],
@@ -79,7 +74,7 @@ final class ReductionValidator extends ConstraintValidator
                 );
             }
         } elseif (Reduction::TYPE_PERCENTAGE === $value['type']) {
-            if (!is_numeric($value['value']) || !$this->assertIsValidPercentage($value['value'])) {
+            if (!$this->assertIsValidPercentage($value['value'])) {
                 $this->buildViolation(
                     $constraint->invalidPercentageValueMessage,
                     [
@@ -113,7 +108,7 @@ final class ReductionValidator extends ConstraintValidator
      */
     private function assertIsValidPercentage(float $value)
     {
-        return 0 < $value && Reduction::MAX_ALLOWED_PERCENTAGE >= $value;
+        return 0 <= $value && Reduction::MAX_ALLOWED_PERCENTAGE >= $value;
     }
 
     /**
@@ -125,7 +120,7 @@ final class ReductionValidator extends ConstraintValidator
      */
     private function assertIsValidAmount(float $value)
     {
-        return 0 < $value;
+        return 0 <= $value;
     }
 
     /**

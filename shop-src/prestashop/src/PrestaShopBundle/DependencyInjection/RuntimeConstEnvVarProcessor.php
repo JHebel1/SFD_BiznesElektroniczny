@@ -32,7 +32,7 @@ use Symfony\Component\DependencyInjection\Exception\EnvNotFoundException;
 
 final class RuntimeConstEnvVarProcessor implements EnvVarProcessorInterface
 {
-    public function getEnv($prefix, $name, Closure $getEnv): mixed
+    public function getEnv($prefix, $name, Closure $getEnv)
     {
         $exploded = explode(':', $name);
         if (count($exploded) !== 2 || $exploded[0] !== 'runtime' || !defined($exploded[1])) {
@@ -42,7 +42,7 @@ final class RuntimeConstEnvVarProcessor implements EnvVarProcessorInterface
         return constant($exploded[1]);
     }
 
-    public static function getProvidedTypes(): array
+    public static function getProvidedTypes()
     {
         return [
             'const' => 'bool|int|float|string|array',

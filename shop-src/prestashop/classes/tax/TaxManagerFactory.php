@@ -23,6 +23,10 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
+
+/**
+ * @since 1.5
+ */
 class TaxManagerFactoryCore
 {
     protected static $cache_tax_manager;
@@ -31,7 +35,7 @@ class TaxManagerFactoryCore
      * Returns a tax manager able to handle this address.
      *
      * @param Address $address
-     * @param int $type
+     * @param string $type
      *
      * @return TaxManagerInterface
      */
@@ -54,7 +58,7 @@ class TaxManagerFactoryCore
      * Check for a tax manager able to handle this type of address in the module list.
      *
      * @param Address $address
-     * @param int $type
+     * @param string $type
      *
      * @return TaxManagerInterface|false
      */
@@ -91,9 +95,7 @@ class TaxManagerFactoryCore
     /**
      * Create a unique identifier for the address.
      *
-     * @param Address $address
-     *
-     * @return string
+     * @param Address
      */
     protected static function getCacheKey(Address $address)
     {

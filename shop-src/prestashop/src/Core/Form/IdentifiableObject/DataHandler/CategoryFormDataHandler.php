@@ -29,14 +29,12 @@ namespace PrestaShop\PrestaShop\Core\Form\IdentifiableObject\DataHandler;
 use PrestaShop\PrestaShop\Core\CommandBus\CommandBusInterface;
 use PrestaShop\PrestaShop\Core\Domain\Category\Command\AddCategoryCommand;
 use PrestaShop\PrestaShop\Core\Domain\Category\Command\EditCategoryCommand;
-use PrestaShop\PrestaShop\Core\Domain\Category\Exception\CategoryConstraintException;
 use PrestaShop\PrestaShop\Core\Domain\Category\ValueObject\CategoryId;
-use PrestaShop\PrestaShop\Core\Domain\Category\ValueObject\RedirectOption;
+use PrestaShop\PrestaShop\Core\Image\Uploader\ImageUploaderInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Creates/updates category from data submitted in category form
- *
- * @internal
  */
 final class CategoryFormDataHandler implements FormDataHandlerInterface
 {
@@ -46,12 +44,36 @@ final class CategoryFormDataHandler implements FormDataHandlerInterface
     private $commandBus;
 
     /**
+     * @var ImageUploaderInterface
+     */
+    private $categoryCoverUploader;
+
+    /**
+     * @var ImageUploaderInterface
+     */
+    private $categoryThumbnailUploader;
+
+    /**
+     * @var ImageUploaderInterface
+     */
+    private $categoryMenuThumbnailUploader;
+
+    /**
      * @param CommandBusInterface $commandBus
+     * @param ImageUploaderInterface $categoryCoverUploader
+     * @param ImageUploaderInterface $categoryThumbnailUploader
+     * @param ImageUploaderInterface $categoryMenuThumbnailUploader
      */
     public function __construct(
-        CommandBusInterface $commandBus
+        CommandBusInterface $commandBus,
+        ImageUploaderInterface $categoryCoverUploader,
+        ImageUploaderInterface $categoryThumbnailUploader,
+        ImageUploaderInterface $categoryMenuThumbnailUploader
     ) {
         $this->commandBus = $commandBus;
+        $this->categoryCoverUploader = $categoryCoverUploader;
+        $this->categoryThumbnailUploader = $categoryThumbnailUploader;
+        $this->categoryMenuThumbnailUploader = $categoryMenuThumbnailUploader;
     }
 
     /**
@@ -64,6 +86,13 @@ final class CategoryFormDataHandler implements FormDataHandlerInterface
         /** @var CategoryId $categoryId */
         $categoryId = $this->commandBus->handle($command);
 
+        $this->uploadImages(
+            $categoryId,
+            $data['cover_image'],
+            $data['thumbnail_image'],
+            $data['menu_thumbnail_images']
+        );
+
         return $categoryId->getValue();
     }
 
@@ -72,9 +101,18 @@ final class CategoryFormDataHandler implements FormDataHandlerInterface
      */
     public function update($categoryId, array $data)
     {
-        $command = $this->createEditCategoryCommand((int) $categoryId, $data);
+        $command = $this->createEditCategoryCommand($categoryId, $data);
 
         $this->commandBus->handle($command);
+
+        $categoryId = new CategoryId((int) $categoryId);
+
+        $this->uploadImages(
+            $categoryId,
+            $data['cover_image'],
+            $data['thumbnail_image'],
+            $data['menu_thumbnail_images']
+        );
     }
 
     /**
@@ -83,10 +121,8 @@ final class CategoryFormDataHandler implements FormDataHandlerInterface
      * @param array $data
      *
      * @return AddCategoryCommand
-     *
-     * @throws CategoryConstraintException
      */
-    private function createAddCategoryCommand(array $data): AddCategoryCommand
+    private function createAddCategoryCommand(array $data)
     {
         $command = new AddCategoryCommand(
             $data['name'],
@@ -96,22 +132,14 @@ final class CategoryFormDataHandler implements FormDataHandlerInterface
         );
 
         $command->setLocalizedDescriptions($data['description']);
-        $command->setLocalizedAdditionalDescriptions($data['additional_description']);
         $command->setLocalizedMetaTitles($data['meta_title']);
         $command->setLocalizedMetaDescriptions($data['meta_description']);
+        $command->setLocalizedMetaKeywords($data['meta_keyword']);
         $command->setAssociatedGroupIds($data['group_association']);
-        $command->setCoverImage($data['cover_image']);
-        $command->setThumbnailImage($data['thumbnail_image']);
+
         if (isset($data['shop_association'])) {
             $command->setAssociatedShopIds($data['shop_association']);
         }
-
-        $redirectOption = new RedirectOption(
-            $data['redirect_option']['type'],
-            $data['redirect_option']['target']['id'] ?? 0
-        );
-
-        $command->setRedirectOption($redirectOption);
 
         return $command;
     }
@@ -123,10 +151,8 @@ final class CategoryFormDataHandler implements FormDataHandlerInterface
      * @param array $data
      *
      * @return EditCategoryCommand
-     *
-     * @throws CategoryConstraintException
      */
-    private function createEditCategoryCommand(int $categoryId, array $data): EditCategoryCommand
+    private function createEditCategoryCommand($categoryId, array $data)
     {
         $command = new EditCategoryCommand($categoryId);
         $command->setIsActive($data['active']);
@@ -134,23 +160,42 @@ final class CategoryFormDataHandler implements FormDataHandlerInterface
         $command->setLocalizedNames($data['name']);
         $command->setParentCategoryId($data['id_parent']);
         $command->setLocalizedDescriptions($data['description']);
-        $command->setLocalizedAdditionalDescriptions($data['additional_description']);
         $command->setLocalizedMetaTitles($data['meta_title']);
         $command->setLocalizedMetaDescriptions($data['meta_description']);
+        $command->setLocalizedMetaKeywords($data['meta_keyword']);
         $command->setAssociatedGroupIds($data['group_association']);
-        $command->setCoverImage($data['cover_image']);
-        $command->setThumbnailImage($data['thumbnail_image']);
+
         if (isset($data['shop_association'])) {
             $command->setAssociatedShopIds($data['shop_association']);
         }
 
-        $redirectOption = new RedirectOption(
-            $data['redirect_option']['type'],
-            $data['redirect_option']['target']['id'] ?? 0
-        );
-
-        $command->setRedirectOption($redirectOption);
-
         return $command;
+    }
+
+    /**
+     * @param CategoryId $categoryId
+     * @param UploadedFile $coverImage
+     * @param UploadedFile $thumbnailImage
+     * @param UploadedFile[] $menuThumbnailImages
+     */
+    private function uploadImages(
+        CategoryId $categoryId,
+        UploadedFile $coverImage = null,
+        UploadedFile $thumbnailImage = null,
+        array $menuThumbnailImages = []
+    ) {
+        if (null !== $coverImage) {
+            $this->categoryCoverUploader->upload($categoryId->getValue(), $coverImage);
+        }
+
+        if (null !== $thumbnailImage) {
+            $this->categoryThumbnailUploader->upload($categoryId->getValue(), $thumbnailImage);
+        }
+
+        if (!empty($menuThumbnailImages)) {
+            foreach ($menuThumbnailImages as $menuThumbnail) {
+                $this->categoryMenuThumbnailUploader->upload($categoryId->getValue(), $menuThumbnail);
+            }
+        }
     }
 }

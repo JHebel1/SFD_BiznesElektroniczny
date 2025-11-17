@@ -36,8 +36,6 @@ use PrestaShop\PrestaShop\Adapter\ContextStateManager;
 use PrestaShop\PrestaShop\Adapter\Currency\CurrencyDataProvider;
 use PrestaShop\PrestaShop\Adapter\Order\AbstractOrderHandler;
 use PrestaShop\PrestaShop\Adapter\Tools;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
-use PrestaShop\PrestaShop\Core\Domain\Currency\Exception\CurrencyNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Product\Query\SearchProducts;
 use PrestaShop\PrestaShop\Core\Domain\Product\QueryHandler\SearchProductsHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Product\QueryResult\FoundProduct;
@@ -51,7 +49,6 @@ use Shop;
 /**
  * Handles products search using legacy object model
  */
-#[AsQueryHandler]
 final class SearchProductsHandler extends AbstractOrderHandler implements SearchProductsHandlerInterface
 {
     /**
@@ -110,10 +107,6 @@ final class SearchProductsHandler extends AbstractOrderHandler implements Search
     public function handle(SearchProducts $query): array
     {
         $currency = $this->currencyDataProvider->getCurrencyByIsoCode($query->getAlphaIsoCode()->getValue());
-        if (null === $currency) {
-            throw new CurrencyNotFoundException(sprintf('Could not find currency matching ISO code %s', $query->getAlphaIsoCode()->getValue()));
-        }
-
         $this->contextStateManager
             ->setCurrency($currency)
         ;
@@ -294,7 +287,7 @@ final class SearchProductsHandler extends AbstractOrderHandler implements Search
      * @param int $computingPrecision
      * @param Order|null $order
      *
-     * @return float|null
+     * @return float
      */
     private function getProductPriceForOrder(
         int $productId,

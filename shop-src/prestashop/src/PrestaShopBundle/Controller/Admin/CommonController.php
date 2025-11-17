@@ -26,21 +26,23 @@
 
 namespace PrestaShopBundle\Controller\Admin;
 
-use PrestaShop\PrestaShop\Adapter\Tools;
+use Context;
+use PrestaShop\PrestaShop\Adapter\Module\AdminModuleDataProvider;
+use PrestaShop\PrestaShop\Core\Addon\AddonsCollection;
+use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManagerBuilder;
 use PrestaShop\PrestaShop\Core\Domain\Notification\Command\UpdateEmployeeNotificationLastElementCommand;
 use PrestaShop\PrestaShop\Core\Domain\Notification\Query\GetNotificationLastElements;
 use PrestaShop\PrestaShop\Core\Domain\Notification\QueryResult\NotificationsResults;
 use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\AbstractGridDefinitionFactory;
 use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\FilterableGridDefinitionFactoryInterface;
-use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\GridDefinitionFactoryProvider;
-use PrestaShop\PrestaShop\Core\Grid\Position\Exception\PositionUpdateException;
-use PrestaShop\PrestaShop\Core\Grid\Position\PositionDefinitionProvider;
+use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\GridDefinitionFactoryInterface;
 use PrestaShop\PrestaShop\Core\Kpi\Row\KpiRowInterface;
-use PrestaShop\PrestaShop\Core\Kpi\Row\KpiRowPresenter;
-use PrestaShopBundle\Entity\Repository\AdminFilterRepository;
-use PrestaShopBundle\Security\Attribute\AdminSecurity;
+use PrestaShopBundle\Security\Annotation\AdminSecurity;
+use PrestaShopBundle\Service\DataProvider\Admin\RecommendedModules;
 use PrestaShopBundle\Service\Grid\ControllerResponseBuilder;
+use PrestaShopBundle\Service\Grid\ResponseBuilder;
 use ReflectionClass;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -49,15 +51,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Admin controller for the common actions across the whole admin interface.
  */
-class CommonController extends PrestaShopAdminController
+class CommonController extends FrameworkBundleAdminController
 {
-    public static function getSubscribedServices(): array
-    {
-        return parent::getSubscribedServices() + [
-            ControllerResponseBuilder::class => ControllerResponseBuilder::class,
-        ];
-    }
-
     /**
      * Get a summary of recent events on the shop.
      * This includes:
@@ -67,10 +62,11 @@ class CommonController extends PrestaShopAdminController
      *
      * @return JsonResponse
      */
-    public function notificationsAction(): JsonResponse
+    public function notificationsAction()
     {
+        $employeeId = Context::getContext()->employee->id;
         /** @var NotificationsResults $elements */
-        $elements = $this->dispatchQuery(new GetNotificationLastElements($this->getEmployeeContext()->getEmployee()->getId()));
+        $elements = $this->getQueryBus()->handle(new GetNotificationLastElements($employeeId));
 
         return new JsonResponse($elements->getNotificationsResultsForJS());
     }
@@ -82,9 +78,10 @@ class CommonController extends PrestaShopAdminController
      *
      * @return JsonResponse
      */
-    public function notificationsAckAction(Request $request): JsonResponse
+    public function notificationsAckAction(Request $request)
     {
-        $this->dispatchCommand(new UpdateEmployeeNotificationLastElementCommand($request->request->get('type')));
+        $type = $request->request->get('type');
+        $this->getCommandBus()->handle(new UpdateEmployeeNotificationLastElementCommand($type));
 
         return new JsonResponse(true);
     }
@@ -105,6 +102,8 @@ class CommonController extends PrestaShopAdminController
      * {% render controller('PrestaShopBundle\\Controller\\Admin\\CommonController::paginationAction',
      *   {'limit': limit, 'offset': offset, 'total': product_count, 'caller_parameters': pagination_parameters}) %}
      *
+     * @Template("@PrestaShop/Admin/Common/pagination.html.twig")
+     *
      * @param Request $request
      * @param int $limit
      * @param int $offset
@@ -112,9 +111,9 @@ class CommonController extends PrestaShopAdminController
      * @param string $view full|quicknav To change default template used to render the content
      * @param string $prefix Indicates the params prefix (eg: ?limit=10&offset=20 -> ?scope[limit]=10&scope[offset]=20)
      *
-     * @return Response
+     * @return array|Response
      */
-    public function paginationAction(Request $request, ?int $limit = 10, ?int $offset = 0, ?int $total = 0, string $view = 'full', string $prefix = ''): Response
+    public function paginationAction(Request $request, $limit = 10, $offset = 0, $total = 0, $view = 'full', $prefix = '')
     {
         $offsetParam = empty($prefix) ? 'offset' : sprintf('%s[offset]', $prefix);
         $limitParam = empty($prefix) ? 'limit' : sprintf('%s[limit]', $prefix);
@@ -129,7 +128,7 @@ class CommonController extends PrestaShopAdminController
         // urls from route
         $callerParameters = $request->attributes->get('caller_parameters', []);
         foreach ($callerParameters as $k => $v) {
-            if (str_starts_with($k, '_')) {
+            if (strpos($k, '_') === 0) {
                 unset($callerParameters[$k]);
             }
         }
@@ -178,7 +177,7 @@ class CommonController extends PrestaShopAdminController
                 $limitParam => $limit,
             ]
         ));
-        $limitChoices = $request->attributes->get('limit_choices', [10, 20, 50, 100, 300, 1000]);
+        $limitChoices = $request->attributes->get('limit_choices', [10, 20, 50, 100]);
 
         // Template vars injection
         $vars = [
@@ -200,7 +199,52 @@ class CommonController extends PrestaShopAdminController
             return $this->render('@PrestaShop/Admin/Common/pagination_' . $view . '.html.twig', $vars);
         }
 
-        return $this->render('@PrestaShop/Admin/Common/pagination.html.twig', $vars);
+        return $vars;
+    }
+
+    /**
+     * This will allow you to retrieve an HTML code with a list of recommended modules depending on the domain.
+     *
+     * @Template("@PrestaShop/Admin/Common/recommendedModules.html.twig")
+     *
+     * @param string $domain
+     * @param int $limit
+     * @param int $randomize
+     *
+     * @return array Template vars
+     */
+    public function recommendedModulesAction($domain, $limit = 0, $randomize = 0)
+    {
+        /** @var RecommendedModules $recommendedModules */
+        $recommendedModules = $this->get('prestashop.data_provider.modules.recommended');
+        $moduleIdList = $recommendedModules->getRecommendedModuleIdList($domain, ($randomize == 1));
+
+        /** @var AdminModuleDataProvider $modulesProvider */
+        $modulesProvider = $this->get('prestashop.core.admin.data_provider.module_interface');
+        $modulesRepository = ModuleManagerBuilder::getInstance()->buildRepository();
+
+        $modules = [];
+        foreach ($moduleIdList as $id) {
+            try {
+                $module = $modulesRepository->getModule($id);
+            } catch (\Exception $e) {
+                continue;
+            }
+            $modules[] = $module;
+        }
+
+        if ($randomize == 1) {
+            shuffle($modules);
+        }
+
+        $modules = $recommendedModules->filterInstalledAndBadModules($modules);
+        $collection = AddonsCollection::createFrom($modules);
+        $modules = $modulesProvider->generateAddonsUrls($collection);
+
+        return [
+            'domain' => $domain,
+            'modules' => array_slice($modules, 0, $limit, true),
+        ];
     }
 
     /**
@@ -212,12 +256,10 @@ class CommonController extends PrestaShopAdminController
      *
      * @return Response
      */
-    public function renderSidebarAction(
-        Tools $tools,
-        string $url,
-        string $title = '',
-        string $footer = '',
-    ): Response {
+    public function renderSidebarAction($url, $title = '', $footer = '')
+    {
+        $tools = $this->get('prestashop.adapter.tools');
+
         return $this->render('@PrestaShop/Admin/Common/_partials/_sidebar.html.twig', [
             'footer' => $tools->purifyHTML($footer),
             'title' => $title,
@@ -232,12 +274,12 @@ class CommonController extends PrestaShopAdminController
      *
      * @return Response
      */
-    public function renderKpiRowAction(
-        KpiRowInterface $kpiRow,
-        KpiRowPresenter $kpiRowPresenter,
-    ): Response {
+    public function renderKpiRowAction(KpiRowInterface $kpiRow)
+    {
+        $presenter = $this->get('prestashop.core.kpi_row.presenter');
+
         return $this->render('@PrestaShop/Admin/Common/Kpi/kpi_row.html.twig', [
-            'kpiRow' => $kpiRowPresenter->present($kpiRow),
+            'kpiRow' => $presenter->present($kpiRow),
         ]);
     }
 
@@ -250,14 +292,11 @@ class CommonController extends PrestaShopAdminController
      *
      * @throws \Doctrine\ORM\OptimisticLockException
      */
-    public function resetSearchAction(
-        AdminFilterRepository $adminFiltersRepository,
-        string $controller = '',
-        string $action = '',
-        string $filterId = '',
-    ): JsonResponse {
-        $employeeId = $this->getEmployeeContext()->getEmployee()->getId();
-        $shopId = $this->getShopContext()->getId();
+    public function resetSearchAction($controller = '', $action = '', $filterId = '')
+    {
+        $adminFiltersRepository = $this->get('prestashop.core.admin.admin_filter.repository');
+        $employeeId = $this->getUser()->getId();
+        $shopId = $this->getContext()->shop->id;
 
         // for compatibility when $controller and $action are used
         if (!empty($controller) && !empty($action)) {
@@ -278,6 +317,33 @@ class CommonController extends PrestaShopAdminController
     }
 
     /**
+     * Specific action to render a specific field twice.
+     *
+     * @param string $formName the form name
+     * @param string $formType the form type FQCN
+     * @param string $fieldName the field name
+     * @param array $fieldData the field data
+     *
+     * @return Response
+     */
+    public function renderFieldAction($formName, $formType, $fieldName, $fieldData)
+    {
+        $formData = [
+            $formName => [
+                $fieldName => $fieldData,
+            ],
+        ];
+
+        $form = $this->createFormBuilder($formData);
+        $form->add($formName, $formType);
+
+        return $this->render('@PrestaShop/Admin/Common/_partials/_form_field.html.twig', [
+            'form' => $form->getForm()->get($formName)->get($fieldName)->createView(),
+            'formId' => $formName . '_' . $fieldName . '_rendered',
+        ]);
+    }
+
+    /**
      * Process Grid search.
      *
      * @param Request $request
@@ -285,19 +351,21 @@ class CommonController extends PrestaShopAdminController
      * @param string $redirectRoute
      * @param array $redirectQueryParamsToKeep
      *
+     * @AdminSecurity("is_granted(['read'], request.get('_legacy_controller'))")
+     *
      * @return RedirectResponse
      */
-    #[AdminSecurity("is_granted('read', request.get('_legacy_controller'))")]
     public function searchGridAction(
-        GridDefinitionFactoryProvider $gridDefinitionFactoryCollection,
         Request $request,
-        string $gridDefinitionFactoryServiceId,
-        string $redirectRoute,
+        $gridDefinitionFactoryServiceId,
+        $redirectRoute,
         array $redirectQueryParamsToKeep = []
     ) {
-        $definitionFactory = $gridDefinitionFactoryCollection->getFactory($gridDefinitionFactoryServiceId);
+        /** @var GridDefinitionFactoryInterface $definitionFactory */
+        $definitionFactory = $this->get($gridDefinitionFactoryServiceId);
 
         $filterId = null;
+
         if ($definitionFactory instanceof FilterableGridDefinitionFactoryInterface) {
             $filterId = $definitionFactory->getFilterId();
         } elseif ($definitionFactory instanceof AbstractGridDefinitionFactory) {
@@ -311,18 +379,21 @@ class CommonController extends PrestaShopAdminController
         }
 
         if (null !== $filterId) {
-            return $this->buildSearchResponse(
+            /** @var ResponseBuilder $responseBuilder */
+            $responseBuilder = $this->get('prestashop.bundle.grid.response_builder');
+
+            return $responseBuilder->buildSearchResponse(
                 $definitionFactory,
                 $request,
                 $filterId,
                 $redirectRoute,
-                $redirectQueryParamsToKeep,
+                $redirectQueryParamsToKeep
             );
         }
 
         // Legacy grid definition which use controller/action as filter keys (and no scope for parameters)
         /** @var ControllerResponseBuilder $controllerResponseBuilder */
-        $controllerResponseBuilder = $this->container->get(ControllerResponseBuilder::class);
+        $controllerResponseBuilder = $this->get('prestashop.bundle.grid.controller_response_builder');
 
         return $controllerResponseBuilder->buildSearchResponse(
             $definitionFactory,
@@ -330,31 +401,5 @@ class CommonController extends PrestaShopAdminController
             $redirectRoute,
             $redirectQueryParamsToKeep
         );
-    }
-
-    /**
-     * @param Request $request
-     *
-     * @return RedirectResponse
-     */
-    #[AdminSecurity("is_granted('update', request.get('_legacy_controller'))")]
-    public function updatePositionAction(
-        Request $request,
-        PositionDefinitionProvider $positionDefinitionProvider,
-    ): RedirectResponse {
-        $positionsData = [
-            'positions' => $request->request->all('positions'),
-        ];
-
-        $positionDefinition = $positionDefinitionProvider->getPositionDefinition($request->attributes->get('position_definition'));
-        try {
-            $this->updateGridPosition($positionDefinition, $positionsData);
-            $this->addFlash('success', $this->trans('Successful update', [], 'Admin.Notifications.Success'));
-        } catch (PositionUpdateException $e) {
-            $errors = [$e->toArray()];
-            $this->addFlashErrors($errors);
-        }
-
-        return $this->redirectToRoute($request->attributes->get('redirect_route'));
     }
 }

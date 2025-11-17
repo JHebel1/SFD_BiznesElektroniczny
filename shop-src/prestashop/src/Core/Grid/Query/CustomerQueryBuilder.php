@@ -78,7 +78,7 @@ final class CustomerQueryBuilder extends AbstractDoctrineQueryBuilder
     {
         $searchQueryBuilder = $this->getCustomerQueryBuilder($searchCriteria)
             ->select('c.id_customer, c.firstname, c.lastname, c.email, c.active, c.newsletter, c.optin')
-            ->addSelect('c.date_add, gl.name as social_title, grl.name as default_group, s.name as shop_name, c.company');
+            ->addSelect('c.date_add, gl.name as social_title, s.name as shop_name, c.company');
 
         $this->appendTotalSpentQuery($searchQueryBuilder);
         $this->appendLastVisitQuery($searchQueryBuilder);
@@ -120,12 +120,6 @@ final class CustomerQueryBuilder extends AbstractDoctrineQueryBuilder
             )
             ->leftJoin(
                 'c',
-                $this->dbPrefix . 'group_lang',
-                'grl',
-                'c.id_default_group = grl.id_group AND grl.id_lang = :context_lang_id'
-            )
-            ->leftJoin(
-                'c',
                 $this->dbPrefix . 'shop',
                 's',
                 'c.id_shop = s.id_shop'
@@ -146,7 +140,7 @@ final class CustomerQueryBuilder extends AbstractDoctrineQueryBuilder
     private function appendTotalSpentQuery(QueryBuilder $queryBuilder)
     {
         $totalSpentQueryBuilder = $this->connection->createQueryBuilder()
-            ->select('SUM(total_paid_tax_incl / conversion_rate)')
+            ->select('SUM(total_paid_real / conversion_rate)')
             ->from($this->dbPrefix . 'orders', 'o')
             ->where('o.id_customer = c.id_customer')
             ->andWhere('o.id_shop IN (:context_shop_ids)')
@@ -188,7 +182,6 @@ final class CustomerQueryBuilder extends AbstractDoctrineQueryBuilder
             'firstname',
             'lastname',
             'email',
-            'default_group',
             'active',
             'newsletter',
             'optin',
@@ -210,13 +203,6 @@ final class CustomerQueryBuilder extends AbstractDoctrineQueryBuilder
 
             if ('social_title' === $filterName) {
                 $qb->andWhere('gl.id_gender = :' . $filterName);
-                $qb->setParameter($filterName, $filterValue);
-
-                continue;
-            }
-
-            if ('default_group' === $filterName) {
-                $qb->andWhere('grl.id_group = :' . $filterName);
                 $qb->setParameter($filterName, $filterValue);
 
                 continue;
@@ -264,10 +250,6 @@ final class CustomerQueryBuilder extends AbstractDoctrineQueryBuilder
                 break;
             case 'social_title':
                 $orderBy = 'gl.name';
-
-                break;
-            case 'default_group':
-                $orderBy = 'grl.name';
 
                 break;
             case 'connect':

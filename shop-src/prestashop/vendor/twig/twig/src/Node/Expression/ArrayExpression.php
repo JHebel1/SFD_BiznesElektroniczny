@@ -12,14 +12,12 @@
 namespace Twig\Node\Expression;
 
 use Twig\Compiler;
-use Twig\Node\Expression\Unary\StringCastUnary;
-use Twig\Node\Expression\Variable\ContextVariable;
 
 class ArrayExpression extends AbstractExpression
 {
-    private $index;
+    protected $index;
 
-    public function __construct(array $elements, int $lineno)
+    public function __construct(array $elements, $lineno)
     {
         parent::__construct($elements, [], $lineno);
 
@@ -31,9 +29,10 @@ class ArrayExpression extends AbstractExpression
         }
     }
 
-    public function getKeyValuePairs(): array
+    public function getKeyValuePairs()
     {
         $pairs = [];
+
         foreach (array_chunk($this->nodes, 2) as $pair) {
             $pairs[] = [
                 'key' => $pair[0],
@@ -44,7 +43,7 @@ class ArrayExpression extends AbstractExpression
         return $pairs;
     }
 
-    public function hasElement(AbstractExpression $key): bool
+    public function hasElement(AbstractExpression $key)
     {
         foreach ($this->getKeyValuePairs() as $pair) {
             // we compare the string representation of the keys
@@ -57,7 +56,7 @@ class ArrayExpression extends AbstractExpression
         return false;
     }
 
-    public function addElement(AbstractExpression $value, ?AbstractExpression $key = null): void
+    public function addElement(AbstractExpression $value, AbstractExpression $key = null)
     {
         if (null === $key) {
             $key = new ConstantExpression(++$this->index, $value->getTemplateLine());
@@ -66,78 +65,24 @@ class ArrayExpression extends AbstractExpression
         array_push($this->nodes, $key, $value);
     }
 
-    public function compile(Compiler $compiler): void
+    public function compile(Compiler $compiler)
     {
-        $keyValuePairs = $this->getKeyValuePairs();
-        $needsArrayMergeSpread = \PHP_VERSION_ID < 80100 && $this->hasSpreadItem($keyValuePairs);
-
-        if ($needsArrayMergeSpread) {
-            $compiler->raw('CoreExtension::merge(');
-        }
         $compiler->raw('[');
         $first = true;
-        $reopenAfterMergeSpread = false;
-        $nextIndex = 0;
-        foreach ($keyValuePairs as $pair) {
-            if ($reopenAfterMergeSpread) {
-                $compiler->raw(', [');
-                $reopenAfterMergeSpread = false;
-            }
-
-            if ($needsArrayMergeSpread && $pair['value']->hasAttribute('spread')) {
-                $compiler->raw('], ')->subcompile($pair['value']);
-                $first = true;
-                $reopenAfterMergeSpread = true;
-                continue;
-            }
+        foreach ($this->getKeyValuePairs() as $pair) {
             if (!$first) {
                 $compiler->raw(', ');
             }
             $first = false;
 
-            if ($pair['value']->hasAttribute('spread') && !$needsArrayMergeSpread) {
-                $compiler->raw('...')->subcompile($pair['value']);
-                ++$nextIndex;
-            } else {
-                $key = null;
-                if ($pair['key'] instanceof ContextVariable) {
-                    $pair['key'] = new StringCastUnary($pair['key'], $pair['key']->getTemplateLine());
-                }
-                if ($pair['key'] instanceof TempNameExpression) {
-                    $key = $pair['key']->getAttribute('name');
-                    $pair['key'] = new ConstantExpression($key, $pair['key']->getTemplateLine());
-                }
-                if ($pair['key'] instanceof ConstantExpression) {
-                    $key = $pair['key']->getAttribute('value');
-                }
-
-                if ($nextIndex !== $key) {
-                    $compiler
-                        ->subcompile($pair['key'])
-                        ->raw(' => ')
-                    ;
-                }
-                ++$nextIndex;
-
-                $compiler->subcompile($pair['value']);
-            }
+            $compiler
+                ->subcompile($pair['key'])
+                ->raw(' => ')
+                ->subcompile($pair['value'])
+            ;
         }
-        if (!$reopenAfterMergeSpread) {
-            $compiler->raw(']');
-        }
-        if ($needsArrayMergeSpread) {
-            $compiler->raw(')');
-        }
-    }
-
-    private function hasSpreadItem(array $pairs): bool
-    {
-        foreach ($pairs as $pair) {
-            if ($pair['value']->hasAttribute('spread')) {
-                return true;
-            }
-        }
-
-        return false;
+        $compiler->raw(']');
     }
 }
+
+class_alias('Twig\Node\Expression\ArrayExpression', 'Twig_Node_Expression_Array');

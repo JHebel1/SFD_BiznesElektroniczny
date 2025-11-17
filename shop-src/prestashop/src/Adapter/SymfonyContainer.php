@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter;
 
-use LogicException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 
@@ -43,7 +42,7 @@ final class SymfonyContainer
     /**
      * Get a singleton instance of SymfonyContainer.
      *
-     * @return ContainerInterface|null
+     * @return ContainerInterface|null;
      */
     public static function getInstance()
     {
@@ -51,11 +50,7 @@ final class SymfonyContainer
             global $kernel;
 
             if (null !== $kernel && $kernel instanceof KernelInterface) {
-                try {
-                    self::$instance = $kernel->getContainer();
-                } catch (LogicException) {
-                    self::$instance = null;
-                }
+                self::$instance = $kernel->getContainer();
             }
         }
 

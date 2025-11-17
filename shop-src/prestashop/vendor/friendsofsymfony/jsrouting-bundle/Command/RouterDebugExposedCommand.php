@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * This file is part of the FOSJsRoutingBundle package.
  *
@@ -15,42 +13,50 @@ namespace FOS\JsRoutingBundle\Command;
 
 use FOS\JsRoutingBundle\Extractor\ExposedRoutesExtractorInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Helper\DescriptorHelper;
-use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Routing\Route;
-use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Routing\RouteCollection;
 
 /**
  * A console command for retrieving information about exposed routes.
  *
  * @author      William DURAND <william.durand1@gmail.com>
  */
-#[AsCommand('fos:js-routing:debug', 'Displays currently exposed routes for an application')]
 class RouterDebugExposedCommand extends Command
 {
-    public function __construct(private ExposedRoutesExtractorInterface $extractor, private RouterInterface $router)
+    protected static $defaultName = 'fos:js-routing:debug';
+
+    private $extractor;
+
+    private $router;
+
+    public function __construct(ExposedRoutesExtractorInterface $extractor, RouterInterface $router)
     {
+        $this->extractor = $extractor;
+        $this->router = $router;
+
         parent::__construct();
     }
+
 
     /**
      * {@inheritdoc}
      */
-    protected function configure(): void
+    protected function configure()
     {
         $this
-            ->setDefinition([
+            ->setDefinition(array(
                 new InputArgument('name', InputArgument::OPTIONAL, 'A route name'),
                 new InputOption('show-controllers', null, InputOption::VALUE_NONE, 'Show assigned controllers in overview'),
                 new InputOption('format', null, InputOption::VALUE_REQUIRED, 'The output format (txt, xml, json, or md)', 'txt'),
                 new InputOption('raw', null, InputOption::VALUE_NONE, 'To output raw route(s)'),
-                new InputOption('domain', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Specify expose domain', []),
-            ])
+                new InputOption('domain', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Specify expose domain', array())
+            ))
             ->setName('fos:js-routing:debug')
             ->setDescription('Displays currently exposed routes for an application')
             ->setHelp(<<<EOF
@@ -67,6 +73,9 @@ EOF
         ;
     }
 
+    /**
+     * @see Command
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if ($name = $input->getArgument('name')) {
@@ -82,24 +91,23 @@ EOF
             }
 
             $helper = new DescriptorHelper();
-            $helper->describe($output, $route, [
-                'format' => $input->getOption('format'),
-                'raw_text' => $input->getOption('raw'),
+            $helper->describe($output, $route, array(
+                'format'           => $input->getOption('format'),
+                'raw_text'         => $input->getOption('raw'),
                 'show_controllers' => $input->getOption('show-controllers'),
-            ]);
+            ));
         } else {
             $helper = new DescriptorHelper();
-            $helper->describe($output, $this->getRoutes($input->getOption('domain')), [
-                'format' => $input->getOption('format'),
-                'raw_text' => $input->getOption('raw'),
+            $helper->describe($output, $this->getRoutes($input->getOption('domain')), array(
+                'format'           => $input->getOption('format'),
+                'raw_text'         => $input->getOption('raw'),
                 'show_controllers' => $input->getOption('show-controllers'),
-            ]);
+            ));
         }
-
         return 0;
     }
 
-    protected function getRoutes($domain = []): RouteCollection
+    protected function getRoutes($domain = array())
     {
         $routes = $this->extractor->getRoutes();
 
@@ -110,12 +118,14 @@ EOF
         $targetRoutes = new RouteCollection();
 
         foreach ($routes as $name => $route) {
+
             $expose = $route->getOption('expose');
-            $expose = is_string($expose) ? ('true' === $expose ? 'default' : $expose) : 'default';
+            $expose = is_string($expose) ? ($expose === 'true' ? 'default' : $expose) : 'default';
 
             if (in_array($expose, $domain, true)) {
                 $targetRoutes->add($name, $route);
             }
+
         }
 
         return $targetRoutes;

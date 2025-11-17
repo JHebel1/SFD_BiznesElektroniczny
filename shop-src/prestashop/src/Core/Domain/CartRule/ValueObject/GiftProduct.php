@@ -26,7 +26,7 @@
 
 namespace PrestaShop\PrestaShop\Core\Domain\CartRule\ValueObject;
 
-use PrestaShop\PrestaShop\Core\Domain\Product\Combination\ValueObject\CombinationId;
+use PrestaShop\PrestaShop\Core\Domain\CartRule\Exception\CartRuleConstraintException;
 use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\ProductId;
 
 /**
@@ -38,22 +38,23 @@ class GiftProduct
      * @var ProductId
      */
     private $productId;
-
     /**
-     * @var CombinationId|null
+     * @var int
      */
-    private $combinationId;
+    private $productAttributeId;
 
     /**
      * @param int $productId
-     * @param int|null $combinationId
+     * @param int|null $productAttributeId
+     *
+     * @throws CartRuleConstraintException
      */
-    public function __construct(int $productId, ?int $combinationId = null)
+    public function __construct(int $productId, int $productAttributeId = null)
     {
+        $this->assertGiftProductIsValid($productId, $productAttributeId);
+
         $this->productId = new ProductId($productId);
-        if ($combinationId) {
-            $this->combinationId = new CombinationId($combinationId);
-        }
+        $this->productAttributeId = $productAttributeId;
     }
 
     /**
@@ -65,10 +66,27 @@ class GiftProduct
     }
 
     /**
-     * @return CombinationId|null
+     * @return int|null
      */
-    public function getCombinationId(): ?CombinationId
+    public function getProductAttributeId(): ?int
     {
-        return $this->combinationId;
+        return $this->productAttributeId;
+    }
+
+    /**
+     * @param int $productId
+     * @param int|null $productAttributeId
+     *
+     * @throws CartRuleConstraintException
+     */
+    private function assertGiftProductIsValid(int $productId, ?int $productAttributeId): void
+    {
+        if (0 >= $productId) {
+            throw new CartRuleConstraintException('Gift product ID must be a positive integer', CartRuleConstraintException::INVALID_GIFT_PRODUCT);
+        }
+
+        if (null !== $productAttributeId && 0 >= $productAttributeId) {
+            throw new CartRuleConstraintException('Gift product attribute ID must be a positive integer', CartRuleConstraintException::INVALID_GIFT_PRODUCT_ATTRIBUTE);
+        }
     }
 }

@@ -27,7 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\Customer\CommandHandler;
 
 use Customer;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Command\SetPrivateNoteAboutCustomerCommand;
 use PrestaShop\PrestaShop\Core\Domain\Customer\CommandHandler\SetPrivateNoteAboutCustomerHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Customer\Exception\CustomerNotFoundException;
@@ -37,7 +36,6 @@ use PrestaShop\PrestaShop\Core\Domain\Customer\Exception\CustomerNotFoundExcepti
  *
  * @internal
  */
-#[AsCommandHandler]
 final class SetPrivateNoteAboutCustomerHandler implements SetPrivateNoteAboutCustomerHandlerInterface
 {
     /**
@@ -49,7 +47,7 @@ final class SetPrivateNoteAboutCustomerHandler implements SetPrivateNoteAboutCus
         $customer = new Customer($customerId->getValue());
 
         if ($customer->id !== $customerId->getValue()) {
-            throw new CustomerNotFoundException(sprintf('Customer with id "%d" was not found.', $customerId->getValue()));
+            throw new CustomerNotFoundException($customerId, sprintf('Customer with id "%s" was not found.', $customerId->getValue()));
         }
 
         $customer->note = $command->getPrivateNote();

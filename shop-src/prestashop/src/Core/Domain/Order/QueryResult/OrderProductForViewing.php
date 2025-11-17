@@ -160,11 +160,6 @@ class OrderProductForViewing implements JsonSerializable
     private $customizations;
 
     /**
-     * @var string
-     */
-    private $mpn;
-
-    /**
      * @param int $orderDetailId
      * @param int $id
      * @param int $combinationId
@@ -190,7 +185,6 @@ class OrderProductForViewing implements JsonSerializable
      * @param bool $availableOutOfStock
      * @param array $packItems
      * @param OrderProductCustomizationsForViewing|null $customizations
-     * @param string $mpn
      */
     public function __construct(
         ?int $orderDetailId,
@@ -217,8 +211,7 @@ class OrderProductForViewing implements JsonSerializable
         string $type,
         bool $availableOutOfStock,
         array $packItems = [],
-        ?OrderProductCustomizationsForViewing $customizations = null,
-        string $mpn = ''
+        ?OrderProductCustomizationsForViewing $customizations = null
     ) {
         $this->id = $id;
         $this->combinationId = $combinationId;
@@ -245,7 +238,6 @@ class OrderProductForViewing implements JsonSerializable
         $this->availableOutOfStock = $availableOutOfStock;
         $this->packItems = $packItems;
         $this->customizations = $customizations;
-        $this->mpn = $mpn;
     }
 
     /**
@@ -515,16 +507,6 @@ class OrderProductForViewing implements JsonSerializable
     }
 
     /**
-     * Get product MPN
-     *
-     * @return string
-     */
-    public function getMpn(): string
-    {
-        return $this->mpn;
-    }
-
-    /**
      * @return array
      */
     public function jsonSerialize(): array
@@ -535,7 +517,6 @@ class OrderProductForViewing implements JsonSerializable
             'name' => $this->getName(),
             'reference' => $this->getReference(),
             'supplierReference' => $this->getSupplierReference(),
-            'mpn' => $this->getMpn(),
             'location' => $this->getLocation(),
             'imagePath' => $this->getImagePath(),
             'quantity' => $this->getQuantity(),

@@ -27,7 +27,7 @@
 namespace PrestaShopBundle\Install;
 
 use Locale;
-use Symfony\Component\Intl\Countries;
+use Symfony\Component\Intl\Intl;
 
 class Language
 {
@@ -40,7 +40,6 @@ class Language
     public $date_format_lite;
     public $date_format_full;
     public $countries;
-    public $allow_accented_chars_url;
 
     public function __construct($iso)
     {
@@ -124,7 +123,7 @@ class Language
     {
         if (!is_array($this->countries)) {
             Locale::setDefault($this->getLocale());
-            $this->countries = Countries::getNames();
+            $this->countries = Intl::getRegionBundle()->getCountryNames();
             $this->countries = array_change_key_case($this->countries, CASE_LOWER);
         }
 

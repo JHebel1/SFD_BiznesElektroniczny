@@ -27,25 +27,20 @@
 namespace PrestaShop\PrestaShop\Adapter\Profile\QueryHandler;
 
 use PrestaShop\PrestaShop\Adapter\Domain\AbstractObjectModelHandler;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\Profile\Exception\ProfileNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\Profile\Query\GetProfileForEditing;
 use PrestaShop\PrestaShop\Core\Domain\Profile\QueryHandler\GetProfileForEditingHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Profile\QueryResult\EditableProfile;
 use PrestaShop\PrestaShop\Core\Domain\Profile\ValueObject\ProfileId;
+use PrestaShop\PrestaShop\Core\Image\Parser\ImageTagSourceParser;
 use PrestaShop\PrestaShop\Core\Image\Parser\ImageTagSourceParserInterface;
 use Profile;
 
 /**
  * Gets Profile for editing using legacy object model
  */
-#[AsQueryHandler]
 final class GetProfileForEditingHandler extends AbstractObjectModelHandler implements GetProfileForEditingHandlerInterface
 {
-    /**
-     * @var string
-     */
-    private $defaultAvatarUrl;
     /**
      * @var ImageTagSourceParserInterface
      */
@@ -56,24 +51,24 @@ final class GetProfileForEditingHandler extends AbstractObjectModelHandler imple
     private $imgDir;
 
     /**
-     * @param ImageTagSourceParserInterface $imageTagSourceParser
+     * @param ImageTagSourceParserInterface|null $imageTagSourceParser
      * @param string $imgDir
-     * @param string $defaultAvatarUrl
      */
     public function __construct(
-        string $defaultAvatarUrl,
-        ImageTagSourceParserInterface $imageTagSourceParser,
+        ImageTagSourceParserInterface $imageTagSourceParser = null,
         string $imgDir = _PS_PROFILE_IMG_DIR_
     ) {
         $this->imgDir = $imgDir;
-        $this->imageTagSourceParser = $imageTagSourceParser;
-        $this->defaultAvatarUrl = $defaultAvatarUrl;
+        if (null === $imageTagSourceParser) {
+            @trigger_error('The $imageTagSourceParser parameter should not be null, inject your main ImageTagSourceParserInterface service', E_USER_DEPRECATED);
+        }
+        $this->imageTagSourceParser = $imageTagSourceParser ?? new ImageTagSourceParser(__PS_BASE_URI__);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function handle(GetProfileForEditing $query): EditableProfile
+    public function handle(GetProfileForEditing $query)
     {
         $profileId = $query->getProfileId();
         $profile = $this->getProfile($profileId);
@@ -83,7 +78,7 @@ final class GetProfileForEditingHandler extends AbstractObjectModelHandler imple
         return new EditableProfile(
             $profileId,
             $profile->name,
-            $avatarUrl ? $avatarUrl['path'] : $this->defaultAvatarUrl
+            $avatarUrl ? $avatarUrl['path'] : null
         );
     }
 

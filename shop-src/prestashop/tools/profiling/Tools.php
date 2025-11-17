@@ -25,17 +25,17 @@
  */
 class Tools extends ToolsCore
 {
-    public static function redirect($url, $base_uri = __PS_BASE_URI__, ?Link $link = null, $headers = null)
+    public static function redirect($url, $base_uri = __PS_BASE_URI__, Link $link = null, $headers = null)
     {
         if (!$link) {
             $link = Context::getContext()->link;
         }
 
-        if (!preg_match('@^https?://@i', $url) && $link) {
+        if (strpos($url, 'http://') === false && strpos($url, 'https://') === false && $link) {
             if (strpos($url, $base_uri) === 0) {
                 $url = substr($url, strlen($base_uri));
             }
-            if (strpos($url, 'index.php?controller=') === 0) {
+            if (strpos($url, 'index.php?controller=') !== false && strpos($url, 'index.php/') == 0) {
                 $url = substr($url, strlen('index.php?controller='));
                 if (Configuration::get('PS_REWRITING_SETTINGS')) {
                     $url = static::strReplaceFirst('&', '?', $url);
@@ -43,7 +43,8 @@ class Tools extends ToolsCore
             }
 
             $explode = explode('?', $url);
-            // don't use ssl if url is home page, used when logout for example
+            // don't use ssl if url is home page
+            // used when logout for example
             $use_ssl = !empty($url);
             $url = $link->getPageLink($explode[0], $use_ssl);
             if (isset($explode[1])) {
@@ -73,7 +74,7 @@ class Tools extends ToolsCore
         if (empty($default_controller)) {
             $default_controller = 'AdminDashboard';
         }
-        $controllers = Dispatcher::getControllers([_PS_ADMIN_CONTROLLER_DIR_, _PS_OVERRIDE_DIR_ . 'controllers/admin/']);
+        $controllers = Dispatcher::getControllers([_PS_ADMIN_DIR_ . '/tabs/', _PS_ADMIN_CONTROLLER_DIR_, _PS_OVERRIDE_DIR_ . 'controllers/admin/']);
         if (!isset($controllers[strtolower($default_controller)])) {
             $default_controller = 'adminnotfound';
         }
@@ -84,7 +85,16 @@ class Tools extends ToolsCore
 
     public static function redirectLink($url)
     {
-        static::redirect($url);
+        if (!preg_match('@^https?://@i', $url)) {
+            if (strpos($url, __PS_BASE_URI__) !== false && strpos($url, __PS_BASE_URI__) == 0) {
+                $url = substr($url, strlen(__PS_BASE_URI__));
+            }
+            $explode = explode('?', $url);
+            $url = Context::getContext()->link->getPageLink($explode[0]);
+            if (isset($explode[1])) {
+                $url .= '?' . $explode[1];
+            }
+        }
     }
 
     public static function redirectAdmin($url)
@@ -95,7 +105,7 @@ class Tools extends ToolsCore
                 $controller->setRedirectAfter($url);
                 $controller->run();
                 Context::getContext()->controller = $controller;
-                die;
+                die();
             } catch (PrestaShopException $e) {
                 $e->displayMessage();
             }

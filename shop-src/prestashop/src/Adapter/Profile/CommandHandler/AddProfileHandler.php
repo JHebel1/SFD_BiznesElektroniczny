@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Profile\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\Profile\Command\AddProfileCommand;
 use PrestaShop\PrestaShop\Core\Domain\Profile\CommandHandler\AddProfileHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Profile\Exception\ProfileException;
@@ -36,7 +35,6 @@ use Profile;
 /**
  * Adds new employee profile using legacy object model
  */
-#[AsCommandHandler]
 final class AddProfileHandler implements AddProfileHandlerInterface
 {
     /**

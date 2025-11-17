@@ -91,10 +91,12 @@ class HostingInformation
     }
 
     /**
-     * @return string
+     * Check if the shop is hosted on PrestaCloud.
+     *
+     * @return bool
      */
-    public function getHostname(): string
+    public function isHostMode()
     {
-        return gethostname();
+        return defined('_PS_HOST_MODE_');
     }
 }

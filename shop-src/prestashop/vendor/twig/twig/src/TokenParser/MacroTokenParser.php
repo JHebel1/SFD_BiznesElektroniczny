@@ -13,12 +13,6 @@ namespace Twig\TokenParser;
 
 use Twig\Error\SyntaxError;
 use Twig\Node\BodyNode;
-use Twig\Node\EmptyNode;
-use Twig\Node\Expression\ArrayExpression;
-use Twig\Node\Expression\ConstantExpression;
-use Twig\Node\Expression\Unary\NegUnary;
-use Twig\Node\Expression\Unary\PosUnary;
-use Twig\Node\Expression\Variable\LocalVariable;
 use Twig\Node\MacroNode;
 use Twig\Node\Node;
 use Twig\Token;
@@ -30,16 +24,17 @@ use Twig\Token;
  *      <input type="{{ type|default('text') }}" name="{{ name }}" value="{{ value|e }}" size="{{ size|default(20) }}" />
  *   {% endmacro %}
  *
- * @internal
+ * @final
  */
-final class MacroTokenParser extends AbstractTokenParser
+class MacroTokenParser extends AbstractTokenParser
 {
-    public function parse(Token $token): Node
+    public function parse(Token $token)
     {
         $lineno = $token->getLine();
         $stream = $this->parser->getStream();
         $name = $stream->expect(Token::NAME_TYPE)->getValue();
-        $arguments = $this->parseDefinition();
+
+        $arguments = $this->parser->getExpressionParser()->parseArguments(true, true);
 
         $stream->expect(Token::BLOCK_END_TYPE);
         $this->parser->pushLocalScope();
@@ -48,76 +43,26 @@ final class MacroTokenParser extends AbstractTokenParser
             $value = $token->getValue();
 
             if ($value != $name) {
-                throw new SyntaxError(\sprintf('Expected endmacro for macro "%s" (but "%s" given).', $name, $value), $stream->getCurrent()->getLine(), $stream->getSourceContext());
+                throw new SyntaxError(sprintf('Expected endmacro for macro "%s" (but "%s" given).', $name, $value), $stream->getCurrent()->getLine(), $stream->getSourceContext());
             }
         }
         $this->parser->popLocalScope();
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        $this->parser->setMacro($name, new MacroNode($name, new BodyNode([$body]), $arguments, $lineno));
+        $this->parser->setMacro($name, new MacroNode($name, new BodyNode([$body]), $arguments, $lineno, $this->getTag()));
 
-        return new EmptyNode($lineno);
+        return new Node();
     }
 
-    public function decideBlockEnd(Token $token): bool
+    public function decideBlockEnd(Token $token)
     {
         return $token->test('endmacro');
     }
 
-    public function getTag(): string
+    public function getTag()
     {
         return 'macro';
     }
-
-    private function parseDefinition(): ArrayExpression
-    {
-        $arguments = new ArrayExpression([], $this->parser->getCurrentToken()->getLine());
-        $stream = $this->parser->getStream();
-        $stream->expect(Token::PUNCTUATION_TYPE, '(', 'A list of arguments must begin with an opening parenthesis');
-        while (!$stream->test(Token::PUNCTUATION_TYPE, ')')) {
-            if (\count($arguments)) {
-                $stream->expect(Token::PUNCTUATION_TYPE, ',', 'Arguments must be separated by a comma');
-
-                // if the comma above was a trailing comma, early exit the argument parse loop
-                if ($stream->test(Token::PUNCTUATION_TYPE, ')')) {
-                    break;
-                }
-            }
-
-            $token = $stream->expect(Token::NAME_TYPE, null, 'An argument must be a name');
-            $name = new LocalVariable($token->getValue(), $this->parser->getCurrentToken()->getLine());
-            if ($token = $stream->nextIf(Token::OPERATOR_TYPE, '=')) {
-                $default = $this->parser->getExpressionParser()->parseExpression();
-            } else {
-                $default = new ConstantExpression(null, $this->parser->getCurrentToken()->getLine());
-                $default->setAttribute('is_implicit', true);
-            }
-
-            if (!$this->checkConstantExpression($default)) {
-                throw new SyntaxError('A default value for an argument must be a constant (a boolean, a string, a number, a sequence, or a mapping).', $token->getLine(), $stream->getSourceContext());
-            }
-            $arguments->addElement($default, $name);
-        }
-        $stream->expect(Token::PUNCTUATION_TYPE, ')', 'A list of arguments must be closed by a parenthesis');
-
-        return $arguments;
-    }
-
-    // checks that the node only contains "constant" elements
-    private function checkConstantExpression(Node $node): bool
-    {
-        if (!($node instanceof ConstantExpression || $node instanceof ArrayExpression
-            || $node instanceof NegUnary || $node instanceof PosUnary
-        )) {
-            return false;
-        }
-
-        foreach ($node as $n) {
-            if (!$this->checkConstantExpression($n)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
 }
+
+class_alias('Twig\TokenParser\MacroTokenParser', 'Twig_TokenParser_Macro');

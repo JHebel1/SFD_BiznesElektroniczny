@@ -27,8 +27,6 @@
 namespace PrestaShop\PrestaShop\Adapter\SqlManager\QueryHandler;
 
 use Db;
-use PHPSQLParser\PHPSQLParser;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsQueryHandler;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Exception\SqlRequestException;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Exception\SqlRequestNotFoundException;
 use PrestaShop\PrestaShop\Core\Domain\SqlManagement\Query\GetSqlRequestExecutionResult;
@@ -42,7 +40,6 @@ use RequestSql;
  *
  * @internal
  */
-#[AsQueryHandler]
 final class GetSqlRequestExecutionResultHandler implements GetSqlRequestExecutionResultHandlerInterface
 {
     /**
@@ -68,7 +65,7 @@ final class GetSqlRequestExecutionResultHandler implements GetSqlRequestExecutio
             }
 
             $columns = array_keys(reset($rows));
-            $rows = $this->hideSensitiveData($rows, $entity->sql);
+            $rows = $this->hideSensitiveData($rows);
 
             return new SqlRequestExecutionResult(
                 $columns,
@@ -83,16 +80,15 @@ final class GetSqlRequestExecutionResultHandler implements GetSqlRequestExecutio
      * Replaces sensitive data with placeholder values.
      *
      * @param array $records
-     * @param string $query
      *
-     * @return array
+     * @return array Records with hidden sensitive data
+     *
+     * @throws PrestaShopException
      */
-    private function hideSensitiveData(array $records, string $query): array
+    private function hideSensitiveData(array $records)
     {
-        $sensitiveAttributes = $this->getSensitiveAttributes($query);
-
         foreach ($records as $key => $record) {
-            foreach ($sensitiveAttributes as $sensitiveAttribute => $placeholder) {
+            foreach ((new RequestSql())->attributes as $sensitiveAttribute => $placeholder) {
                 if (isset($record[$sensitiveAttribute])) {
                     $records[$key][$sensitiveAttribute] = $placeholder;
                 }
@@ -100,35 +96,5 @@ final class GetSqlRequestExecutionResultHandler implements GetSqlRequestExecutio
         }
 
         return $records;
-    }
-
-    /**
-     * Detect from list of sensitive attributes if function or alias are used in the sql query
-     * then add alias in the list of sensitives attributes to hide.
-     *
-     * @param string $query
-     *
-     * @return array
-     */
-    private function getSensitiveAttributes(string $query): array
-    {
-        $sensitiveAttributes = (new RequestSql())->attributes;
-        $parser = new PHPSQLParser();
-        $parsed = $parser->parse($query);
-        foreach ($parsed['SELECT'] as $selectField) {
-            if (is_array($selectField['alias'])) {
-                $alias = $selectField['alias']['name'];
-                while (is_array($selectField['sub_tree'])) {
-                    $selectField = $selectField['sub_tree'][0];
-                }
-                $field = end($selectField['no_quotes']['parts']);
-                if (array_key_exists($field, $sensitiveAttributes)) {
-                    $alias = str_replace(['"', "'", '`'], '', $alias);
-                    $sensitiveAttributes[$alias] = $sensitiveAttributes[$field];
-                }
-            }
-        }
-
-        return $sensitiveAttributes;
     }
 }

@@ -45,7 +45,7 @@ abstract class AbstractLocalizationPackLoader implements LocalizationPackLoaderI
     {
         try {
             $xml = simplexml_load_file($file);
-        } catch (ErrorException) {
+        } catch (ErrorException $e) {
             return null;
         }
 

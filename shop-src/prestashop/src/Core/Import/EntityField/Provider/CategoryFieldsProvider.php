@@ -28,7 +28,7 @@ namespace PrestaShop\PrestaShop\Core\Import\EntityField\Provider;
 
 use PrestaShop\PrestaShop\Core\Import\EntityField\EntityField;
 use PrestaShop\PrestaShop\Core\Import\EntityField\EntityFieldCollection;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class CategoryFieldsProvider defines a category fields provider.
@@ -65,13 +65,14 @@ final class CategoryFieldsProvider implements EntityFieldsProviderInterface
             ),
             new EntityField('description', $this->trans('Description', 'Admin.Global')),
             new EntityField('meta_title', $this->trans('Meta title', 'Admin.Global')),
+            new EntityField('meta_keywords', $this->trans('Meta keywords', 'Admin.Global')),
             new EntityField('meta_description', $this->trans('Meta description', 'Admin.Global')),
             new EntityField('link_rewrite', $this->trans('Rewritten URL', 'Admin.Shopparameters.Feature')),
             new EntityField('image', $this->trans('Image URL', 'Admin.Advparameters.Feature')),
             new EntityField(
                 'shop',
-                $this->trans('ID / Name of the store', 'Admin.Advparameters.Feature'),
-                $this->trans('Ignore this field if you don\'t use the Multistore tool. If you leave this field empty, the default store will be used.', 'Admin.Advparameters.Help')
+                $this->trans('ID / Name of shop', 'Admin.Advparameters.Feature'),
+                $this->trans('Ignore this field if you don\'t use the Multistore tool. If you leave this field empty, the default shop will be used.', 'Admin.Advparameters.Help')
             ),
         ];
 

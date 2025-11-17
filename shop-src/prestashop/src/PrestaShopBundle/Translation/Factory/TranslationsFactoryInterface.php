@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -38,9 +39,9 @@ interface TranslationsFactoryInterface
      * @param string $identifier Domain identifier
      * @param string $locale Locale identifier
      *
-     * @return MessageCatalogueInterface
-     *
      * @throws ProviderNotFoundException
+     *
+     * @return MessageCatalogueInterface
      */
     public function createCatalogue($identifier, $locale = self::DEFAULT_LOCALE);
 
@@ -52,9 +53,9 @@ interface TranslationsFactoryInterface
      * @param null $theme
      * @param null $search
      *
-     * @return array Translation tree structure
-     *
      * @throws ProviderNotFoundException
+     *
+     * @return array Translation tree structure
      */
     public function createTranslationsArray($domainIdentifier, $locale = self::DEFAULT_LOCALE, $theme = null, $search = null);
 }

@@ -29,38 +29,19 @@ use PrestaShop\PrestaShop\Core\Product\Search\SortOrder;
 
 class NewProductsControllerCore extends ProductListingFrontController
 {
-    /** @var string */
     public $php_self = 'new-products';
 
     /**
-     * Returns canonical URL for new-products page
-     *
-     * @return string
+     * {@inheritdoc}
      */
-    public function getCanonicalURL(): string
-    {
-        return $this->buildPaginatedUrl($this->context->link->getPageLink('new-products'));
-    }
-
-    /**
-     * Assign template vars related to page content.
-     *
-     * @see FrontController::initContent()
-     */
-    public function initContent(): void
+    public function initContent()
     {
         parent::initContent();
 
         $this->doProductSearch('catalog/listing/new-products', ['entity' => 'new-products']);
     }
 
-    /**
-     * Gets the product search query for the controller. This is a set of information that
-     * a filtering module or the default provider will use to fetch our products.
-     *
-     * @return ProductSearchQuery
-     */
-    protected function getProductSearchQuery(): ProductSearchQuery
+    protected function getProductSearchQuery()
     {
         $query = new ProductSearchQuery();
         $query
@@ -70,19 +51,14 @@ class NewProductsControllerCore extends ProductListingFrontController
         return $query;
     }
 
-    /**
-     * Default product search provider used if no filtering module stood up for the job
-     *
-     * @return NewProductsProductSearchProvider
-     */
-    protected function getDefaultProductSearchProvider(): NewProductsProductSearchProvider
+    protected function getDefaultProductSearchProvider()
     {
         return new NewProductsProductSearchProvider(
             $this->getTranslator()
         );
     }
 
-    public function getListingLabel(): string
+    public function getListingLabel()
     {
         return $this->trans(
             'New products',
@@ -91,13 +67,13 @@ class NewProductsControllerCore extends ProductListingFrontController
         );
     }
 
-    public function getBreadcrumbLinks(): array
+    public function getBreadcrumbLinks()
     {
         $breadcrumb = parent::getBreadcrumbLinks();
 
         $breadcrumb['links'][] = [
             'title' => $this->trans('New products', [], 'Shop.Theme.Catalog'),
-            'url' => $this->context->link->getPageLink('new-products'),
+            'url' => $this->context->link->getPageLink('new-products', true),
         ];
 
         return $breadcrumb;

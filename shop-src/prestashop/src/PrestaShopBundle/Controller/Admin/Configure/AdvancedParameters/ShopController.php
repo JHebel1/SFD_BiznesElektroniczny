@@ -30,14 +30,14 @@ namespace PrestaShopBundle\Controller\Admin\Configure\AdvancedParameters;
 
 use Exception;
 use PrestaShop\PrestaShop\Core\Domain\Shop\Query\SearchShops;
-use PrestaShopBundle\Controller\Admin\PrestaShopAdminController;
+use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Admin controller to manage shops.
  */
-class ShopController extends PrestaShopAdminController
+class ShopController extends FrameworkBundleAdminController
 {
     /**
      * Search for shops by query.
@@ -50,15 +50,29 @@ class ShopController extends PrestaShopAdminController
     {
         try {
             $result = [];
-            $result['shops'] = $this->dispatchQuery(new SearchShops((string) $searchTerm));
+            $result['shops'] = $this->getQueryBus()->handle(new SearchShops((string) $searchTerm));
             $statusCode = empty($result['shops']) ? Response::HTTP_NOT_FOUND : Response::HTTP_OK;
         } catch (Exception $e) {
             return $this->json(
-                ['message' => $this->getErrorMessageForException($e)],
+                ['message' => $this->getErrorMessage($e)],
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
 
         return $this->json($result['shops'], $statusCode);
+    }
+
+    /**
+     * @param Exception $e
+     *
+     * @return string
+     */
+    private function getErrorMessage(Exception $e): string
+    {
+        return $this->getFallbackErrorMessage(
+            get_class($e),
+            $e->getCode(),
+            $e->getMessage()
+        );
     }
 }

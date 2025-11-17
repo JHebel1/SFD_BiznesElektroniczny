@@ -31,7 +31,6 @@ use PrestaShop\PrestaShop\Core\CommandBus\CommandBusInterface;
 use PrestaShop\PrestaShop\Core\Domain\OrderState\Command\AddOrderStateCommand;
 use PrestaShop\PrestaShop\Core\Domain\OrderState\Command\EditOrderStateCommand;
 use PrestaShop\PrestaShop\Core\Domain\OrderState\ValueObject\OrderStateId;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Saves or updates order state data submitted in form
@@ -92,18 +91,6 @@ final class OrderStateFormDataHandler implements FormDataHandlerInterface
             $data['template']
         );
 
-        if (isset($data['icon'])) {
-            /** @var UploadedFile $fileObject */
-            $fileObject = $data['icon'];
-
-            $command->setFileInformation(
-                $fileObject->getPathname(),
-                $fileObject->getSize(),
-                $fileObject->getMimeType(),
-                $fileObject->getClientOriginalName()
-            );
-        }
-
         return $command;
     }
 
@@ -128,18 +115,6 @@ final class OrderStateFormDataHandler implements FormDataHandlerInterface
             ->setDelivery($data['delivery'])
             ->setTemplate($data['template'])
         ;
-
-        /** @var UploadedFile|null $fileObject */
-        $fileObject = $data['icon'];
-
-        if ($fileObject instanceof UploadedFile) {
-            $command->setFileInformation(
-                $fileObject->getPathname(),
-                $fileObject->getSize(),
-                $fileObject->getMimeType(),
-                $fileObject->getClientOriginalName()
-            );
-        }
 
         return $command;
     }

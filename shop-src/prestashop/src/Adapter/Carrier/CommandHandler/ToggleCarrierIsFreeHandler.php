@@ -28,28 +28,21 @@ declare(strict_types=1);
 
 namespace PrestaShop\PrestaShop\Adapter\Carrier\CommandHandler;
 
-use PrestaShop\PrestaShop\Adapter\Carrier\Repository\CarrierRepository;
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
+use PrestaShop\PrestaShop\Adapter\Carrier\AbstractCarrierHandler;
 use PrestaShop\PrestaShop\Core\Domain\Carrier\Command\ToggleCarrierIsFreeCommand;
 use PrestaShop\PrestaShop\Core\Domain\Carrier\CommandHandler\ToggleCarrierIsFreeHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Carrier\Exception\CannotToggleCarrierIsFreeStatusException;
 use PrestaShop\PrestaShop\Core\Domain\Carrier\Exception\CarrierException;
 use PrestaShopException;
 
-#[AsCommandHandler]
-class ToggleCarrierIsFreeHandler implements ToggleCarrierIsFreeHandlerInterface
+class ToggleCarrierIsFreeHandler extends AbstractCarrierHandler implements ToggleCarrierIsFreeHandlerInterface
 {
-    public function __construct(
-        private readonly CarrierRepository $carrierRepository
-    ) {
-    }
-
     /**
      * {@inheritdoc}
      */
     public function handle(ToggleCarrierIsFreeCommand $command)
     {
-        $carrier = $this->carrierRepository->get($command->getCarrierId());
+        $carrier = $this->getCarrier($command->getCarrierId());
 
         try {
             $carrier->setFieldsToUpdate(['is_free' => true]);

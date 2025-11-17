@@ -30,18 +30,16 @@ use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\CleanHtml;
 use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\DateRange;
 use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\Reduction;
 use PrestaShop\PrestaShop\Core\Domain\ValueObject\Reduction as ReductionVO;
-use PrestaShopBundle\Form\Admin\Type\CountryChoiceType;
-use PrestaShopBundle\Form\Admin\Type\CurrencyChoiceType;
 use PrestaShopBundle\Form\Admin\Type\DateRangeType;
-use PrestaShopBundle\Form\Admin\Type\PriceReductionType;
+use PrestaShopBundle\Form\Admin\Type\ReductionType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Defines catalog price rule form for create/edit actions
@@ -56,7 +54,17 @@ class CatalogPriceRuleType extends AbstractType
     /**
      * @var bool
      */
-    private $isMultiShopEnabled;
+    private $isMultishopEnabled;
+
+    /**
+     * @var array
+     */
+    private $currencyByIdChoices;
+
+    /**
+     * @var array
+     */
+    private $countryByIdChoices;
 
     /**
      * @var array
@@ -69,21 +77,35 @@ class CatalogPriceRuleType extends AbstractType
     private $shopByIdChoices;
 
     /**
+     * @var array
+     */
+    private $taxInclusionChoices;
+
+    /**
      * @param TranslatorInterface $translator
-     * @param bool $isMultiShopEnabled
+     * @param bool $isMultishopEnabled
+     * @param array $currencyByIdChoices
+     * @param array $countryByIdChoices
      * @param array $groupByIdChoices
      * @param array $shopByIdChoices
+     * @param array $taxInclusionChoices
      */
     public function __construct(
         TranslatorInterface $translator,
-        bool $isMultiShopEnabled,
+        bool $isMultishopEnabled,
+        array $currencyByIdChoices,
+        array $countryByIdChoices,
         array $groupByIdChoices,
-        array $shopByIdChoices
+        array $shopByIdChoices,
+        array $taxInclusionChoices
     ) {
         $this->translator = $translator;
-        $this->isMultiShopEnabled = $isMultiShopEnabled;
+        $this->isMultishopEnabled = $isMultishopEnabled;
+        $this->currencyByIdChoices = $currencyByIdChoices;
+        $this->countryByIdChoices = $countryByIdChoices;
         $this->groupByIdChoices = $groupByIdChoices;
         $this->shopByIdChoices = $shopByIdChoices;
+        $this->taxInclusionChoices = $taxInclusionChoices;
     }
 
     /**
@@ -97,13 +119,15 @@ class CatalogPriceRuleType extends AbstractType
                     new CleanHtml(),
                 ],
             ])
-            ->add('id_currency', CurrencyChoiceType::class, [
-                'add_all_currencies_option' => true,
-            ])
-            ->add('id_country', CountryChoiceType::class, [
+            ->add('id_currency', ChoiceType::class, [
                 'required' => false,
                 'placeholder' => false,
-                'add_all_countries_option' => true,
+                'choices' => $this->getModifiedCurrencyChoices(),
+            ])
+            ->add('id_country', ChoiceType::class, [
+                'required' => false,
+                'placeholder' => false,
+                'choices' => $this->getModifiedCountryChoices(),
             ])
             ->add('id_group', ChoiceType::class, [
                 'required' => false,
@@ -142,7 +166,6 @@ class CatalogPriceRuleType extends AbstractType
             ])
             ->add('date_range', DateRangeType::class, [
                 'date_format' => 'YYYY-MM-DD HH:mm:ss',
-                'placeholder' => $this->translator->trans('YYYY-MM-DD HH:mm:ss', [], 'Admin.Global'),
                 'constraints' => [
                     new DateRange([
                         'message' => $this->translator->trans(
@@ -153,7 +176,12 @@ class CatalogPriceRuleType extends AbstractType
                     ]),
                 ],
             ])
-            ->add('reduction', PriceReductionType::class, [
+            ->add('include_tax', ChoiceType::class, [
+                'placeholder' => false,
+                'required' => false,
+                'choices' => $this->taxInclusionChoices,
+            ])
+            ->add('reduction', ReductionType::class, [
                 'constraints' => [
                     new Reduction([
                         'invalidPercentageValueMessage' => $this->translator->trans(
@@ -171,13 +199,39 @@ class CatalogPriceRuleType extends AbstractType
             ])
         ;
 
-        if ($this->isMultiShopEnabled) {
+        if ($this->isMultishopEnabled) {
             $builder->add('id_shop', ChoiceType::class, [
                 'required' => false,
                 'placeholder' => false,
                 'choices' => $this->shopByIdChoices,
             ]);
         }
+    }
+
+    /**
+     * Prepends 'All currencies' option with id of 0 to currency choices
+     *
+     * @return array
+     */
+    private function getModifiedCurrencyChoices(): array
+    {
+        return array_merge(
+            [$this->translator->trans('All currencies', [], 'Admin.Global') => 0],
+            $this->currencyByIdChoices
+        );
+    }
+
+    /**
+     * Prepends 'All countries' option with id of 0 to country choices
+     *
+     * @return array
+     */
+    private function getModifiedCountryChoices(): array
+    {
+        return array_merge(
+            [$this->translator->trans('All countries', [], 'Admin.Global') => 0],
+            $this->countryByIdChoices
+        );
     }
 
     /**

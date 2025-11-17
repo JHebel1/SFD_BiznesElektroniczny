@@ -27,11 +27,10 @@
 namespace PrestaShopBundle\Form\Admin\Improve\Payment\Preferences;
 
 use PrestaShop\PrestaShop\Adapter\Country\CountryDataProvider;
-use PrestaShop\PrestaShop\Core\Form\ChoiceProvider\CurrencyByIdChoiceProvider;
 use PrestaShopBundle\Form\Admin\Type\Material\MaterialMultipleChoiceTableType;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class PaymentModulePreferencesType defines form in "Improve > Payment > Preferences" page.
@@ -56,16 +55,17 @@ class PaymentModulePreferencesType extends TranslatorAwareType
     /**
      * @var array
      */
+    private $currencyChoices;
+
+    /**
+     * @var array
+     */
     private $paymentModules;
 
     /**
      * @var CountryDataProvider
      */
     private $countryDataProvider;
-    /**
-     * @var CurrencyByIdChoiceProvider
-     */
-    private $currencyChoicesProvider;
 
     /**
      * @param TranslatorInterface $translator
@@ -74,7 +74,7 @@ class PaymentModulePreferencesType extends TranslatorAwareType
      * @param array $countryChoices
      * @param array $groupChoices
      * @param array $carrierChoices
-     * @param CurrencyByIdChoiceProvider $currencyChoicesProvider
+     * @param array $currencyChoices
      * @param CountryDataProvider $countryDataProvider
      */
     public function __construct(
@@ -84,7 +84,7 @@ class PaymentModulePreferencesType extends TranslatorAwareType
         array $countryChoices,
         array $groupChoices,
         array $carrierChoices,
-        CurrencyByIdChoiceProvider $currencyChoicesProvider,
+        array $currencyChoices,
         CountryDataProvider $countryDataProvider
     ) {
         parent::__construct($translator, $locales);
@@ -92,9 +92,9 @@ class PaymentModulePreferencesType extends TranslatorAwareType
         $this->countryChoices = $countryChoices;
         $this->groupChoices = $groupChoices;
         $this->carrierChoices = $carrierChoices;
+        $this->currencyChoices = $currencyChoices;
         $this->paymentModules = $this->sortPaymentModules($paymentModules);
         $this->countryDataProvider = $countryDataProvider;
-        $this->currencyChoicesProvider = $currencyChoicesProvider;
     }
 
     /**
@@ -143,10 +143,13 @@ class PaymentModulePreferencesType extends TranslatorAwareType
 
             if ('radio' === $moduleInstance->currencies_mode) {
                 $allowMultipleCurrencies = false;
-                $currencyChoices = $this->getCurrencyChoices();
+                $currencyChoices = array_merge(
+                    $this->currencyChoices,
+                    $this->getAdditionalCurrencyChoices()
+                );
             } else {
                 $allowMultipleCurrencies = true;
-                $currencyChoices = $this->currencyChoicesProvider->getChoices();
+                $currencyChoices = $this->currencyChoices;
             }
 
             $choices[] = [
@@ -239,7 +242,7 @@ class PaymentModulePreferencesType extends TranslatorAwareType
     private function getCurrencyChoices()
     {
         return array_merge(
-            $this->currencyChoicesProvider->getChoices(),
+            $this->currencyChoices,
             $this->getAdditionalCurrencyChoices()
         );
     }

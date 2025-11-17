@@ -26,7 +26,6 @@
 
 namespace PrestaShop\PrestaShop\Adapter\CMS\Page\CommandHandler;
 
-use PrestaShop\PrestaShop\Core\CommandBus\Attributes\AsCommandHandler;
 use PrestaShop\PrestaShop\Core\Domain\CmsPage\Command\BulkDeleteCmsPageCommand;
 use PrestaShop\PrestaShop\Core\Domain\CmsPage\CommandHandler\BulkDeleteCmsPageHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\CmsPage\Exception\CannotDeleteCmsPageException;
@@ -36,7 +35,6 @@ use PrestaShopException;
 /**
  * Deletes multiple cms pages
  */
-#[AsCommandHandler]
 final class BulkDeleteCmsPageHandler extends AbstractCmsPageHandler implements BulkDeleteCmsPageHandlerInterface
 {
     /**

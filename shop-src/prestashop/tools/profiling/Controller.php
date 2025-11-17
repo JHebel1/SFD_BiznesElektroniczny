@@ -27,11 +27,6 @@ abstract class Controller extends ControllerCore
 {
     protected $profiler = null;
 
-    /**
-     * @var string|null
-     */
-    public $outPutHtml;
-
     public function __construct()
     {
         $this->profiler = Profiler::getInstance();
@@ -135,13 +130,11 @@ abstract class Controller extends ControllerCore
             );
         }
 
-        if (isset($this->outPutHtml)) {
-            $this->outPutHtml = str_replace(
-                '{$content}',
-                '{$content}' . $this->context->smarty->fetch(__DIR__ . '/templates/profiling.tpl'),
-                $content
-            );
-        }
+        $this->outPutHtml = str_replace(
+            '{$content}',
+            '{$content}' . $this->context->smarty->fetch(__DIR__ . '/templates/profiling.tpl'),
+            $content
+        );
 
         // Return empty string since we change the outPutHtml
         return '';

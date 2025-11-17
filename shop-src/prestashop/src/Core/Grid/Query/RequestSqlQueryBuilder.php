@@ -43,36 +43,44 @@ final class RequestSqlQueryBuilder extends AbstractDoctrineQueryBuilder
     private $requestSqlTable;
 
     /**
+     * @var DoctrineSearchCriteriaApplicator
+     */
+    private $searchCriteriaApplicator;
+
+    /**
      * @param Connection $connection
      * @param string $dbPrefix
+     * @param DoctrineSearchCriteriaApplicator $searchCriteriaApplicator
      */
     public function __construct(
         Connection $connection,
-        $dbPrefix
+        $dbPrefix,
+        DoctrineSearchCriteriaApplicator $searchCriteriaApplicator
     ) {
         parent::__construct($connection, $dbPrefix);
 
+        $this->searchCriteriaApplicator = $searchCriteriaApplicator;
         $this->requestSqlTable = $dbPrefix . 'request_sql';
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getSearchQueryBuilder(?SearchCriteriaInterface $searchCriteria = null): QueryBuilder
+    public function getSearchQueryBuilder(SearchCriteriaInterface $searchCriteria = null): QueryBuilder
     {
         $searchQueryBuilder = $this->buildQueryBySearchCriteria($searchCriteria);
 
         return $searchQueryBuilder
             ->select('rs.*')
             ->orderBy(sprintf('`%s`', $searchCriteria->getOrderBy()), $searchCriteria->getOrderWay())
-            ->setFirstResult($searchCriteria->getOffset() ?? 0)
+            ->setFirstResult($searchCriteria->getOffset())
             ->setMaxResults($searchCriteria->getLimit());
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getCountQueryBuilder(?SearchCriteriaInterface $searchCriteria = null)
+    public function getCountQueryBuilder(SearchCriteriaInterface $searchCriteria = null)
     {
         $countQueryBuilder = $this->buildQueryBySearchCriteria($searchCriteria);
         $countQueryBuilder->select('COUNT(rs.id_request_sql)');

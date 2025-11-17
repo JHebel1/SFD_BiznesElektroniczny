@@ -20,11 +20,11 @@
   {if !$orderPayPal}
     <div class="checkout-modal-container">
       <div class="checkout-modal">
-        {if $psCheckoutCart->getPaypalStatus() === 'CANCELED'}
+        {if $psPayPalOrder->getStatus() === 'CANCELED'}
           <div role="alert" aria-live="polite" aria-atomic="true" class="alert alert-info">
             <p>{l s='Transaction details are not available' mod='ps_checkout'} {l s='This PayPal Order has been canceled.' mod='ps_checkout'}</p>
           </div>
-        {elseif $psCheckoutCart->getPaypalStatus() === 'REVERSED'}
+        {elseif $psPayPalOrder->getStatus() === 'REVERSED'}
           <div role="alert" aria-live="polite" aria-atomic="true" class="alert alert-info">
             <p>{l s='Transaction details are not available' mod='ps_checkout'} {l s='This PayPal Order has been reversed.' mod='ps_checkout'}</p>
           </div>
@@ -65,13 +65,13 @@
           </dt>
           <dd data-test="balance-value">{$orderPayPal.balance}</dd>
           <dt data-grid-area="payment">{l s='Payment mode' mod='ps_checkout'}</dt>
-          <dd data-test="payment-mode-value">{$orderPaymentDisplayName|escape:'html':'UTF-8'} <img src="{$orderPayPal.paymentSourceLogo}" alt="{$orderPaymentDisplayName|escape:'html':'UTF-8'}" title="{$orderPaymentDisplayName|escape:'html':'UTF-8'}" height="20"></dd>
+          <dd data-test="payment-mode-value">{$orderPayPal.paymentSourceName|escape:'html':'UTF-8'} <img src="{$orderPayPal.paymentSourceLogo}" alt="{$orderPayPal.paymentSourceName|escape:'html':'UTF-8'}" title="{$orderPayPal.paymentSourceName|escape:'html':'UTF-8'}" height="20"></dd>
           <dt data-grid-area="environment">
             {l s='Environment' mod='ps_checkout'}
             <i class="icon-info-sign" title="{l s='The environment in which the transaction was made: Test or Production' mod='ps_checkout'}"></i>
           </dt>
           <dd data-grid-area="environment-value">
-            <span data-test="payment-env-value" class="badge rounded badge-paypal-environment-{if $isProductionEnv}live{else}sandbox{/if}" data-value="{$psCheckoutCart->getEnvironment()|escape:'html':'UTF-8'}">
+            <span data-test="payment-env-value" class="badge rounded badge-paypal-environment-{if $isProductionEnv}live{else}sandbox{/if}" data-value="{$psPayPalOrder->getEnvironment()|escape:'html':'UTF-8'}">
               {if $isProductionEnv}
                 {l s='Production' mod='ps_checkout'}
               {else}
@@ -79,10 +79,14 @@
               {/if}
             </span>
           </dd>
-          {if $psCheckoutCart->paypal_funding === 'card'}
+          {if $psPayPalOrder->getFundingSource() === 'card'}
             <dt data-grid-area="card-sca">{l s='3D Secure' mod='ps_checkout'}</dt>
             <dd data-grid-area="card-sca-value">
-              {if $orderPayPal.is3DSecureAvailable && $orderPayPal.isLiabilityShifted}
+              {if $orderPayPal.is3DSNotRequired}
+                <span class="badge rounded badge-warning">
+                  {l s='Not required' mod='ps_checkout'}
+                </span>
+              {elseif $orderPayPal.is3DSecureAvailable && $orderPayPal.isLiabilityShifted}
                 <span class="badge rounded badge-success">{l s='Success' mod='ps_checkout'}</span>
               {elseif $orderPayPal.is3DSecureAvailable && !$orderPayPal.isLiabilityShifted}
                 <span class="badge rounded badge-danger">{l s='Failed' mod='ps_checkout'}</span>
@@ -100,12 +104,15 @@
             </dd>
           {/if}
         </dl>
-        {if $psCheckoutCart->paypal_funding === 'card' && !$orderPayPal.isLiabilityShifted}
+        {if $psPayPalOrder->getFundingSource() === 'card' && !$orderPayPal.isLiabilityShifted}
         <div class="liability-explanation">
+          {if $orderPayPal.is3DSNotRequired}
+            {l s='Your 3D Secure settings for this transaction were set to "Strong Customer Authentication (SCA) when required", but the current transaction does not require it as per the regulation.' mod='ps_checkout'}
+          {/if}
           {l s='The bank issuer declined the liability shift. We advice you not to honor the order immediately, wait a few days in case of chargeback and contact the consumer to ensure authenticity of the transaction. For this type of cases we also recommend to consider Chargeback protection.' mod='ps_checkout'}
         </div>
         {/if}
-        {if $psCheckoutCart->paypal_funding === 'card' && $orderPayPal.isLiabilityShifted}
+        {if $psPayPalOrder->getFundingSource() === 'card' && $orderPayPal.isLiabilityShifted}
           <div class="liability-explanation">
             {l s='The bank issuer accepted the liability shift. You can safely honor the order.' mod='ps_checkout'}
           </div>

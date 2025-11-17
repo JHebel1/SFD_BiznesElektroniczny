@@ -26,14 +26,12 @@
 
 namespace PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints;
 
-use Attribute;
 use PrestaShop\PrestaShop\Core\ConstraintValidator\TypedRegexValidator;
 use Symfony\Component\Validator\Constraint;
 
 /**
  * Provides regex validation by type
  */
-#[Attribute(Attribute::TARGET_PROPERTY | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
 class TypedRegex extends Constraint
 {
     /**
@@ -53,22 +51,9 @@ class TypedRegex extends Constraint
     public const TYPE_FILE_NAME = 'file_name';
     public const TYPE_DNI_LITE = 'dni_lite';
     public const TYPE_UPC = 'upc';
-    /**
-     * @deprecated since 9.0 will be removed in 10.0
-     */
     public const TYPE_EAN_13 = 'ean_13';
-    public const TYPE_GTIN = 'gtin';
     public const TYPE_ISBN = 'isbn';
     public const TYPE_REFERENCE = 'reference';
-    public const TYPE_URL = 'url';
-    public const TYPE_MODULE_NAME = 'module_name';
-    public const TYPE_STATE_ISO_CODE = 'state_iso_code';
-    public const TYPE_WEBSERVICE_KEY = 'webservice_key';
-    public const TYPE_LINK_REWRITE = 'link_rewrite';
-    public const TYPE_ZIP_CODE_FORMAT = 'zip_code_format';
-    public const TYPE_IMAGE_TYPE_NAME = 'image_type_name';
-    public const CLEAN_HTML_NO_IFRAME = 'clean_html_no_iframe';
-    public const CLEAN_HTML_ALLOW_IFRAME = 'clean_html_allow_iframe';
 
     /**
      * @var string

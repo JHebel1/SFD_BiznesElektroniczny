@@ -31,30 +31,17 @@ use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchContext;
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchProviderInterface;
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchQuery;
 use PrestaShop\PrestaShop\Core\Product\Search\ProductSearchResult;
-use PrestaShop\PrestaShop\Core\Product\Search\SortOrder;
-use PrestaShop\PrestaShop\Core\Product\Search\SortOrdersCollection;
-use PrestaShopDatabaseException;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use PrestaShop\PrestaShop\Core\Product\Search\SortOrderFactory;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Responsible of getting products for specific category.
  */
 class CategoryProductSearchProvider implements ProductSearchProviderInterface
 {
-    /**
-     * @var TranslatorInterface
-     */
     private $translator;
-
-    /**
-     * @var Category
-     */
     private $category;
-
-    /**
-     * @var SortOrdersCollection
-     */
-    private $sortOrdersCollection;
+    private $sortOrderFactory;
 
     public function __construct(
         TranslatorInterface $translator,
@@ -62,7 +49,7 @@ class CategoryProductSearchProvider implements ProductSearchProviderInterface
     ) {
         $this->translator = $translator;
         $this->category = $category;
-        $this->sortOrdersCollection = new SortOrdersCollection($this->translator);
+        $this->sortOrderFactory = new SortOrderFactory($this->translator);
     }
 
     /**
@@ -72,7 +59,7 @@ class CategoryProductSearchProvider implements ProductSearchProviderInterface
      *
      * @return array|false|int
      *
-     * @throws PrestaShopDatabaseException
+     * @throws \PrestaShopDatabaseException
      */
     private function getProductsOrCount(
         ProductSearchContext $context,
@@ -109,7 +96,7 @@ class CategoryProductSearchProvider implements ProductSearchProviderInterface
      *
      * @return ProductSearchResult
      *
-     * @throws PrestaShopDatabaseException
+     * @throws \PrestaShopDatabaseException
      */
     public function runQuery(
         ProductSearchContext $context,
@@ -125,18 +112,8 @@ class CategoryProductSearchProvider implements ProductSearchProviderInterface
                 ->setProducts($products)
                 ->setTotalProductsCount($count);
 
-            // We use default set of sort orders + option to sort by position, which makes sense only here and on search page
             $result->setAvailableSortOrders(
-                array_merge(
-                    [
-                        (new SortOrder('product', 'position', 'asc'))->setLabel(
-                            $this->translator->trans('Relevance', [], 'Shop.Theme.Catalog')
-                        ),
-                        (new SortOrder('product', 'sales', 'desc'))->setLabel(
-                            $this->translator->trans('Best sales', [], 'Shop.Theme.Catalog')
-                        ),
-                    ],
-                    $this->sortOrdersCollection->getDefaults())
+                $this->sortOrderFactory->getDefaultSortOrders()
             );
         }
 

@@ -24,8 +24,6 @@
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
 
-use PrestaShopBundle\Form\Admin\Type\FormattedTextareaType;
-
 /**
  * Class MessageCore.
  */
@@ -61,7 +59,7 @@ class MessageCore extends ObjectModel
         'table' => 'message',
         'primary' => 'id_message',
         'fields' => [
-            'message' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'required' => true, 'size' => FormattedTextareaType::LIMIT_MEDIUMTEXT_UTF8_MB4],
+            'message' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'required' => true, 'size' => 1600],
             'id_cart' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId'],
             'id_order' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId'],
             'id_customer' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId'],
@@ -113,8 +111,12 @@ class MessageCore extends ObjectModel
      *
      * @return array Messages
      */
-    public static function getMessagesByOrderId($idOrder, bool $private = false, ?Context $context = null)
+    public static function getMessagesByOrderId($idOrder, $private = false, Context $context = null)
     {
+        if (!Validate::isBool($private)) {
+            die(Tools::displayError());
+        }
+
         if (!$context) {
             $context = Context::getContext();
         }
@@ -138,14 +140,17 @@ class MessageCore extends ObjectModel
     /**
      * Return messages from Cart ID.
      *
-     * @param int $idCart Cart ID
+     * @param int $id_order Order ID
      * @param bool $private return WITH private messages
-     * @param Context|null $context
      *
      * @return array Messages
      */
-    public static function getMessagesByCartId($idCart, bool $private = false, ?Context $context = null)
+    public static function getMessagesByCartId($idCart, $private = false, Context $context = null)
     {
+        if (!Validate::isBool($private)) {
+            die(Tools::displayError());
+        }
+
         if (!$context) {
             $context = Context::getContext();
         }
@@ -168,17 +173,14 @@ class MessageCore extends ObjectModel
      * Registered a message 'readed'.
      *
      * @param int $idMessage Message ID
-     * @param int $idEmployee Employee ID
+     * @param int $id_emplyee Employee ID
      *
      * @return bool
      */
     public static function markAsReaded($idMessage, $idEmployee)
     {
-        if (!Validate::isUnsignedId($idMessage)) {
-            throw new PrestaShopException('Message ID is invalid.');
-        }
-        if (!Validate::isUnsignedId($idEmployee)) {
-            throw new PrestaShopException('Employee ID is invalid.');
+        if (!Validate::isUnsignedId($idMessage) || !Validate::isUnsignedId($idEmployee)) {
+            die(Tools::displayError());
         }
 
         $result = Db::getInstance()->execute('

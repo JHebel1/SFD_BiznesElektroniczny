@@ -56,12 +56,10 @@ final class LinkRowAction extends AbstractRowAction
             ->setDefaults([
                 'confirm_message' => '',
                 'accessibility_checker' => null,
-                // pass extra_route_params in case one param is not enough.
-                // route_param_name and route_param_field becomes redundant, but it cannot be removed due to BC break
+                //pass extra_route_params in case one param is not enough.
+                //route_param_name and route_param_field becomes redundant, but it cannot be removed due to BC break
                 'extra_route_params' => [],
                 'clickable_row' => false,
-                'target' => '',
-                'attr' => [],
             ])
             ->setAllowedTypes('route', 'string')
             ->setAllowedTypes('route_param_name', 'string')
@@ -70,8 +68,6 @@ final class LinkRowAction extends AbstractRowAction
             ->setAllowedTypes('confirm_message', 'string')
             ->setAllowedTypes('accessibility_checker', [AccessibilityCheckerInterface::class, 'callable', 'null'])
             ->setAllowedTypes('clickable_row', 'boolean')
-            ->setAllowedTypes('target', 'string')
-            ->setAllowedTypes('attr', 'array')
         ;
     }
 

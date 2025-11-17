@@ -28,7 +28,6 @@ namespace PrestaShop\PrestaShop\Adapter;
 
 use Db;
 use DbQuery;
-use PrestaShopDatabaseException;
 
 /**
  * Adapter for Db legacy class.
@@ -42,7 +41,7 @@ class Database implements \PrestaShop\PrestaShop\Core\Foundation\Database\Databa
      *
      * @return array|false
      *
-     * @throws PrestaShopDatabaseException
+     * @throws \PrestaShopDatabaseException
      */
     public function select($sqlString)
     {

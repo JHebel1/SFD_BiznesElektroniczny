@@ -29,13 +29,9 @@ use PrestaShop\PrestaShop\Adapter\Presenter\Order\OrderReturnPresenter;
 
 class OrderReturnControllerCore extends FrontController
 {
-    /** @var bool */
     public $auth = true;
-    /** @var string */
     public $php_self = 'order-return';
-    /** @var string */
     public $authRedirection = 'order-follow';
-    /** @var bool */
     public $ssl = true;
 
     /**
@@ -43,19 +39,19 @@ class OrderReturnControllerCore extends FrontController
      *
      * @see FrontController::init()
      */
-    public function init(): void
+    public function init()
     {
         parent::init();
 
         $id_order_return = (int) Tools::getValue('id_order_return');
 
-        if (!Validate::isUnsignedId($id_order_return)) {
+        if (!isset($id_order_return) || !Validate::isUnsignedId($id_order_return)) {
             $this->redirect_after = '404';
             $this->redirect();
         } else {
             $order_return = new OrderReturn((int) $id_order_return);
             if (Validate::isLoadedObject($order_return) && $order_return->id_customer == $this->context->cookie->id_customer) {
-                $order = new Order((int) $order_return->id_order);
+                $order = new Order((int) ($order_return->id_order));
                 if (Validate::isLoadedObject($order)) {
                     if ($order_return->state == 1) {
                         $this->warning[] = $this->trans('You must wait for confirmation before returning any merchandise.', [], 'Shop.Notifications.Warning');
@@ -82,7 +78,7 @@ class OrderReturnControllerCore extends FrontController
      *
      * @see FrontController::initContent()
      */
-    public function initContent(): void
+    public function initContent()
     {
         if (Configuration::isCatalogMode()) {
             Tools::redirect('index.php');
@@ -92,12 +88,13 @@ class OrderReturnControllerCore extends FrontController
         $this->setTemplate('customer/order-return');
     }
 
-    public function getTemplateVarOrderReturn(OrderReturn $orderReturn)
+    public function getTemplateVarOrderReturn($orderReturn)
     {
-        $orderReturns = OrderReturn::getOrdersReturn($orderReturn->id_customer, $orderReturn->id_order, false, null, $orderReturn->id);
-
-        if (empty($orderReturns)) {
-            return [];
+        $orderReturns = OrderReturn::getOrdersReturn($orderReturn->id_customer, $orderReturn->id_order);
+        foreach ($orderReturns as $return) {
+            if ($orderReturn->id_order == $return['id_order']) {
+                break;
+            }
         }
 
         $orderReturnPresenter = new OrderReturnPresenter(
@@ -105,10 +102,10 @@ class OrderReturnControllerCore extends FrontController
             $this->context->link
         );
 
-        return $orderReturnPresenter->present(array_shift($orderReturns));
+        return $orderReturnPresenter->present($return);
     }
 
-    public function getTemplateVarProducts(int $order_return_id, Order $order)
+    public function getTemplateVarProducts($order_return_id, $order)
     {
         $products = [];
         $return_products = OrderReturn::getOrdersReturnProducts((int) $order_return_id, $order);
@@ -169,7 +166,7 @@ class OrderReturnControllerCore extends FrontController
         return $product_customizations;
     }
 
-    public function getBreadcrumbLinks(): array
+    public function getBreadcrumbLinks()
     {
         $breadcrumb = parent::getBreadcrumbLinks();
 

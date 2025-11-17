@@ -29,16 +29,16 @@
 abstract class DbCore
 {
     /** @var int Constant used by insert() method */
-    public const INSERT = 1;
+    const INSERT = 1;
 
     /** @var int Constant used by insert() method */
-    public const INSERT_IGNORE = 2;
+    const INSERT_IGNORE = 2;
 
     /** @var int Constant used by insert() method */
-    public const REPLACE = 3;
+    const REPLACE = 3;
 
     /** @var int Constant used by insert() method */
-    public const ON_DUPLICATE_KEY = 4;
+    const ON_DUPLICATE_KEY = 4;
 
     /** @var string Server (eg. localhost) */
     protected $server;
@@ -55,7 +55,7 @@ abstract class DbCore
     /** @var bool */
     protected $is_cache_enabled;
 
-    /** @var PDO|mysqli|resource|null Resource link */
+    /** @var PDO|mysqli|resource Resource link */
     protected $link;
 
     /** @var PDOStatement|mysqli_result|resource|bool SQL cached result */
@@ -67,7 +67,7 @@ abstract class DbCore
     /** @var array List of server settings */
     public static $_servers = [];
 
-    /** @var bool|null Flag used to load slave servers only once.
+    /** @var null Flag used to load slave servers only once.
      * See loadSlaveServers() method
      */
     public static $_slave_servers_loaded = null;
@@ -89,7 +89,7 @@ abstract class DbCore
     /**
      * Last cached query.
      *
-     * @var bool
+     * @var string
      */
     protected $last_cached;
 
@@ -214,7 +214,7 @@ abstract class DbCore
         static $id = 0;
 
         // This MUST not be declared with the class members because some defines (like _DB_SERVER_) may not exist yet (the constructor can be called directly with params)
-        if (!self::$_servers && defined('_DB_SERVER_') && defined('_DB_USER_') && defined('_DB_PASSWD_') && defined('_DB_NAME_')) {
+        if (!self::$_servers) {
             self::$_servers = [
                 ['server' => _DB_SERVER_, 'user' => _DB_USER_, 'password' => _DB_PASSWD_, 'database' => _DB_NAME_], /* MySQL Master server */
             ];
@@ -233,10 +233,6 @@ abstract class DbCore
         }
 
         if (!isset(self::$instance[$id_server])) {
-            if (!isset(self::$_servers[$id_server])) {
-                throw new PrestaShopException('Database server configuration not found');
-            }
-
             $class = Db::getClass();
             self::$instance[$id_server] = new $class(
                 self::$_servers[$id_server]['server'],
@@ -255,8 +251,8 @@ abstract class DbCore
     }
 
     /**
-     * @param Db $test_db
-     *                    Unit testing purpose only
+     * @param $test_db Db
+     * Unit testing purpose only
      */
     public static function setInstanceForTesting($test_db)
     {
@@ -296,8 +292,7 @@ abstract class DbCore
     public static function getClass()
     {
         $class = '';
-        /* @phpstan-ignore-next-line */
-        if (extension_loaded('pdo_mysql')) {
+        if (PHP_VERSION_ID >= 50200 && extension_loaded('pdo_mysql')) {
             $class = 'DbPDO';
         } elseif (extension_loaded('mysqli')) {
             $class = 'DbMySQLi';
@@ -381,8 +376,9 @@ abstract class DbCore
         $this->result = $this->_query($sql);
 
         if (!$this->result && $this->getNumberError() == 2006) {
-            $this->connect();
-            $this->result = $this->_query($sql);
+            if ($this->connect()) {
+                $this->result = $this->_query($sql);
+            }
         }
 
         if (_PS_DEBUG_SQL_) {
@@ -425,7 +421,7 @@ abstract class DbCore
         } elseif ($type == Db::ON_DUPLICATE_KEY) {
             $insert_keyword = 'INSERT';
         } else {
-            throw new PrestaShopDatabaseException('Bad keyword, must be Db::INSERT or Db::INSERT_IGNORE or Db::REPLACE or Db::ON_DUPLICATE_KEY');
+            throw new PrestaShopDatabaseException('Bad keyword, must be Db::INSERT or Db::INSERT_IGNORE or Db::REPLACE');
         }
 
         // Check if $data is a list of row
@@ -438,7 +434,6 @@ abstract class DbCore
         $values_stringified = [];
         $first_loop = true;
         $duplicate_key_stringified = '';
-
         foreach ($data as $row_data) {
             $values = [];
             foreach ($row_data as $key => $value) {
@@ -583,7 +578,7 @@ abstract class DbCore
      * @param bool $array Return an array instead of a result object (deprecated since 1.5.0.1, use query method instead)
      * @param bool $use_cache
      *
-     * @return array|bool|mysqli_result|PDOStatement|resource|null
+     * @return array|false|mysqli_result|PDOStatement|resource|null
      *
      * @throws PrestaShopDatabaseException
      */
@@ -691,7 +686,7 @@ abstract class DbCore
      * @param string|DbQuery $sql
      * @param bool $use_cache
      *
-     * @return string|false|null Returns false if no results
+     * @return string|false Returns false if no results
      */
     public function getValue($sql, $use_cache = true)
     {
@@ -699,8 +694,7 @@ abstract class DbCore
             $sql = $sql->build();
         }
 
-        $result = $this->getRow($sql, $use_cache);
-        if (false === $result) {
+        if (!$result = $this->getRow($sql, $use_cache)) {
             return false;
         }
 
@@ -724,8 +718,6 @@ abstract class DbCore
         } elseif ($this->is_cache_enabled && $this->last_cached) {
             return Cache::getInstance()->get($this->last_query_hash . '_nrows');
         }
-
-        return 0;
     }
 
     /**

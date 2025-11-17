@@ -26,52 +26,52 @@
 
 namespace PrestaShopBundle\Form\Admin\Sell\Catalog;
 
-use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\DefaultLanguage;
 use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\TypedRegex;
 use PrestaShopBundle\Form\Admin\Type\ShopChoiceTreeType;
 use PrestaShopBundle\Form\Admin\Type\TranslatableType;
-use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
+use PrestaShopBundle\Translation\TranslatorAwareTrait;
+use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Type that builds a product feature add/edit form.
  */
-class FeatureType extends TranslatorAwareType
+class FeatureType extends AbstractType
 {
+    use TranslatorAwareTrait;
+
+    /**
+     * @var bool
+     */
+    private $isMultistoreFeatureActive;
+
+    /**
+     * @param bool $isMultistoreFeatureActive
+     */
+    public function __construct($isMultistoreFeatureActive)
+    {
+        $this->isMultistoreFeatureActive = $isMultistoreFeatureActive;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder
-            ->add('name', TranslatableType::class, [
-                'label' => $this->trans('Name', 'Admin.Global'),
-                'type' => TextType::class,
+        $builder->add('name', TranslatableType::class, [
+            'type' => TextType::class,
+            'options' => [
                 'constraints' => [
-                    new DefaultLanguage(),
+                    new TypedRegex([
+                        'type' => 'generic_name',
+                    ]),
                 ],
-                'options' => [
-                    'constraints' => [
-                        new TypedRegex([
-                            'type' => 'generic_name',
-                        ]),
-                    ],
-                ],
-                'help' => $this->trans('Invalid characters: %chars%', 'Admin.Notifications.Info', ['%chars%' => '<>{}']),
-            ])
-            ->add('shop_association', ShopChoiceTreeType::class, [
-                'label' => $this->trans('Store association', 'Admin.Global'),
-            ])
-        ;
-    }
-
-    public function configureOptions(OptionsResolver $resolver)
-    {
-        parent::configureOptions($resolver);
-        $resolver->setDefaults([
-            'form_theme' => '@PrestaShop/Admin/TwigTemplateForm/prestashop_ui_kit.html.twig',
+            ],
         ]);
+
+        if ($this->isMultistoreFeatureActive) {
+            $builder->add('shop_association', ShopChoiceTreeType::class);
+        }
     }
 }

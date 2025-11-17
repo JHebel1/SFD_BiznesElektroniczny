@@ -26,23 +26,22 @@
 
 namespace PrestaShop\PrestaShop\Adapter\Presenter\Product;
 
-use PrestaShop\PrestaShop\Adapter\Presenter\LazyArrayAttribute;
-use PrestaShop\PrestaShop\Core\Domain\Product\ProductCustomizabilitySettings;
 use PrestaShop\PrestaShop\Core\Product\ProductPresentationSettings;
 
 class ProductListingLazyArray extends ProductLazyArray
 {
     /**
+     * @arrayAccess
+     *
      * @return string|null
      */
-    #[LazyArrayAttribute(arrayAccess: true)]
     public function getAddToCartUrl()
     {
         if ($this->product['id_product_attribute'] != 0 && !$this->settings->allow_add_variant_to_cart_from_listing) {
             return null;
         }
 
-        if ($this->product['customizable'] == ProductCustomizabilitySettings::REQUIRES_CUSTOMIZATION || $this->getCustomizationRequired()) {
+        if ($this->product['customizable'] == 2 || !empty($this->product['customization_required'])) {
             return null;
         }
 
@@ -58,7 +57,7 @@ class ProductListingLazyArray extends ProductLazyArray
     protected function shouldEnableAddToCartButton(array $product, ProductPresentationSettings $settings)
     {
         if (isset($product['attributes'])
-            && !empty($product['attributes'])
+            && count($product['attributes']) > 0
             && !$settings->allow_add_variant_to_cart_from_listing) {
             return false;
         }

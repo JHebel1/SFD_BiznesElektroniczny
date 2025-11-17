@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -81,7 +82,7 @@ class CurrencyData
      *     'es-CO' => 'US$', // In Colombia, colombian peso's symbol is "$". They have to differentiate foreign dollars.
      * ]
      *
-     * @var string[]|null
+     * @var string[]
      */
     protected $symbols;
 
@@ -95,7 +96,7 @@ class CurrencyData
     /**
      * the currency's name, by locale code.
      *
-     * @var string[]|null
+     * @var string[]
      */
     protected $names;
 
@@ -107,7 +108,7 @@ class CurrencyData
      *     'en-EN' => '¤#,##0.00',
      * ]
      *
-     * @var string[]|null
+     * @var string[]
      */
     protected $patterns;
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -23,21 +24,16 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
-
 use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
 use PrestaShop\PrestaShop\Core\Checkout\TermsAndConditions;
 use PrestaShop\PrestaShop\Core\Foundation\Templating\RenderableProxy;
-use PrestaShopBundle\Translation\TranslatorComponent;
 
 class OrderControllerCore extends FrontController
 {
-    /** @var bool */
     public $ssl = true;
-    /** @var string */
     public $php_self = 'order';
-    /** @var string */
     public $page_name = 'checkout';
-    public $checkoutWarning = [];
+    public $checkoutWarning = false;
 
     /**
      * @var CheckoutProcess
@@ -68,13 +64,13 @@ class OrderControllerCore extends FrontController
      *
      * @see FrontController::init()
      */
-    public function init(): void
+    public function init()
     {
         parent::init();
         $this->cartChecksum = new CartChecksum(new AddressChecksum());
     }
 
-    public function postProcess(): void
+    public function postProcess()
     {
         parent::postProcess();
 
@@ -98,7 +94,7 @@ class OrderControllerCore extends FrontController
                 $context->cart = $duplication['cart'];
                 CartRule::autoAddToCart($context);
                 $this->context->cookie->write();
-                Tools::redirect($this->context->link->getPageLink('order'));
+                Tools::redirect('index.php?controller=order');
             }
         }
 
@@ -108,7 +104,7 @@ class OrderControllerCore extends FrontController
     /**
      * @return CheckoutProcess
      */
-    public function getCheckoutProcess(): CheckoutProcess
+    public function getCheckoutProcess()
     {
         return $this->checkoutProcess;
     }
@@ -116,7 +112,7 @@ class OrderControllerCore extends FrontController
     /**
      * @return CheckoutSession
      */
-    public function getCheckoutSession(): CheckoutSession
+    public function getCheckoutSession()
     {
         $deliveryOptionsFinder = new DeliveryOptionsFinder(
             $this->context,
@@ -133,7 +129,7 @@ class OrderControllerCore extends FrontController
         return $session;
     }
 
-    protected function bootstrap(): void
+    protected function bootstrap()
     {
         $translator = $this->getTranslator();
         $session = $this->getCheckoutSession();
@@ -172,7 +168,7 @@ class OrderControllerCore extends FrontController
         $rawData = Db::getInstance()->getValue(
             'SELECT checkout_session_data FROM ' . _DB_PREFIX_ . 'cart WHERE id_cart = ' . (int) $cart->id
         );
-        $data = json_decode($rawData ?? '', true);
+        $data = json_decode($rawData, true);
         if (!is_array($data)) {
             $data = [];
         }
@@ -205,7 +201,7 @@ class OrderControllerCore extends FrontController
         }
     }
 
-    public function displayAjaxselectDeliveryOption(): void
+    public function displayAjaxselectDeliveryOption()
     {
         $cart = $this->cart_presenter->present(
             $this->context->cart,
@@ -214,7 +210,7 @@ class OrderControllerCore extends FrontController
 
         ob_end_clean();
         header('Content-Type: application/json');
-        $this->ajaxRender(json_encode([
+        $this->ajaxRender(Tools::jsonEncode([
             'preview' => $this->render('checkout/_partials/cart-summary', [
                 'cart' => $cart,
                 'static_token' => Tools::getToken(false),
@@ -222,30 +218,7 @@ class OrderControllerCore extends FrontController
         ]));
     }
 
-    public function displayAjaxCheckCartStillOrderable(): void
-    {
-        $responseData = [
-            'errors' => false,
-            'cartUrl' => '',
-        ];
-
-        if ($this->context->cart->isAllProductsInStock() !== true
-            || $this->context->cart->checkAllProductsAreStillAvailableInThisState() !== true
-            || $this->context->cart->checkAllProductsHaveMinimalQuantities() !== true) {
-            $responseData['errors'] = true;
-            $responseData['cartUrl'] = $this->context->link->getPageLink('cart', null, null, ['action' => 'show']);
-        }
-
-        header('Content-Type: application/json');
-        $this->ajaxRender(json_encode($responseData));
-    }
-
-    /**
-     * Assign template vars related to page content.
-     *
-     * @see FrontController::initContent()
-     */
-    public function initContent(): void
+    public function initContent()
     {
         if (Configuration::isCatalogMode()) {
             Tools::redirect('index.php');
@@ -258,26 +231,17 @@ class OrderControllerCore extends FrontController
 
         $presentedCart = $this->cart_presenter->present($this->context->cart, true);
 
-        $shouldRedirectToCart = false;
-
-        // Check the cart meets minimal order amount treshold
-        // Check that the cart is not empty
         if (count($presentedCart['products']) <= 0 || $presentedCart['minimalPurchaseRequired']) {
-            $shouldRedirectToCart = true;
+            // if there is no product in current cart, redirect to cart page
+            $cartLink = $this->context->link->getPageLink('cart');
+            Tools::redirect($cartLink);
         }
 
-        // Check that products are still orderable, at any point in checkout
-        if ($this->context->cart->isAllProductsInStock() !== true
-            || $this->context->cart->checkAllProductsAreStillAvailableInThisState() !== true
-            || $this->context->cart->checkAllProductsHaveMinimalQuantities() !== true) {
-            $shouldRedirectToCart = true;
-        }
-
-        // If there was a problem, we redirect the user to cart, CartController deals with display of detailed errors
-        // We don't redirect in case of ajax requests, so we can get our response
-        if ($shouldRedirectToCart === true && !$this->ajax) {
+        $product = $this->context->cart->checkQuantities(true);
+        if (is_array($product)) {
+            // if there is an issue with product quantities, redirect to cart page
             $cartLink = $this->context->link->getPageLink('cart', null, null, ['action' => 'show']);
-            $this->redirectWithNotifications($cartLink);
+            Tools::redirect($cartLink);
         }
 
         $this->checkoutProcess
@@ -289,7 +253,7 @@ class OrderControllerCore extends FrontController
 
         if (!$this->checkoutProcess->hasErrors()) {
             if ($_SERVER['REQUEST_METHOD'] !== 'GET' && !$this->ajax) {
-                $this->redirectWithNotifications(
+                return $this->redirectWithNotifications(
                     $this->checkoutProcess->getCheckoutSession()->getCheckoutURL()
                 );
             }
@@ -297,6 +261,10 @@ class OrderControllerCore extends FrontController
 
         $this->context->smarty->assign([
             'checkout_process' => new RenderableProxy($this->checkoutProcess),
+            'cart' => $presentedCart,
+        ]);
+
+        $this->context->smarty->assign([
             'display_transaction_updated_info' => Tools::getIsset('updatedTransaction'),
             'tos_cms' => $this->getDefaultTermsAndConditions(),
         ]);
@@ -305,7 +273,7 @@ class OrderControllerCore extends FrontController
         $this->setTemplate('checkout/checkout');
     }
 
-    public function displayAjaxAddressForm(): void
+    public function displayAjaxAddressForm()
     {
         $addressForm = $this->makeAddressForm();
 
@@ -333,7 +301,7 @@ class OrderControllerCore extends FrontController
         ob_end_clean();
         header('Content-Type: application/json');
 
-        $this->ajaxRender(json_encode([
+        $this->ajaxRender(Tools::jsonEncode([
             'address_form' => $this->render(
                 'checkout/_partials/address-form',
                 $templateParams
@@ -346,7 +314,7 @@ class OrderControllerCore extends FrontController
      *
      * @return string|bool
      */
-    protected function getDefaultTermsAndConditions(): string|bool
+    protected function getDefaultTermsAndConditions()
     {
         $cms = new CMS((int) Configuration::get('PS_CONDITIONS_CMS_ID'), $this->context->language->id);
 
@@ -354,7 +322,7 @@ class OrderControllerCore extends FrontController
             return false;
         }
 
-        $link = $this->context->link->getCMSLink($cms, $cms->link_rewrite);
+        $link = $this->context->link->getCMSLink($cms, $cms->link_rewrite, (bool) Configuration::get('PS_SSL_ENABLED'));
 
         $termsAndConditions = new TermsAndConditions();
         $termsAndConditions
@@ -369,7 +337,7 @@ class OrderControllerCore extends FrontController
 
     /**
      * @param CheckoutSession $session
-     * @param TranslatorComponent $translator
+     * @param $translator
      *
      * @return CheckoutProcess
      */
@@ -406,7 +374,7 @@ class OrderControllerCore extends FrontController
                     !Product::getTaxCalculationMethod((int) $this->context->cart->id_customer)
                     && (int) Configuration::get('PS_TAX')
                 )
-                ->setDisplayTaxesLabel(Configuration::get('PS_TAX'))
+                ->setDisplayTaxesLabel((Configuration::get('PS_TAX') && !Configuration::get('AEUC_LABEL_TAX_INC_EXC')))
                 ->setGiftCost(
                     $this->context->cart->getGiftWrappingPrice(
                         $checkoutDeliveryStep->getIncludeTaxes()

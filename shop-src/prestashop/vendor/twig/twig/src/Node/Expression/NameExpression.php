@@ -13,33 +13,28 @@
 namespace Twig\Node\Expression;
 
 use Twig\Compiler;
-use Twig\Node\Expression\Variable\ContextVariable;
 
 class NameExpression extends AbstractExpression
 {
-    private $specialVars = [
-        '_self' => '$this->getTemplateName()',
+    protected $specialVars = [
+        '_self' => '$this',
         '_context' => '$context',
         '_charset' => '$this->env->getCharset()',
     ];
 
-    public function __construct(string $name, int $lineno)
+    public function __construct($name, $lineno)
     {
-        if (self::class === static::class) {
-            trigger_deprecation('twig/twig', '3.15', 'The "%s" class is deprecated, use "%s" instead.', self::class, ContextVariable::class);
-        }
-
         parent::__construct([], ['name' => $name, 'is_defined_test' => false, 'ignore_strict_check' => false, 'always_defined' => false], $lineno);
     }
 
-    public function compile(Compiler $compiler): void
+    public function compile(Compiler $compiler)
     {
         $name = $this->getAttribute('name');
 
         $compiler->addDebugInfo($this);
 
         if ($this->getAttribute('is_defined_test')) {
-            if (isset($this->specialVars[$name]) || $this->getAttribute('always_defined')) {
+            if ($this->isSpecial()) {
                 $compiler->repr(true);
             } elseif (\PHP_VERSION_ID >= 70400) {
                 $compiler
@@ -56,7 +51,7 @@ class NameExpression extends AbstractExpression
                     ->raw(', $context))')
                 ;
             }
-        } elseif (isset($this->specialVars[$name])) {
+        } elseif ($this->isSpecial()) {
             $compiler->raw($this->specialVars[$name]);
         } elseif ($this->getAttribute('always_defined')) {
             $compiler
@@ -65,48 +60,60 @@ class NameExpression extends AbstractExpression
                 ->raw(']')
             ;
         } else {
-            if ($this->getAttribute('ignore_strict_check') || !$compiler->getEnvironment()->isStrictVariables()) {
+            if (\PHP_VERSION_ID >= 70000) {
+                // use PHP 7 null coalescing operator
                 $compiler
                     ->raw('($context[')
                     ->string($name)
-                    ->raw('] ?? null)')
+                    ->raw('] ?? ')
                 ;
-            } else {
+
+                if ($this->getAttribute('ignore_strict_check') || !$compiler->getEnvironment()->isStrictVariables()) {
+                    $compiler->raw('null)');
+                } else {
+                    $compiler->raw('$this->getContext($context, ')->string($name)->raw('))');
+                }
+            } elseif (\PHP_VERSION_ID >= 50400) {
+                // PHP 5.4 ternary operator performance was optimized
                 $compiler
                     ->raw('(isset($context[')
                     ->string($name)
-                    ->raw(']) || array_key_exists(')
+                    ->raw(']) ? $context[')
                     ->string($name)
-                    ->raw(', $context) ? $context[')
+                    ->raw('] : ')
+                ;
+
+                if ($this->getAttribute('ignore_strict_check') || !$compiler->getEnvironment()->isStrictVariables()) {
+                    $compiler->raw('null)');
+                } else {
+                    $compiler->raw('$this->getContext($context, ')->string($name)->raw('))');
+                }
+            } else {
+                $compiler
+                    ->raw('$this->getContext($context, ')
                     ->string($name)
-                    ->raw('] : (function () { throw new RuntimeError(\'Variable ')
-                    ->string($name)
-                    ->raw(' does not exist.\', ')
-                    ->repr($this->lineno)
-                    ->raw(', $this->source); })()')
+                ;
+
+                if ($this->getAttribute('ignore_strict_check')) {
+                    $compiler->raw(', true');
+                }
+
+                $compiler
                     ->raw(')')
                 ;
             }
         }
     }
 
-    /**
-     * @deprecated since Twig 3.11 (to be removed in 4.0)
-     */
     public function isSpecial()
     {
-        trigger_deprecation('twig/twig', '3.11', 'The "%s()" method is deprecated and will be removed in Twig 4.0.', __METHOD__);
-
         return isset($this->specialVars[$this->getAttribute('name')]);
     }
 
-    /**
-     * @deprecated since Twig 3.11 (to be removed in 4.0)
-     */
     public function isSimple()
     {
-        trigger_deprecation('twig/twig', '3.11', 'The "%s()" method is deprecated and will be removed in Twig 4.0.', __METHOD__);
-
         return !$this->isSpecial() && !$this->getAttribute('is_defined_test');
     }
 }
+
+class_alias('Twig\Node\Expression\NameExpression', 'Twig_Node_Expression_Name');

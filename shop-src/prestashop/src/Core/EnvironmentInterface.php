@@ -52,11 +52,4 @@ interface EnvironmentInterface
      * @return string
      */
     public function getCacheDir();
-
-    /**
-     * Indicates the App ID of the kernel.
-     *
-     * @return string
-     */
-    public function getAppId(): string;
 }

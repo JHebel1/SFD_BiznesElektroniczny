@@ -70,6 +70,7 @@ final class CmsPageFormDataHandler implements FormDataHandlerInterface
             $data['title'],
             $data['meta_title'],
             $data['meta_description'],
+            $data['meta_keyword'],
             $data['friendly_url'],
             $data['content'],
             $data['is_indexed_for_search'],
@@ -106,6 +107,7 @@ final class CmsPageFormDataHandler implements FormDataHandlerInterface
         $command->setLocalizedTitle($data['title']);
         $command->setLocalizedMetaTitle($data['meta_title']);
         $command->setLocalizedMetaDescription($data['meta_description']);
+        $command->setLocalizedMetaKeyword($data['meta_keyword']);
         $command->setLocalizedFriendlyUrl($data['friendly_url']);
         $command->setLocalizedContent($data['content']);
         $command->setIsIndexedForSearch($data['is_indexed_for_search']);

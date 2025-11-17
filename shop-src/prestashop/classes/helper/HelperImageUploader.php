@@ -32,12 +32,12 @@ class HelperImageUploaderCore extends HelperUploader
 
     public function getSavePath()
     {
-        return $this->normalizeDirectory(_PS_TMP_IMG_DIR_);
+        return $this->_normalizeDirectory(_PS_TMP_IMG_DIR_);
     }
 
     public function getFilePath($file_name = null)
     {
-        // Force file path
+        //Force file path
         return tempnam($this->getSavePath(), $this->getUniqueFileName());
     }
 
@@ -49,13 +49,13 @@ class HelperImageUploaderCore extends HelperUploader
 
         $upload_max_filesize = Tools::convertBytes(ini_get('upload_max_filesize'));
 
-        if ($post_max_size && ($this->getServerVars('CONTENT_LENGTH') > $post_max_size)) {
+        if ($post_max_size && ($this->_getServerVars('CONTENT_LENGTH') > $post_max_size)) {
             $file['error'] = Context::getContext()->getTranslator()->trans('The uploaded file exceeds the post_max_size directive in php.ini', [], 'Admin.Notifications.Error');
 
             return false;
         }
 
-        if ($upload_max_filesize && ($this->getServerVars('CONTENT_LENGTH') > $upload_max_filesize)) {
+        if ($upload_max_filesize && ($this->_getServerVars('CONTENT_LENGTH') > $upload_max_filesize)) {
             $file['error'] = Context::getContext()->getTranslator()->trans('The uploaded file exceeds the upload_max_filesize directive in php.ini', [], 'Admin.Notifications.Error');
 
             return false;

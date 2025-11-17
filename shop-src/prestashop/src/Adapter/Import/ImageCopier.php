@@ -80,7 +80,7 @@ final class ImageCopier
      * Copy an image located in $url and save it in a path.
      *
      * @param int $entityId id of product or category (set in entity)
-     * @param int $imageId id of the image if watermark enabled (calls hook actionWatermark)
+     * @param int $imageId id of the image if watermark enabled
      * @param string $url path or url to use
      * @param string $entity 'products' or 'categories'
      * @param bool $regenerate
@@ -91,6 +91,7 @@ final class ImageCopier
     {
         $tmpDir = $this->configuration->get('_PS_TMP_IMG_DIR_');
         $tmpFile = tempnam($tmpDir, 'ps_import');
+        $watermarkTypes = explode(',', $this->configuration->get('WATERMARK_TYPES'));
 
         switch ($entity) {
             default:
@@ -129,6 +130,10 @@ final class ImageCopier
             $query_parts = [];
             parse_str($parsedUrl['query'], $query_parts);
             $parsedUrl['query'] = http_build_query($query_parts);
+        }
+
+        if (!function_exists('http_build_url')) {
+            require_once $this->configuration->get('_PS_TOOL_DIR_') . 'http_build_url/http_build_url.php';
         }
 
         $url = http_build_url('', $parsedUrl);
@@ -199,15 +204,16 @@ final class ImageCopier
                             }
                         }
                     }
+                    if (in_array($imageType['id_image_type'], $watermarkTypes)) {
+                        $this->hookDispatcher->dispatchWithParameters(
+                            'actionWatermark',
+                            [
+                                'id_image' => $imageId,
+                                'id_product' => $entityId,
+                            ]
+                        );
+                    }
                 }
-
-                $this->hookDispatcher->dispatchWithParameters(
-                    'actionWatermark',
-                    [
-                        'id_image' => $imageId,
-                        'id_product' => $entityId,
-                    ]
-                );
             }
         } else {
             @unlink($origTmpfile);
@@ -233,7 +239,7 @@ final class ImageCopier
         $pathInfos = array_reverse($pathInfos);
         $path = '';
         foreach ($pathInfos as $pathInfo) {
-            [$width, $height, $path] = $pathInfo;
+            list($width, $height, $path) = $pathInfo;
             if ($width >= $targetWidth && $height >= $targetHeight) {
                 return $path;
             }

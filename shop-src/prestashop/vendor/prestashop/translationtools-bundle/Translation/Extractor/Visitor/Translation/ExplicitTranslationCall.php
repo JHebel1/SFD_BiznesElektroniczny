@@ -1,12 +1,4 @@
 <?php
-/**
- * This file is authored by PrestaShop SA and Contributors <contact@prestashop.com>
- *
- * It is distributed under MIT license.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace PrestaShop\TranslationToolsBundle\Translation\Extractor\Visitor\Translation;
 
@@ -17,13 +9,16 @@ use PhpParser\Node;
  */
 class ExplicitTranslationCall extends AbstractTranslationNodeVisitor
 {
-    public const SUPPORTED_METHODS = ['l', 'trans', 't'];
+    const SUPPORTED_METHODS = ['l', 'trans', 't'];
 
     public function leaveNode(Node $node)
     {
         $this->translations->add($this->extractFrom($node));
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function extractFrom(Node $node)
     {
         if (!$this->appliesFor($node)) {
@@ -85,7 +80,9 @@ class ExplicitTranslationCall extends AbstractTranslationNodeVisitor
     }
 
     /**
-     * @param Node|Node\Expr\MethodCall|Node\Expr\FuncCall $node
+     * @param Node|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\FuncCall $node
+     *
+     * @return mixed
      */
     private function getNodeName(Node $node)
     {

@@ -29,7 +29,6 @@ use PrestaShop\PrestaShop\Core\Product\Search\SortOrder;
 
 class SearchControllerCore extends ProductListingFrontController
 {
-    /** @var string */
     public $php_self = 'search';
     public $instant_search;
     public $ajax_search;
@@ -38,11 +37,11 @@ class SearchControllerCore extends ProductListingFrontController
     protected $search_tag;
 
     /**
-     * Initialize the controller.
+     * Assign template vars related to page content.
      *
-     * @see FrontController::init()
+     * @see FrontController::initContent()
      */
-    public function init(): void
+    public function init()
     {
         parent::init();
 
@@ -63,54 +62,31 @@ class SearchControllerCore extends ProductListingFrontController
     }
 
     /**
-     * Returns canonical URL for a search page with this term
-     *
-     * @return string
+     * Ensure that no search results page is indexed by search engines.
      */
-    public function getCanonicalURL(): string
-    {
-        return $this->buildPaginatedUrl($this->context->link->getPageLink('search', null, null, ['s' => $this->search_string]));
-    }
-
-    /**
-     * Initializes a set of commonly used variables related to the current page, available for use
-     * in the template. @see FrontController::assignGeneralPurposeVariables for more information.
-     *
-     * @return array
-     */
-    public function getTemplateVarPage(): array
+    public function getTemplateVarPage()
     {
         $page = parent::getTemplateVarPage();
 
-        // Ensure that no search results page is indexed by search engines.
         $page['meta']['robots'] = 'noindex';
 
         return $page;
     }
 
     /**
-     * Assign template vars related to page content.
-     *
-     * @see FrontController::initContent()
+     * Performs the search.
      */
-    public function initContent(): void
+    public function initContent()
     {
         parent::initContent();
 
         $this->doProductSearch('catalog/listing/search', ['entity' => 'search']);
     }
 
-    /**
-     * Gets the product search query for the controller. This is a set of information that
-     * a filtering module or the default provider will use to fetch our products.
-     *
-     * @return ProductSearchQuery
-     */
-    protected function getProductSearchQuery(): ProductSearchQuery
+    protected function getProductSearchQuery()
     {
         $query = new ProductSearchQuery();
         $query
-            ->setQueryType('search')
             ->setSortOrder(new SortOrder('product', 'position', 'desc'))
             ->setSearchString($this->search_string)
             ->setSearchTag($this->search_tag);
@@ -118,24 +94,19 @@ class SearchControllerCore extends ProductListingFrontController
         return $query;
     }
 
-    /**
-     * Default product search provider used if no filtering module stood up for the job
-     *
-     * @return SearchProductSearchProvider
-     */
-    protected function getDefaultProductSearchProvider(): SearchProductSearchProvider
+    protected function getDefaultProductSearchProvider()
     {
         return new SearchProductSearchProvider(
             $this->getTranslator()
         );
     }
 
-    public function getListingLabel(): string
+    public function getListingLabel()
     {
         return $this->getTranslator()->trans('Search results', [], 'Shop.Theme.Catalog');
     }
 
-    public function getBreadcrumbLinks(): array
+    public function getBreadcrumbLinks()
     {
         $breadcrumb = parent::getBreadcrumbLinks();
         $breadcrumb['links'][] = [

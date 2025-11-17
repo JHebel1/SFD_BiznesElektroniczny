@@ -1,4 +1,4 @@
-{# **
+{#**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
  *
@@ -21,32 +21,29 @@
  * @author    PrestaShop SA and Contributors <contact@prestashop.com>
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
- * #}
+ *#}
 
 {% set severity = record.severity %}
 {% set withMessage = column.options.with_message %}
 
-{% if severity == 0 %}
-  {% set severityClass = 'bg-secondary' %}
-  {% set severityMessage = withMessage ? 'Debug'|trans({}, 'Admin.Advparameters.Help') : '' %}
-{% elseif severity == 1 %}
-  {% set severityClass = 'badge-success' %}
+{% if severity == 1 %}
+  {% set severityClass = 'success' %}
   {% set severityMessage = withMessage ? 'Informative only'|trans({}, 'Admin.Advparameters.Help') : '' %}
 {% elseif severity == 2 %}
-  {% set severityClass = 'badge-warning' %}
+  {% set severityClass = 'warning' %}
   {% set severityMessage = withMessage ? 'Warning'|trans({}, 'Admin.Advparameters.Help') : '' %}
 {% elseif severity == 3 %}
-  {% set severityClass = 'badge-danger' %}
+  {% set severityClass = 'danger' %}
   {% set severityMessage = withMessage ? 'Error'|trans({}, 'Admin.Advparameters.Help') : '' %}
 {% elseif severity == 4 %}
-  {% set severityClass = 'badge-dark' %}
+  {% set severityClass = 'dark' %}
   {% set severityMessage = withMessage ? 'Major issue (crash)!'|trans({}, 'Admin.Advparameters.Help') : '' %}
 {% else %}
   {% set severityClass = '' %}
   {% set severityMessage = '' %}
 {% endif %}
 
-<span class="badge badge-pill {{ severityClass }}">
+<span class="badge badge-pill badge-{{ severityClass }}">
   {% if withMessage %}
     {{ severityMessage }} ({{ severity }})
   {% else %}

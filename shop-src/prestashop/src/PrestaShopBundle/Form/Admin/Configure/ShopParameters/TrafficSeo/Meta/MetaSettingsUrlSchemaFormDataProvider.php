@@ -28,10 +28,11 @@ declare(strict_types=1);
 namespace PrestaShopBundle\Form\Admin\Configure\ShopParameters\TrafficSeo\Meta;
 
 use PrestaShop\PrestaShop\Adapter\Routes\RouteValidator;
+use PrestaShop\PrestaShop\Adapter\Validate;
 use PrestaShop\PrestaShop\Core\Configuration\DataConfigurationInterface;
 use PrestaShop\PrestaShop\Core\Form\FormDataProviderInterface;
 use PrestaShopException;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Class MetaSettingsFormDataProvider is responsible for providing configurations data and responsible for persisting data
@@ -55,20 +56,28 @@ final class MetaSettingsUrlSchemaFormDataProvider implements FormDataProviderInt
     private $translator;
 
     /**
+     * @var Validate
+     */
+    private $validate;
+
+    /**
      * MetaFormDataProvider constructor.
      *
      * @param DataConfigurationInterface $urlSchemaDataConfiguration
      * @param TranslatorInterface $translator
      * @param RouteValidator $routeValidator
+     * @param Validate $validate
      */
     public function __construct(
         DataConfigurationInterface $urlSchemaDataConfiguration,
         TranslatorInterface $translator,
-        RouteValidator $routeValidator
+        RouteValidator $routeValidator,
+        Validate $validate
     ) {
         $this->urlSchemaDataConfiguration = $urlSchemaDataConfiguration;
         $this->routeValidator = $routeValidator;
         $this->translator = $translator;
+        $this->validate = $validate;
     }
 
     /**
@@ -105,35 +114,31 @@ final class MetaSettingsUrlSchemaFormDataProvider implements FormDataProviderInt
     private function validateData(array $data)
     {
         $patternErrors = [];
-        $fieldErrors = [];
+        $requiredFieldErrors = [];
         foreach ($data as $routeId => $rule) {
             if (!$this->routeValidator->isRoutePattern($rule)) {
                 $patternErrors[] = $this->translator->trans(
-                    'The route %routeRule% is not valid',
-                    [
-                        '%routeRule%' => htmlspecialchars($rule),
-                    ],
-                    'Admin.Shopparameters.Feature'
+                  'The route %routeRule% is not valid',
+                  [
+                      '%routeRule%' => htmlspecialchars($rule),
+                  ],
+                  'Admin.Shopparameters.Feature'
                 );
             }
 
-            $errors = $this->routeValidator->isRouteValid($routeId, $rule);
+            $missingKeywords = $this->routeValidator->doesRouteContainsRequiredKeywords($routeId, $rule);
 
-            foreach (['missing', 'unknown'] as $type) {
-                if (!empty($errors[$type])) {
-                    foreach ($errors[$type] as $keyword) {
-                        $fieldErrors[] = $this->translator->trans(
-                            $type === 'missing'
-                                ? 'Keyword "{%keyword%}" required for route "%routeName%" (rule: "%routeRule%")'
-                                : 'Keyword "{%keyword%}" doesn\'t exist for route "%routeName%" (rule: "%routeRule%")',
-                            [
-                                '%keyword%' => $keyword,
-                                '%routeName%' => $routeId,
-                                '%routeRule%' => $rule,
-                            ],
-                            'Admin.Shopparameters.Feature'
-                        );
-                    }
+            if (!empty($missingKeywords)) {
+                foreach ($missingKeywords as $keyword) {
+                    $requiredFieldErrors[] = $this->translator->trans(
+                        'Keyword "{%keyword%}" required for route "%routeName%" (rule: "%routeRule%")',
+                        [
+                            '%keyword%' => $keyword,
+                            '%routeName%' => $routeId,
+                            '%routeRule%' => $rule,
+                        ],
+                        'Admin.Shopparameters.Feature'
+                    );
                 }
             }
         }
@@ -142,6 +147,6 @@ final class MetaSettingsUrlSchemaFormDataProvider implements FormDataProviderInt
             return $patternErrors;
         }
 
-        return $fieldErrors;
+        return $requiredFieldErrors;
     }
 }

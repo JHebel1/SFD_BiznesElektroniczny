@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace PrestaShop\PrestaShop\Core\Domain\CartRule\QueryHandler;
 
 use PrestaShop\PrestaShop\Core\Domain\CartRule\Query\GetCartRuleForEditing;
-use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\CartRuleForEditing;
+use PrestaShop\PrestaShop\Core\Domain\CartRule\QueryResult\EditableCartRule;
 
 /**
  * Defines contract for GetCartRuleForEditingHandler
@@ -39,7 +39,7 @@ interface GetCartRuleForEditingHandlerInterface
     /**
      * @param GetCartRuleForEditing $query
      *
-     * @return CartRuleForEditing
+     * @return EditableCartRule
      */
-    public function handle(GetCartRuleForEditing $query): CartRuleForEditing;
+    public function handle(GetCartRuleForEditing $query): EditableCartRule;
 }
