@@ -12,6 +12,7 @@ pub struct ProductRow {
     pub brand_id: String,
     pub price_on_unit: String,
     pub img: String,
+    pub second_img: String,
     pub description: String,
     pub recommended_serving: String,
     pub product_composition: String,
@@ -29,6 +30,7 @@ pub struct Product {
     pub brand_id: String,
     pub price_on_unit: String,
     pub img: Option<String>,
+    pub second_img: Option<String>,
 
     pub description: String,
     pub recommended_serving: String,
@@ -75,6 +77,7 @@ impl Product {
             brand_id: self.brand_id.clone(),
             price_on_unit: self.price_on_unit.clone(),
             img: self.img.clone().unwrap_or_default(),
+            second_img: self.second_img.clone().unwrap_or_default(),
             description: self.description.clone(),
             recommended_serving: self.recommended_serving.clone(),
             product_composition: self.product_composition.clone(),

@@ -14,7 +14,7 @@ use regex::Regex;
 use crate::models::brands::REGEX_BRAND_ID;
 use crate::scraper::categories_scraper::load_categories;
 
-const MAX_NUMBER_OF_PRODUCTS: usize = 20;
+const MAX_NUMBER_OF_PRODUCTS: usize = 30;
 const TARGET_DEPTH: usize = 3;
 
 use crate::utils::constants::USER_AGENT;
@@ -177,17 +177,31 @@ async fn scrape_product_page(
 
     let gallery_selector = Selector::parse("div.product-gallery a.product-gallery__img").unwrap();
 
-    let img_url = document
-        .select(&gallery_selector)
+    let mut gallery_iter = document.select(&gallery_selector);
+
+    let img_url = gallery_iter
         .next()
         .and_then(|a| a.value().attr("href"))
         .map(|s| s.to_string());
 
-    let mut local_img_path = None;
+    let second_img_url = gallery_iter
+        .next()
+        .and_then(|a| a.value().attr("href"))
+        .map(|s| s.to_string());
 
-    if let Some(url) = &img_url {
+    let mut local_img_path: Option<String> = None;
+    let mut second_local_img_path: Option<String> = None;
+
+    if let Some(url) = img_url.as_ref() {
         match download_image(url, IMAGE_DESTINATION).await {
             Ok(path) => local_img_path = Some(path),
+            Err(e) => eprintln!("Error downloading image {}: {}", url, e),
+        }
+    }
+
+    if let Some(url) = second_img_url.as_ref() {
+        match download_image(url, IMAGE_DESTINATION).await {
+            Ok(path) => second_local_img_path = Some(path),
             Err(e) => eprintln!("Error downloading image {}: {}", url, e),
         }
     }
@@ -204,6 +218,7 @@ async fn scrape_product_page(
         brand_id,
         price_on_unit: price_on_unit.clone(),
         img: local_img_path,
+        second_img: second_local_img_path,
         description: escape_csv_field(&*description),
         recommended_serving: escape_csv_field(&*recommended_serving),
         product_composition: escape_csv_field(&*product_composition),
