@@ -206,7 +206,36 @@ async fn scrape_product_page(
         }
     }
 
-    let reviews = String::new();
+    if local_img_path.is_none() && second_local_img_path.is_none() {
+        let main_link_sel = Selector::parse("a.product-information__main-image").unwrap();
+        if let Some(a) = document.select(&main_link_sel).next() {
+            if let Some(href) = a.value().attr("href") {
+                if let Ok(path) = download_image(href, IMAGE_DESTINATION).await {
+                    local_img_path = Some(path);
+                }
+            }
+        }
+
+        if local_img_path.is_none() {
+            let img_sel = Selector::parse("img#ctl00_ContentPlaceHolder1_imgProdukt").unwrap();
+            if let Some(img) = document.select(&img_sel).next() {
+                if let Some(src) = img.value().attr("src") {
+                    let full_url = if src.starts_with("http") {
+                        src.to_string()
+                    } else if src.starts_with("//") {
+                        format!("https:{}", src)
+                    } else {
+                        format!("https://sklep.sfd.pl{}", src)
+                    };
+
+                    if let Ok(path) = download_image(&full_url, IMAGE_DESTINATION).await {
+                        local_img_path = Some(path);
+                    }
+                }
+            }
+        }
+    }
+
 
     Ok(Product {
         id,
@@ -222,7 +251,7 @@ async fn scrape_product_page(
         description: escape_csv_field(&*description),
         recommended_serving: escape_csv_field(&*recommended_serving),
         product_composition: escape_csv_field(&*product_composition),
-        reviews,
+        reviews: String::new()
     })
 }
 
@@ -236,13 +265,13 @@ fn save_products_csv(products: &[Product], path: &str) -> std::io::Result<()> {
 
     writeln!(
         file,
-        "id;name;url;category_id;price;weight;brand_id;price_on_unit;img;description;recommended_serving;product_composition;reviews"
+        "id;name;url;category_id;price;weight;brand_id;price_on_unit;img;second_img;description;recommended_serving;product_composition;reviews"
     )?;
 
     for row in rows {
         writeln!(
             file,
-            "{};{};{};{};{};{};{};{};{};{};{};{};{}",
+            "{};{};{};{};{};{};{};{};{};{};{};{};{} {}",
             row.id,
             row.name,
             row.url,
@@ -252,6 +281,7 @@ fn save_products_csv(products: &[Product], path: &str) -> std::io::Result<()> {
             row.brand_id,
             row.price_on_unit,
             row.img,
+            row.second_img,
             row.description,
             row.recommended_serving,
             row.product_composition,
