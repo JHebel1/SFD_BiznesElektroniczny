@@ -59,11 +59,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,119,3
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,119,3
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,119,3
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,119,3
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,119,3
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,119,3
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,119,3
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,119,3
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,119,3
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,119,3
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,119,3
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,119,3
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,119,3
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,119,3
@@ -136,6 +139,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,119,3
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,119,3
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,119,3
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,119,3
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,119,3
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,119,3
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,119,3
@@ -239,11 +243,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,1591,2
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,1591,2
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,1591,2
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,1591,2
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,1591,2
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,1591,2
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,1591,2
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,1591,2
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,1591,2
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,1591,2
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,1591,2
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,1591,2
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,1591,2
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,1591,2
@@ -316,6 +323,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,1591,2
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,1591,2
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,1591,2
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,1591,2
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,1591,2
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,1591,2
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,1591,2
@@ -419,11 +427,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,1592,3
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,1592,3
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,1592,3
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,1592,3
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,1592,3
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,1592,3
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,1592,3
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,1592,3
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,1592,3
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,1592,3
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,1592,3
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,1592,3
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,1592,3
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,1592,3
@@ -496,6 +507,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,1592,3
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,1592,3
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,1592,3
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,1592,3
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,1592,3
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,1592,3
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,1592,3
@@ -625,11 +637,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,897,1
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,897,1
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,897,1
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,897,1
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,897,1
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,897,1
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,897,1
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,897,1
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,897,1
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,897,1
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,897,1
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,897,1
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,897,1
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,897,1
@@ -702,6 +717,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,897,1
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,897,1
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,897,1
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,897,1
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,897,1
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,897,1
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,897,1
@@ -805,11 +821,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,119,2
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,119,2
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,119,2
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,119,2
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,119,2
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,119,2
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,119,2
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,119,2
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,119,2
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,119,2
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,119,2
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,119,2
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,119,2
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,119,2
@@ -882,6 +901,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,119,2
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,119,2
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,119,2
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,119,2
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,119,2
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,119,2
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,119,2
@@ -989,11 +1009,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,112,2
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,112,2
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,112,2
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,112,2
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,112,2
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,112,2
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,112,2
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,112,2
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,112,2
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,112,2
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,112,2
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,112,2
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,112,2
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,112,2
@@ -1066,6 +1089,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,112,2
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,112,2
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,112,2
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,112,2
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,112,2
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,112,2
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,112,2
@@ -1169,11 +1193,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,174,3
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,174,3
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,174,3
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,174,3
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,174,3
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,174,3
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,174,3
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,174,3
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,174,3
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,174,3
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,174,3
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,174,3
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,174,3
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,174,3
@@ -1246,6 +1273,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,174,3
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,174,3
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,174,3
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,174,3
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,174,3
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,174,3
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,174,3
@@ -1352,11 +1380,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,174,3
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,174,3
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,174,3
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,174,3
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,174,3
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,174,3
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,174,3
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,174,3
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,174,3
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,174,3
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,174,3
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,174,3
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,174,3
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,174,3
@@ -1429,6 +1460,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,174,3
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,174,3
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,174,3
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,174,3
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,174,3
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,174,3
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,174,3
@@ -1534,11 +1566,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,154,2
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,154,2
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,154,2
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,154,2
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,154,2
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,154,2
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,154,2
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,154,2
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,154,2
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,154,2
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,154,2
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,154,2
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,154,2
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,154,2
@@ -1611,6 +1646,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,154,2
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,154,2
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,154,2
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,154,2
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,154,2
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,154,2
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,154,2
@@ -1714,11 +1750,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,147,3
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,147,3
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,147,3
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,147,3
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,147,3
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,147,3
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,147,3
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,147,3
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,147,3
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,147,3
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,147,3
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,147,3
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,147,3
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,147,3
@@ -1791,6 +1830,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,147,3
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,147,3
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,147,3
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,147,3
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,147,3
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,147,3
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,147,3
@@ -1903,10 +1943,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,119,2
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,119,2
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,119,2
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,119,2
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,119,2
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,119,2
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,119,2
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,119,2
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,119,2
+169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,119,2
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,119,2
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,119,2
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,119,2
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,119,2
@@ -1979,6 +2023,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,119,2
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,119,2
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,119,2
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,119,2
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,119,2
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,119,2
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,119,2
@@ -2086,11 +2131,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,166,2
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,166,2
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,166,2
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,166,2
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,166,2
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,166,2
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,166,2
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,166,2
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,166,2
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,166,2
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,166,2
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,166,2
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,166,2
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,166,2
@@ -2163,6 +2211,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,166,2
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,166,2
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,166,2
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,166,2
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,166,2
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,166,2
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,166,2
@@ -2266,11 +2315,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,165,3
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,165,3
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,165,3
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,165,3
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,165,3
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,165,3
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,165,3
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,165,3
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,165,3
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,165,3
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,165,3
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,165,3
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,165,3
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,165,3
@@ -2343,6 +2395,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,165,3
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,165,3
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,165,3
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,165,3
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,165,3
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,165,3
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,165,3
@@ -2447,11 +2500,14 @@ id,name,url,parent_id,depth
 1519,E-sport,https://sklep.sfd.pl///sklep.sfd.pl/E-sport-k1519.html,267,2
 150,Żywność dietetyczna,https://sklep.sfd.pl///sklep.sfd.pl/Zdrowa_Zywnosc-k150.html,267,2
 877,Gotowanie i dieta,https://sklep.sfd.pl///sklep.sfd.pl/Gotowanie_i_dieta-k877.html,267,2
+965,Dżemy, frużeliny i przetwory,https://sklep.sfd.pl///sklep.sfd.pl/Dzemy,_fruzeliny_i_przetwory-k965.html,267,2
 879,Kremy do smarowania,https://sklep.sfd.pl///sklep.sfd.pl/Kremy_do_smarowania-k879.html,267,2
 108,Sosy i syropy niskokaloryczne,https://sklep.sfd.pl///sklep.sfd.pl/Sosy_dietetyczne-k108.html,267,2
 138,Zdrowe oleje i tłuszcze,https://sklep.sfd.pl///sklep.sfd.pl/MCT_olej-k138.html,267,2
 352,Zamienniki cukru,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_cukru-k352.html,267,2
+1247,Płatki, granola, kaszki,https://sklep.sfd.pl///sklep.sfd.pl/Granola_i_Platki-k1247.html,267,2
 169,Gotowe posiłki,https://sklep.sfd.pl///sklep.sfd.pl/Zamienniki_posilkow-k169.html,267,2
+886,Kisiel, budyń, galaretka,https://sklep.sfd.pl///sklep.sfd.pl/Kisiel,_budyn,_galaretka-k886.html,267,2
 878,Kawa i herbata,https://sklep.sfd.pl///sklep.sfd.pl/Kawa_i_herbata-k878.html,267,2
 884,Superfoody,https://sklep.sfd.pl///sklep.sfd.pl/Superfoody-k884.html,267,2
 890,Białka jaj w płynie,https://sklep.sfd.pl///sklep.sfd.pl/Bialka_jaj_w_plynie-k890.html,267,2
@@ -2524,6 +2580,7 @@ id,name,url,parent_id,depth
 1539,Kwas foliowy,https://sklep.sfd.pl///sklep.sfd.pl/Kwas_foliowy-k1539.html,267,2
 937,Błonnik dietetyczny,https://sklep.sfd.pl///sklep.sfd.pl/Blonnik_dietetyczny-k937.html,267,2
 1552,Olejki eteryczne,https://sklep.sfd.pl///sklep.sfd.pl/Olejki_eteryczne-k1552.html,267,2
+930,Skóra, włosy i paznokcie,https://sklep.sfd.pl///sklep.sfd.pl/Skora,_wlosy_i_paznokcie-k930.html,267,2
 968,Kolagen,https://sklep.sfd.pl///sklep.sfd.pl/Kolagen-k968.html,267,2
 1357,Pozostałe produkty dla urody,https://sklep.sfd.pl///sklep.sfd.pl/Pozostale_produkty_dla_urody-k1357.html,267,2
 1355,Biotyna,https://sklep.sfd.pl///sklep.sfd.pl/Biotyna-k1355.html,267,2
