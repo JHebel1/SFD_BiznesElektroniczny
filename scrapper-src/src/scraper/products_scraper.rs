@@ -14,7 +14,7 @@ use regex::Regex;
 use crate::models::brands::REGEX_BRAND_ID;
 use crate::scraper::categories_scraper::load_categories;
 
-const MAX_NUMBER_OF_PRODUCTS: usize = 12;
+const MAX_NUMBER_OF_PRODUCTS: usize = 20;
 const TARGET_DEPTH: usize = 3;
 
 use crate::utils::constants::USER_AGENT;
@@ -62,7 +62,6 @@ async fn collect_product_links_for_category(
 
     let mut links = Vec::new();
 
-    println!("{}", links.len());
     for tile in document.select(&product_tile_selector) {
         if links.len() >= max_products {
             break;
