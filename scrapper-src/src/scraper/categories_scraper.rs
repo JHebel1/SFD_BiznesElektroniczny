@@ -217,10 +217,9 @@ pub fn load_categories(
         }
 
         let depth: usize = parts[4].parse().unwrap_or(0);
-        if depth != target_depth {
+        if depth != target_depth-1 {
             continue;
         }
-
         result.push(CategoryRow {
             id: parts[0].trim().to_string(),
             name: parts[1].trim().to_string(),
