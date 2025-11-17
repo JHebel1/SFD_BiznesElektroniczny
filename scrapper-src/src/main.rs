@@ -6,5 +6,6 @@ use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    scraper::run().await
+    let args: Vec<String> = std::env::args().collect();
+    scraper::run(args).await
 }

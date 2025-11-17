@@ -8,7 +8,7 @@ use reqwest::Client;
 use scraper::{Html, Selector};
 use crate::models::categories::{Category, CategoryRow, CATEGORIES_DESTINATION, CATEGORIES_SOURCE_PATH, REGEX_CATEGORY, REGEX_CATEGORY_ID};
 use crate::utils::constants::USER_AGENT;
-use crate::utils::text::clean_text;
+use crate::utils::text::{clean_text, escape_csv_field};
 
 pub(crate) async fn categories() -> Result<()> {
     let url = CATEGORIES_SOURCE_PATH;
@@ -137,12 +137,6 @@ async fn crawl_category<'a>(
                 .map(|m| m.as_str().to_string());
 
             if !seen_urls.insert(full_url.clone()) {
-                childrens.push(Category {
-                    id,
-                    name: child_name,
-                    url: full_url,
-                    childrens: Vec::new(),
-                });
                 continue;
             }
 
@@ -184,7 +178,7 @@ pub fn load_categories(
             continue;
         }
 
-        let parts: Vec<&str> = line.split(',').collect();
+        let parts: Vec<&str> = line.split(';').collect();
         if parts.len() < 5 {
             continue;
         }
@@ -195,10 +189,10 @@ pub fn load_categories(
         }
 
         result.push(CategoryRow {
-            id: parts[0].to_string(),
-            name: parts[1].to_string(),
-            url: parts[2].to_string(),
-            parent_id: parts[3].to_string(),
+            id: parts[0].trim().to_string(),
+            name: parts[1].trim().to_string(),
+            url: parts[2].trim().to_string(),
+            parent_id: parts[3].trim().to_string(),
             depth,
         });
     }
@@ -215,14 +209,14 @@ fn save_categories_csv(categories: &[Category], path: &str) -> std::io::Result<(
 
     let mut file = File::create(path)?;
 
-    writeln!(file, "id,name,url,parent_id,depth")?;
+    writeln!(file, "id;name;url;parent_id;depth")?;
 
     for row in rows {
         writeln!(
             file,
-            "{},{},{},{},{}",
+            "{};{};{};{};{}",
             row.id,
-            row.name,
+            escape_csv_field(&row.name),
             row.url,
             row.parent_id,
             row.depth

@@ -72,12 +72,12 @@ fn save_brands_csv(categories: &[Brand], path: &str) -> std::io::Result<()> {
 
     let mut file = File::create(path)?;
 
-    writeln!(file, "id,name,url,img")?;
+    writeln!(file, "id;name;url;img")?;
 
     for row in rows {
         writeln!(
             file,
-            "{},{},{},{}",
+            "{};{};{};{}",
             row.id,
             row.name,
             row.url,
