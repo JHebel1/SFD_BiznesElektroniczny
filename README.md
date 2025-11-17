@@ -1,4 +1,5 @@
 # SFD_BiznesElektroniczny
+This repository aims to copy content of: https://sklep.sfd.pl/ using Prestashop and other tool.
 ## To run scraper, use:
 `cargo run`
 
