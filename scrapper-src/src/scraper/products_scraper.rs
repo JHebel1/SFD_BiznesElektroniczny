@@ -17,7 +17,8 @@ use crate::scraper::categories_scraper::load_categories;
 const MAX_NUMBER_OF_PRODUCTS: usize = 12;
 const TARGET_DEPTH: usize = 3;
 
-use crate::utils::constants::USER_AGENT;pub async fn products() -> Result<()> {
+use crate::utils::constants::USER_AGENT;
+pub async fn products() -> Result<()> {
     let categories: Vec<CategoryRow> = load_categories(CATEGORIES_DESTINATION, TARGET_DEPTH)?;
 
     let client = Client::builder()
