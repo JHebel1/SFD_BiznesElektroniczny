@@ -1,0 +1,62 @@
+import requests
+from lxml import etree
+from dotenv import load_dotenv
+import os
+import urllib3
+
+urllib3.disable_warnings()
+load_dotenv()
+
+API_URL = os.getenv("PS_API_URL")
+API_KEY = os.getenv("PS_API_KEY")
+
+if not API_URL or not API_KEY:
+    raise ValueError("Missing PRESTASHOP_URL or PRESTASHOP_API_KEY")
+
+headers = {"Accept": "application/xml"}
+
+def delete_category(category_id: int):
+    url = f"{API_URL}/categories/{category_id}"
+    resp = requests.delete(url, auth=(API_KEY, ""), headers=headers, verify=False)
+
+    if resp.status_code in (200, 201):
+        print(f"🗑️ Usunięto produkt ID: {category_id}")
+    else:
+        print(f"❌ Błąd usuwania kategorii {category_id}: {resp.status_code}")
+        print(resp.text)
+
+
+def get_all_categories():
+    url = f"{API_URL}/categories?display=[id]"
+    resp = requests.get(url, auth=(API_KEY, ""), headers=headers, verify=False)
+
+    if resp.status_code != 200:
+        print("❌ Nie mogę pobrać listy kategorii")
+        print("STATUS:", resp.status_code)
+        print(resp.text)
+        return []
+
+    tree = etree.fromstring(resp.content)
+    ids = tree.xpath("//category/id/text()")
+    return [int(x) for x in ids]
+
+
+def main():
+    print("Pobieram listę produktów…")
+    category_ids = get_all_categories()
+
+    if not category_ids:
+        print("Brak kategorii do usunięcia.")
+        return
+
+    print(f"Znaleziono {len(category_ids)} kategorii. Usuwam…")
+
+    for pid in category_ids:
+        if pif not in [1, 2]:
+            delete_category(pid)
+
+    print("\n✔ GOTOWE – wszystkie kategorie usunięte.")
+
+
+if __name__ == "__main__":
+    main()

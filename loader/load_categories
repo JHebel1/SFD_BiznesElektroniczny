@@ -1,0 +1,176 @@
+import csv
+import os
+import json
+import re
+import unicodedata
+import requests
+from collections import defaultdict
+from dotenv import load_dotenv
+from xml.etree import ElementTree as ET
+import urllib3
+
+load_dotenv()
+
+API_URL = os.getenv("PS_API_URL").rstrip("/")
+API_KEY = os.getenv("PS_API_KEY")
+LANG_ID = int(os.getenv("PS_LANG_ID", "1"))
+ROOT_CATEGORY = int(os.getenv("PS_ROOT_CATEGORY_ID", "2"))
+
+INPUT_FILE = "../scrapper-results/categories.csv"
+OUTPUT_MAP = "category_map.json"
+
+print("Working directory:", os.getcwd())
+print("Looking for:", os.path.abspath(INPUT_FILE))
+print("Exists:", os.path.exists(INPUT_FILE))
+
+
+urllib3.disable_warnings()
+
+def slugify(value):
+    value = value.lower()
+    value = unicodedata.normalize("NFKD", value)
+    value = value.encode("ascii", "ignore").decode("ascii")
+    value = re.sub(r"[^a-z0-9]+", "-", value).strip("-")
+    return value
+
+
+def create_category(name, parent_id):
+    slug = slugify(name)
+
+    xml = f"""
+    <prestashop xmlns:xlink="http://www.w3.org/1999/xlink">
+        <category>
+            <active>1</active>
+            <id_parent>{parent_id}</id_parent>
+            <is_root_category>0</is_root_category>
+            <name>
+                <language id="{LANG_ID}"><![CDATA[{name}]]></language>
+            </name>
+            <link_rewrite>
+                <language id="{LANG_ID}">{slug}</language>
+            </link_rewrite>
+        </category>
+    </prestashop>
+    """
+
+    response = requests.post(
+        f"{API_URL}/categories",
+        auth=(API_KEY, ""),
+        headers={"Content-Type": "application/xml"},
+        data=xml.encode("utf-8"),
+        verify=False
+    )
+    
+    print("STATUS:", response.status_code)
+    print("Odpowiedź:", response.text)
+    print("XML wysłany:")
+    print(xml)
+    print("==============")
+
+
+    if response.status_code not in (200, 201):
+        print("BŁĄD API dla kategorii:", name)
+        print(response.text)
+        return None
+
+    tree = ET.fromstring(response.content)
+    new_id = tree.find(".//id").text
+    print(f"DODANO: {name} (id={new_id})")
+
+    return int(new_id)
+
+
+
+categories = []
+
+with open(INPUT_FILE, newline="", encoding="utf-8") as f:
+    reader = csv.DictReader(f, delimiter=";")
+    for row in reader:
+        row["id"] = row["id"].strip()
+        row["parent_id"] = row["parent_id"].strip() or None
+        categories.append(row)
+
+print(f"Wczytano {len(categories)} kategorii z CSV.")
+
+
+
+children = defaultdict(list)
+records = {}
+
+for c in categories:
+    scrap_id = c["id"]
+    parent_id = c["parent_id"]
+    name = c["name"]
+
+    if scrap_id not in records:
+        records[scrap_id] = c
+
+    children[parent_id].append(scrap_id)
+
+def detect_cycles():
+    visited = set()
+    stack = set()
+
+    def dfs(node):
+        if node in stack:
+            return True
+        if node in visited:
+            return False
+
+        visited.add(node)
+        stack.add(node)
+
+        for ch in children[node]:
+            if dfs(ch):
+                return True
+
+        stack.remove(node)
+        return False
+
+    return dfs(None)
+
+if detect_cycles():
+    print("⚠️ Wykryto zapętlenia w strukturze kategorii. Usuwam błędne rekordy...")
+
+cleaned = {}
+for rec in categories:
+    scrap_id = rec["id"]
+    parent_id = rec["parent_id"]
+
+    if parent_id == scrap_id:
+        continue
+
+    if parent_id in children.get(scrap_id, []):
+        rec["parent_id"] = None
+
+    cleaned[scrap_id] = rec
+
+categories = list(cleaned.values())
+
+
+
+categories.sort(key=lambda x: int(x["depth"]))
+
+
+mapping = {}
+
+for cat in categories:
+    scrap_id = cat["id"]
+    name = cat["name"]
+    parent_scrap = cat["parent_id"]
+
+    if parent_scrap and parent_scrap in mapping:
+        ps_parent = mapping[parent_scrap]
+    else:
+        ps_parent = ROOT_CATEGORY
+
+    new_id = create_category(name, ps_parent)
+
+    if new_id:
+        mapping[scrap_id] = new_id
+
+
+with open(OUTPUT_MAP, "w", encoding="utf-8") as f:
+    json.dump(mapping, f, indent=4)
+
+print("\n✓ Zakończono! Zapisano mapowanie do:", OUTPUT_MAP)
