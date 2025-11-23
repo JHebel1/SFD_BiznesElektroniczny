@@ -1,0 +1,84 @@
+/***** Genenel *****/
+.unvisible {
+  display: none;
+}
+.elementor-widget-pos_menu .elementor-editor-pos_menu-settings,
+.elementor-widget-posLogo .elementor-editor-posLogo-settings,
+.elementor-widget-pos_contact .elementor-editor-pos_contact-settings,
+.elementor-widget-pos_language .elementor-editor-element-settings ,
+.elementor-widget-pos_currency .elementor-editor-element-settings ,
+.elementor-widget-posCart .elementor-editor-element-settings ,
+.elementor-widget-posCompare .elementor-editor-element-settings ,
+.elementor-widget-posWishlist .elementor-editor-element-settings ,
+.elementor-widget-pos_settings .elementor-editor-element-settings ,
+.elementor-widget-posSearch .elementor-editor-element-settings ,
+.elementor-widget-posAccount .elementor-editor-element-settings {
+  top: -20px !important;
+} 
+.elementor-widget-pos_language .elementor-editor-element-settings .elementor-editor-element-duplicate ,
+.elementor-widget-pos_currency .elementor-editor-element-settings .elementor-editor-element-duplicate ,
+.elementor-widget-posCart .elementor-editor-element-settings .elementor-editor-element-duplicate ,
+.elementor-widget-posCompare .elementor-editor-element-settings .elementor-editor-element-duplicate ,
+.elementor-widget-posWishlist .elementor-editor-element-settings .elementor-editor-element-duplicate ,
+.elementor-widget-posSearch .elementor-editor-element-settings .elementor-editor-element-duplicate ,
+.elementor-widget-posAccount .elementor-editor-element-settings .elementor-editor-element-duplicate {
+  display: none !important;
+}
+
+/***** Hotspot widget *****/
+.pos-image-hotspot {
+  display: inline-block;
+  position: relative; }
+  .pos-image-hotspot .pos-image-hotspot-wrapper {
+    position: absolute;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%); }
+    .pos-image-hotspot .pos-image-hotspot-wrapper:hover .pos-image-hotspot-content {
+      visibility: visible;
+      opacity: 1;
+      -webkit-transform: translate3d(-50%, -110%, 0);
+      transform: translate3d(-50%, -110%, 0); }
+  .pos-image-hotspot .pos-image-hotspot-content {
+    position: absolute;
+    visibility: hidden;
+    top: 0;
+    left: 50%;
+    width: 240px;
+    max-width: 100vw;
+    padding: 20px;
+    text-align: center;
+    border-radius: 5px;
+    background: #fff;
+    opacity: 0;
+    z-index: 10;
+    box-shadow: 0 2px 20px 0 rgba(0, 0, 0, 0.07);
+    -webkit-transform: translate3d(-50%, -100%, 0);
+    transform: translate3d(-50%, -100%, 0);
+    -webkit-transition: all 0.3s cubic-bezier(0, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0, 0, 0.2, 1); }
+    .pos-image-hotspot .pos-image-hotspot-title {
+      margin: 0 0 7px 0; }
+    .pos-image-hotspot .pos-image-hotspot-description > :first-child {
+      margin-top: 0; }
+    .pos-image-hotspot .pos-image-hotspot-description > :last-child {
+      margin-bottom: 0; }
+.elementor-widget-pos_image_hotspot.pos-view-framed .pos-icon {
+  border-width: 2px; }
+.elementor-widget-pos_image_hotspot.pos-view-stacked .pos-icon,
+.elementor-widget-pos_image_hotspot.pos-view-framed .pos-icon {
+  border-radius: 50%; }
+.pos-image-hotspot .pos-icon i[class=''],
+.pos-image-hotspot .pos-icon i:not([class]) {
+  display: none; }
+/***** End Hotspot widget *****/
+
+/***** Slideshow widget *****/
+
+.slideshow-item {
+  position: relative;
+}
+/***** End Slideshow widget *****/
+
+.pewidth-inline{
+  display: inline-block;
+}

@@ -1,0 +1,4 @@
+1. 
+Purpose: Load google font fir each content.
+File: classes/wrapper/Helper.php 
+Change: line 124, move Plugin::$instance->frontend->printGoogleFonts(); to line 127

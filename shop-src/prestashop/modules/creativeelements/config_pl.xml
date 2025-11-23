@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>creativeelements</name>
+    <displayName><![CDATA[Creative Elements - Elementor based PageBuilder [in-stock]]]></displayName>
+    <version><![CDATA[1.4.10.4]]></version>
+    <description><![CDATA[Najbardziej zaawansowany edytor stron &quot;przeciągnij i upuść&quot; w trybie &quot;live&quot;. Tw&oacute;rz z rekordową prędkością wysokiej jakości strony dopracowane co do piksela. Wsp&oacute;łpracuje z każdym motywem i każdym projektem.&lt;a href=&quot;https://addons.prestashop.com/administrative-tools/44064-creative-elements-elementor-based-pagebuilder.html&quot; target=&quot;_blank&quot;&gt; [Upgrade to PREMIUM]&lt;/a&gt;]]></description>
+    <author><![CDATA[WebshopWorks]]></author>
+    <tab><![CDATA[content_management]]></tab>
+    <is_configurable>1</is_configurable>
+    <need_instance>1</need_instance>
+	<limited_countries></limited_countries>
+</module>

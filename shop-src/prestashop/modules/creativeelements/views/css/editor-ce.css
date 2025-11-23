@@ -1,0 +1,236 @@
+/* Loading */
+.elementor-loader div.elementor-loader-box:not(:nth-of-type(1)) {
+  left: 6%;
+  width: 80%;
+  border-radius: 3px; }
+.elementor-loader div.elementor-loader-box:nth-of-type(2) {
+  top: 4px; }
+.elementor-loader div.elementor-loader-box:nth-of-type(3) {
+  width: 56%; }
+.elementor-loader div.elementor-loader-box:nth-of-type(4) {
+  bottom: 4px; }
+
+/* Hide */
+.elementor-loader div.elementor-loader-box:nth-of-type(1),
+#elementor-panel-elements-navigation,
+#elementor-panel-get-pro-elements {
+  display: none !important; }
+
+/* Tabs */
+.elementor-panel div.elementor-control-type-tabs {
+  display: block;
+  margin-bottom: -2px;
+  padding-bottom: 0; }
+.elementor-panel div.elementor-control-type-tab {
+  display: inline-block;
+  padding: 0 10px;
+  width: auto; }
+
+/* Keyboard Shortcuts */
+#elementor-hotkeys-dialog .dialog-widget-content {
+  width: 450px;
+  background: #f1f3f5; }
+#elementor-hotkeys-dialog .elementor-template-library-template-local {
+  padding: 0 10px; }
+#elementor-hotkeys-dialog .elementor-template-library-template-controls {
+  visibility: visible !important;
+  pointer-events: none; }
+#elementor-hotkeys-dialog .dialog-message {
+  padding-bottom: 20px; }
+#elementor-hotkeys-dialog .dialog-buttons-wrapper {
+  background: #fff; }
+
+/* File Manager */
+#ce-file-manager-modal .dialog-widget-content {
+  background: #ECECEC; }
+#ce-file-manager-modal .dialog-widget-header {
+  background: #fff;
+  padding: 18px 17px;
+  text-align: left; }
+#ce-file-manager-modal .dialog-close-button {
+  color: #6d7882; }
+#ce-file-manager-modal .dialog-message {
+  background: #F1F3F5; }
+#ce-file-manager-modal .elementor-loader-box {
+  background: #d5dadf; }
+#ce-file-manager-modal .elementor-loading-title {
+  color: #a4afb7; }
+#ce-file-manager-modal iframe {
+  position: relative; }
+
+/* TinyMCE */
+.elementor-panel .elementor-control-description.elementor-control-type-wysiwyg {
+  margin-top: 0; }
+
+/* Media buttons */
+.elementor-panel .elementor-control-type-media .elementor-control-media-image-area:not(:hover) .elementor-control-media-btn {
+  display: none; }
+.elementor-panel .elementor-control-type-media .elementor-control-media-btn {
+  position: absolute;
+  left: 0;
+  right: auto;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  padding: 9.5px 0;
+  font-size: 11px;
+  color: #fff;
+  background-color: #a4afb7;
+  text-transform: uppercase; }
+.elementor-panel .elementor-control-media-seo div.elementor-control-media-btn {
+  width: 33.3%; }
+.elementor-panel .elementor-control-media-seo div.elementor-control-media-title {
+  left: 33.3%;
+  border-left: 1px solid #d5dadf; }
+.elementor-panel .elementor-control-media-seo div.elementor-control-media-delete {
+  left: 66.6%;
+  background-color: #b01b1b;
+  border-left: 1px solid #d5dadf; }
+
+/* Picker */
+.elementor-panel .wp-picker-container.wp-picker-active {
+  -webkit-transform: translateY(-16px);
+  transform: translateY(-16px); }
+.elementor-panel .wp-picker-default {
+  height: 26px;
+  width: 48px;
+  padding: 0;
+  background-color: #d5dadf;
+  border-radius: 0 3px 3px 0;
+  margin: 0; }
+.elementor-panel .wp-picker-holder .iris-picker-inner {
+  margin-right: -1px; }
+
+/* Import template */
+#elementor-template-library-header-close-modal, #elementor-template-library-header-import {
+  width: 56px; }
+#elementor-template-library-header-import-file {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 200%;
+  top: 0;
+  cursor: pointer; }
+.elementor-template-library-template-type {
+  width: 80px; }
+
+/* Language switcher */
+#ce-context-wrapper {
+  position: relative; }
+#ce-context-wrapper:after {
+  content: '\f0d7';
+  position: absolute;
+  top: 11px;
+  right: 13px;
+  font: 15px/15px 'FontAwesome';
+  color: #d5dadf;
+  pointer-events: none; }
+select#ce-context {
+  height: 38px;
+  margin: 0 0 10px;
+  border: none;
+  border-radius: 5px;
+  padding: 12px;
+  background: #495157;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none; }
+select#ce-context:hover {
+  background: #444d53; }
+select#ce-context:focus {
+  background: #3b4349; }
+select#ce-context,
+select#ce-context option {
+  font-family: Roboto, sans-serif;
+  font-size: 13px;
+  color: #d5dadf; }
+select#ce-context option {
+  background: #495157; }
+#ce-langs .ce-lang.active {
+  cursor: default; }
+#ce-langs .elementor-description {
+  text-align: center; }
+#ce-langs .elementor-button {
+  padding: 4px 8px;
+  font-size: 11px;
+  text-transform: uppercase; }
+
+/* Premium */
+.panel-elements-category-title-premium ~ .panel-elements-category-items .elementor-element {
+  position: relative; }
+.panel-elements-category-title-premium ~ .panel-elements-category-items .elementor-element:before {
+  content: "\f023";
+  font-family: FontAwesome;
+  font-size: 15px;
+  opacity: .5;
+  position: absolute;
+  top: 5px;
+  right: 5px; }
+.premium-notification {
+  background: #d1eff8;
+  border: 1px solid #bcdff1;
+  border-radius: 4px;
+  padding: 20px;
+  font-size: 12px;
+  text-align: center;
+  color: #43a2bf; }
+.premium-notification-title {
+  margin: 5px 0 13px;
+  font-size: 13px;
+  font-weight: bold; }
+.premium-buttons .elementor-button {
+  width: 48%;
+  text-align: center;
+  -webkit-transition: .5s;
+  transition: .5s; }
+.premium-buttons .elementor-button-success {
+  font-size: 11px;
+  text-transform: uppercase;
+  padding: 6.5px 15px;
+  margin-right: 4% }
+.premium-buttons a.elementor-button-default {
+  background: #fcb92c; }
+.premium-buttons a.elementor-button-default:hover {
+  background: #fdca5e; }
+
+/* Contrast fix */
+#elementor-panel .elementor-units-choices input:not(:checked)+label,
+#elementor-panel .elementor-control-type-dimensions li input+span {
+  color: #a4afb7; }
+
+/* Condition fix for products repeater */
+.elementor-control-products_label.elementor-hidden-control + .elementor-control-products {
+  display: none; }
+.elementor-control-products .repeater-fields {
+  margin-top: 0 !important; }
+
+/* !EN */
+html:not([lang=en]) #elementor-panel-footer-lang .elementor-button,
+html:not([lang=en]) #elementor-template-library-modal .elementor-button-success .elementor-button-title {
+  text-transform: none; }
+html:not([lang=en]) .elementor-template-library-template-local .elementor-template-library-template-insert {
+  margin: 0 10px; }
+
+/* FR */
+html[lang=fr] .elementor-loading-title {
+  letter-spacing: 4px; }
+html[lang=fr] .elementor-panel .elementor-panel-scheme-save .elementor-button,
+html[lang=fr] .elementor-panel #elementor-panel-footer-save .elementor-button {
+  text-transform: none; }
+
+/* ES */
+html[lang=es] .elementor-template-library-menu-item {
+  padding: 17px 8px; }
+
+/* IT */
+html[lang=it] .elementor-loading-title {
+  letter-spacing: 3px; }
+html[lang=it] .elementor-template-library-menu-item {
+  padding: 17px 12px; }
+
+/* DE */
+html[lang=de] .elementor-panel-scheme-buttons button {
+  font-size: 12px; }
+html[lang=de] .elementor-panel .elementor-panel-scheme-save .elementor-button {
+  text-transform: none; }
