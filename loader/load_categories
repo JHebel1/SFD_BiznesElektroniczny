@@ -60,13 +60,6 @@ def create_category(name, parent_id):
         data=xml.encode("utf-8"),
         verify=False
     )
-    
-    print("STATUS:", response.status_code)
-    print("Odpowiedź:", response.text)
-    print("XML wysłany:")
-    print(xml)
-    print("==============")
-
 
     if response.status_code not in (200, 201):
         print("BŁĄD API dla kategorii:", name)

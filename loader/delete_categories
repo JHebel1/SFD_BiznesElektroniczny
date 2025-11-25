@@ -42,7 +42,7 @@ def get_all_categories():
 
 
 def main():
-    print("Pobieram listę produktów…")
+    print("Pobieram listę kategorii…")
     category_ids = get_all_categories()
 
     if not category_ids:
@@ -52,7 +52,7 @@ def main():
     print(f"Znaleziono {len(category_ids)} kategorii. Usuwam…")
 
     for pid in category_ids:
-        if pif not in [1, 2]:
+        if pid not in [1, 2]:
             delete_category(pid)
 
     print("\n✔ GOTOWE – wszystkie kategorie usunięte.")

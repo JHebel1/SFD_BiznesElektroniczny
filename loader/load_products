@@ -1,10 +1,12 @@
 import os
+import io
 import csv
 import json
 import random
 import requests
 import re
 import urllib3
+from PIL import Image
 from dotenv import load_dotenv
 from lxml import etree
 
@@ -16,13 +18,20 @@ urllib3.disable_warnings()
 API_URL = os.getenv("PS_API_URL")
 API_KEY = os.getenv("PS_API_KEY")
 LANG_ID = 1
+MAX_SIZE_KB = 3000
 
+def get_product_id_by_name(name, weight, price):
 
-def get_product_id_by_name(name):
+    parameters = {
+        "filter[name]": f"%[{name}]%",
+        "filter[weight]": f"%[{weight}]%",
+        "filter[price]": f"%[{price}]%"
+    }
+
     resp = requests.get(
         f"{API_URL}/products",
         auth=(API_KEY, ""),
-        params={"filter[name]": f"%[{name}]%"},
+        params=parameters,
         verify=False
     )
     if resp.status_code != 200:
@@ -81,6 +90,33 @@ def normalize_image_path(img_path: str) -> str:
 
     return full
 
+def compress_image_if_needed(full_path):
+    file_size_kb = os.path.getsize(full_path) / 1024
+
+    if file_size_kb < MAX_SIZE_KB:
+        return full_path
+
+    img = Image.open(full_path)
+
+    if img.mode in ("P", "RGBA", "LA"):
+        img = img.convert("RGB")
+
+    compressed_io = io.BytesIO()
+    quality = 85
+    while True:
+        compressed_io.seek(0)
+        img.save(compressed_io, format = "JPEG", optimize = True, quality = quality)
+        size_kb = compressed_io.tell() / 1024
+        if size_kb < MAX_SIZE_KB:
+            break
+        quality -= 5
+
+    print(f"📉 Po kompresji: {size_kb:.1f} KB (quality={quality})")
+    compressed_path = full_path + "_compressed.jpg"
+    with open(compressed_path, "wb") as f:
+        f.write(compressed_io.getvalue())
+
+    return compressed_path
 
 def upload_image(product_id, img_path):
     if not img_path:
@@ -93,6 +129,9 @@ def upload_image(product_id, img_path):
     if not os.path.exists(full_path):
         print(f"⚠ Zdjęcie nie istnieje: {full_path}")
         return
+
+    full_path = compress_image_if_needed(full_path)
+
 
     with open(full_path, "rb") as f:
         files = {"image": f}
@@ -160,7 +199,7 @@ def update_stock_quantity(product_id, qty):
 # PRODUCT CREATION
 # ---------------------------------------------------
 
-def create_product(row, ps_cat_id):
+def create_product(row, ps_cat_id, ps_brand_id):
     name = row["name"]
     price = normalize_price(row["price"])
     weight = normalize_weight(row["weight"])
@@ -171,6 +210,7 @@ def create_product(row, ps_cat_id):
 
     simple = {
         "id_category_default": ps_cat_id,
+        "id_manufacturer": ps_brand_id,
         "price": price,
         "weight": weight,
         "active": 1,
@@ -218,7 +258,7 @@ def create_product(row, ps_cat_id):
     )
 
 
-    product_id = get_product_id_by_name(name)
+    product_id = get_product_id_by_name(name, weight, price)
     print("🟢 Utworzono produkt ID:", product_id)
 
     # zdjęcia
@@ -235,6 +275,9 @@ def create_product(row, ps_cat_id):
 with open("category_map.json", "r", encoding="utf-8") as f:
     category_map = json.load(f)
 
+with open("brands_map.json", "r", encoding="utf-8") as f:
+    brands_map = json.load(f)
+
 with open("../scrapper-results/product.csv", newline="", encoding="utf-8") as f:
     reader = csv.DictReader(f, delimiter=";")
 
@@ -243,6 +286,11 @@ with open("../scrapper-results/product.csv", newline="", encoding="utf-8") as f:
         if scrap_cat not in category_map:
             print("⚠ Brak kategorii w mapie dla:", scrap_cat)
             continue
+        scrap_brand = row["brand_id"]
+        if scrap_brand not in brands_map:
+            print("⚠ Brak marki w mapie dla:", scrap_brand)
+            continue
 
         ps_cat = category_map[scrap_cat]
-        create_product(row, ps_cat)
+        ps_brand = brands_map[scrap_brand]
+        create_product(row, ps_cat, ps_brand)
