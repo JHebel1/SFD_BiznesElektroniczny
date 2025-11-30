@@ -60,6 +60,8 @@ pub(crate) async fn categories() -> Result<()> {
             full_url.clone(),
             &client,
             &REGEX_CATEGORY,
+            href,
+            "li.primary-menu__main-list-item",
             3,
             0,
             &mut seen,
@@ -79,10 +81,12 @@ async fn crawl_category<'a>(
     url: String,
     client: &'a Client,
     category_href_re: &'a Regex,
+    parent_href: &'a str,
+    parent_selector: &'a str,
     max_depth: usize,
     depth: usize,
     seen_urls: &'a mut BTreeSet<String>,
-) -> Pin<Box<dyn Future<Output =anyhow::Result<Category>> + 'a>>
+) -> Pin<Box<dyn Future<Output = anyhow::Result<Category>> + 'a>>
 {
     Box::pin(async move {
         if depth >= max_depth {
@@ -96,67 +100,96 @@ async fn crawl_category<'a>(
 
         let html = client.get(&url).send().await?.text().await?;
         let document = Html::parse_document(&html);
-        let a_selector = Selector::parse("a").unwrap();
 
-        let id_re =  Regex::new(r"-k(\d+)\.html$")?;
+        let parent_li_selector = Selector::parse(parent_selector).unwrap();
+        let top_a_selector     = Selector::parse("a.primary-menu__submenu-link").unwrap();
+        let leaf_a_selector = Selector::parse("ul > li.primary-menu__submenu-listitem > a").unwrap();
+
+        let id_re = Regex::new(r"-k(\d+)\.html$")?;
+
         let mut childrens = Vec::new();
         let mut local_seen = BTreeSet::new();
 
-        for a in document.select(&a_selector) {
-            let href = match a.value().attr("href") {
+        for li in document.select(&parent_li_selector) {
+            let top_a = match li.select(&top_a_selector).next() {
+                Some(a) => a,
+                None => continue,
+            };
+
+            let top_href = match top_a.value().attr("href") {
                 Some(h) => h,
                 None => continue,
             };
 
-            if !category_href_re.is_match(href) {
+            if top_href != parent_href {
                 continue;
             }
 
-            let full_url = if href.starts_with("http") {
-                href.to_string()
-            } else {
-                format!("{}{}", CATEGORIES_SOURCE_PATH , href)
-            };
+            for a in li.select(&leaf_a_selector) {
+                let href = match a.value().attr("href") {
+                    Some(h) => h,
+                    None => continue,
+                };
 
-            if full_url == url {
-                continue;
+                if !category_href_re.is_match(href) {
+                    continue;
+                }
+
+                let full_url = if href.starts_with("http") {
+                    href.to_string()
+                } else {
+                    format!("{}{}", CATEGORIES_SOURCE_PATH, href)
+                };
+
+                if full_url == url {
+                    continue;
+                }
+
+                if !local_seen.insert(full_url.clone()) {
+                    continue;
+                }
+
+                let child_name = clean_text(&a);
+                if child_name.is_empty() {
+                    continue;
+                }
+
+                let child_id = id_re
+                    .captures(href)
+                    .and_then(|c| c.get(1))
+                    .map(|m| m.as_str().to_string());
+
+                if !seen_urls.insert(full_url.clone()) {
+                    continue;
+                }
+
+                let child = crawl_category(
+                    child_id,
+                    child_name,
+                    full_url,
+                    client,
+                    category_href_re,
+                    href,
+                    "li.primary-menu__submenu-listitem",
+                    max_depth,
+                    depth + 1,
+                    seen_urls,
+                )
+                    .await.await?;
+
+                childrens.push(child);
             }
-
-            if !local_seen.insert(full_url.clone()) {
-                continue;
-            }
-
-            let child_name = clean_text(&a);
-            if child_name.is_empty() {
-                continue;
-            }
-
-            let id = id_re
-                .captures(href)
-                .and_then(|c| c.get(1))
-                .map(|m| m.as_str().to_string());
-
-            if !seen_urls.insert(full_url.clone()) {
-                continue;
-            }
-
-            let child = crawl_category(
-                id,
-                child_name,
-                full_url,
-                client,
-                category_href_re,
-                max_depth,
-                depth + 1,
-                seen_urls,
-            ).await.await?;
-
-            childrens.push(child);
         }
 
-        Ok(Category { id, name, url, childrens })
+        Ok(Category {
+            id,
+            name,
+            url,
+            childrens,
+        })
     })
 }
+
 
 pub fn load_categories(
     path: &str,
@@ -184,10 +217,9 @@ pub fn load_categories(
         }
 
         let depth: usize = parts[4].parse().unwrap_or(0);
-        if depth != target_depth {
+        if depth != target_depth-1 {
             continue;
         }
-
         result.push(CategoryRow {
             id: parts[0].trim().to_string(),
             name: parts[1].trim().to_string(),
