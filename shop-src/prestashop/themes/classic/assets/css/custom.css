@@ -1,0 +1,107 @@
+/* ====== TOPBAR GLOBAL ====== */
+.topbar {
+  background: #ffffff;
+  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ===== LEFT SECTION ===== */
+.top-left {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.logo img {
+  height: 45px;
+}
+
+/* ===== NAVIGATION ===== */
+.simple-nav .nav-link {
+  font-weight: 600;
+  color: #000;
+  text-decoration: none;
+  font-size: 15px;
+  margin-right: 20px;
+}
+
+.simple-nav .nav-link:hover {
+  color: #0c66ff;
+}
+
+/* ===== SEARCH ===== */
+.top-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.search-form {
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  border: 2px solid #0c66ff;
+  border-radius: 25px;
+  overflow: hidden;
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  outline: none;
+  font-size: 15px;
+}
+
+.search-btn {
+  background: #0c66ff;
+  color: #fff;
+  padding: 0 20px;
+  border: none;
+  cursor: pointer;
+}
+
+.search-btn:hover {
+  background: #003dcb;
+}
+
+/* ===== RIGHT SECTION ===== */
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ===== MOBILE HEADER ===== */
+.mobile-only {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.mobile-left,
+.mobile-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.mobile-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.hidden-md-up #menu-icon {
+  font-size: 30px;
+  cursor: pointer;
+}
+
