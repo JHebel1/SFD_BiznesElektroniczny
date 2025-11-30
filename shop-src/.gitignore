@@ -6,3 +6,10 @@ prestashop/admin*/autoupgrade/tmp/
 prestashop/admin*/import/
 prestashop/modules/*/cache/
 prestashop/modules/*/logs/
+prestashop/img/tmp/
+prestashop/img/m/
+prestashop/img/m/
+prestashop/img/p/
+prestashop/img/c/
+prestashop/config/xml/trusted_modules_list.xml
+prestashop/config/xml/untrusted_modules_list.xml

@@ -1,0 +1,84 @@
+.row .btn-edit-with-ce,
+.form-group .btn-edit-with-ce {
+	margin: 5px 0;
+	padding: 12px 15px 12px 13px;
+	background: #9b0a46 !important;
+	color: #fff !important;
+	-webkit-transition: all 0.5s;
+	transition: all 0.5s;
+}
+.btn.btn-back-to-ps {
+	margin: 5px 0;
+}
+.admincetemplates .btn-back-to-ps,
+.admincecontent .btn-back-to-ps {
+	display: none;
+}
+.admincetemplates textarea,
+.admincecontent textarea {
+	color: transparent;
+}
+
+.ce_template td:last-child {
+	width: 120px;
+}
+.admincetemplates td.ce-shortcode {
+	width: 230px;
+}
+.admincetemplates .ce-shortcode input {
+	font-family: monospace !important;
+}
+
+.adminproducts #description .btn-edit-with-ce {
+	margin: 10px;
+}
+.adminproducts #description .btn-edit-with-ce ~ .mce-tinymce {
+	margin: 0 10px 10px;
+}
+.adminproducts .tab-content .wrapper-edit-with-ce {
+	border: none;
+	border-top: 1px solid #dfdfdf;
+	border-radius: 0;
+}
+.ce-product-hook::first-letter {
+	text-transform: uppercase;
+}
+.row .btn-edit-with-ce:hover,
+.form-group .btn-edit-with-ce:hover {
+	opacity: 0.85;
+	box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 2px rgba(0, 0, 0, 0.2);
+}
+.row .btn-edit-with-ce:active,
+.form-group .btn-edit-with-ce:active {
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.1);
+}
+.row .btn-edit-with-ce .material-icons,
+.form-group .btn-edit-with-ce .material-icons {
+	vertical-align: -2px;
+	border-color: #fff;
+	line-height: 1em;
+}
+.admincecontent .select2-container {
+	margin: 4px 0;
+}
+.btn-back-to-ps i.material-icons {
+	vertical-align: middle;
+}
+.wrapper-edit-with-ce {
+	background: #f5f8f9;
+	border: 1px solid #c7d6db;
+	border-radius: 3px;
+	padding: 30px;
+	text-align: center;
+	cursor: pointer;
+	transition: background 0.05s;
+}
+.wrapper-edit-with-ce:hover {
+	background: rgba(245, 248, 249, 0.2);
+}
+.btn-edit-with-ce ~ .mce-tinymce {
+	border: 1px solid #dfdfdf !important;
+}
+.btn-edit-with-ce ~ .mce-tinymce > .mce-container-body {
+	border: none !important;
+}

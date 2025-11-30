@@ -1,0 +1,201 @@
+/* module search category */
+ #_desktop_search_category  {
+	 float:right;
+	 position:relative;
+ }
+ #_desktop_search_category .search-icon {
+	 height:46px;
+	 line-height:46px;
+	 display:inline-block;
+	 color:#253237;
+	 font-size:28px;
+	 cursor:pointer;
+ }
+ @media (max-width:991px) {
+     #_mobile_search_category .search-icon {
+		display:none; 
+	 }
+	  #_mobile_search_category #pos_search_top {
+		 display:block !important;
+		 position:static;
+		 width:100%;
+		 min-width:auto; 
+	 }
+}
+ @media (min-width:1920px) { 
+     #_desktop_search_category .search-icon {
+		display:none; 
+	 }
+	  #_desktop_search_category #pos_search_top {
+		 display:block !important; 
+		 position:static;
+		 width:100%;
+	 }
+}
+ #_mobile_search_category {
+     display: inline-block;
+     width: 100%;
+     margin: 10px 0;
+}
+#pos_search_top {
+     padding: 0;
+     left: auto;
+     right: 0;
+	 min-width:500px;   
+	 border:none;
+	 background:transparent;  
+}
+ #pos_search_top .form_search {
+     padding: 0;
+     position: relative;
+     width: 100%;
+     float: left;
+     height:46px;
+     color: #b1b1b1;
+}
+ #pos_search_top .form_search label {
+     display: none;
+}
+ #pos_search_top .form_search .search-block {
+     height:46px;
+     line-height:46px;
+}
+ #pos_search_top .form_search .form-control {
+     padding: 10px 70px 10px 20px;
+     width: 100%;
+     height:46px;
+     font-size: 14px;
+     background: #ffffff;
+     color: #253237;
+	 border-width:2px;
+	 border-radius:30px;
+}
+ #pos_search_top .form_search .form-control::-moz-placeholder {
+     color: #b1b1b1;
+}
+ #pos_search_top .form_search .form-control::-webkit-input-placeholder {
+     color: #b1b1b1;
+}
+ #pos_search_top .form_search .form-control:-ms-input-placeholder {
+     color: #b1b1b1;
+}
+ #pos_search_top .form_search .form-control:focus {
+     box-shadow: none;
+}
+ @media (max-width: 479px) {
+     #pos_search_top .form_search .form-control {
+         padding-right: 0;
+    }
+}
+ #pos_search_top .form_search .search_submit {
+     position: absolute;
+     top: 0;
+     right: 0;
+     height:46px;
+     line-height:46px;
+     text-align: center;
+     width: 65px;
+     text-align: center;
+     color: #fff;
+	 border-radius: 0 30px 30px 0;
+     padding: 0;
+     border: 0;
+     -webkit-transition: all 300ms linear;
+     -moz-transition: all 300ms linear;
+     -ms-transition: all 300ms linear;
+     -o-transition: all 300ms linear;
+     transition: all 300ms linear;
+}
+ #pos_search_top .form_search .search_submit:hover {
+    background:#253237;
+}
+ #pos_search_top .form_search .search_submit i {
+     font-size: 24px;
+     display: block;
+     line-height:46px;
+}
+ #pos_search_top .form_search .search_submit:hover {
+     -webkit-transition: all 300ms linear;
+     -moz-transition: all 300ms linear;
+     -ms-transition: all 300ms linear;
+     -o-transition: all 300ms linear;
+     transition: all 300ms linear;
+}
+ #pos_search_top .form_search .form-group {
+     position: absolute;
+     right: 65px;
+     top:2px;
+     display: inline-block;
+     width:150px;
+     margin: 0;
+     background: transparent;
+}
+ #pos_search_top .form_search .form-group .bootstrap-select {
+     width: 150px;
+     height: 42px;
+     line-height: 42px;
+     margin: 0;
+     border: 0;
+     padding: 0 25px;
+     color: #253237;
+     font-size: 14px;
+	 border-radius:30px;
+     -webkit-user-select: none;
+     -moz-user-select: -moz-none;
+     -ms-user-select: none;
+     user-select: none;
+     -webkit-appearance: none;
+     -moz-appearance: none;
+     appearance: none;
+     background: url(../../img/option_search.png) no-repeat 90% 54% white;
+}
+ #pos_search_top .form_search.show-categories .form-control {
+       padding-right: 220px;
+}
+
+ @media (max-width: 480px) {
+     #pos_search_top .form_search .form-control {
+         font-size:10px;
+         padding: 0 50px 0 10px;
+    }
+     #pos_search_top .form_search .form-group {
+         width: 110px;
+    }
+     #pos_search_top .form_search .form-group .bootstrap-select {
+         width: 110px;
+         font-size: 10px;
+         padding: 0 10px;
+    }
+     #pos_search_top .form_search.show-categories .form-control {
+         padding-right: 175px; 
+    }
+     #pos_search_top .form_search.show-categories .form-group:after {
+         right: 0;
+    }
+}
+.ui-autocomplete {
+	font-family: "Open Sans", sans-serif;
+}
+.ui-autocomplete.ui-widget-content {
+     max-height: 380px;
+     overflow: auto;
+     border: 1px solid #ebebeb;
+	 padding:1rem;
+}
+.ui-autocomplete.ui-widget-content li{
+    margin-bottom:15px;
+}
+.ui-autocomplete.ui-widget-content li:last-child{
+    margin-bottom:0; 
+}
+.ui-autocomplete.ui-widget-content img {
+    float:left;
+	width:60px;
+}
+.product {
+	display:block;
+	overflow:hidden; 
+	padding:15px 20px;
+	max-width:300px; 
+}
+/* end module search category */

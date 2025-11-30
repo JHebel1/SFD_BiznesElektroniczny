@@ -54,58 +54,37 @@
   </nav>
 {/block}
 
-{block name='header_top' class="topbar"}
-  <div class="topbar-inner container">
-
-    {* LOGO *}
-    <div class="top-left">
-      <div class="logo">
-        {if $shop.logo_details}
-          <a href="{$urls.base_url}">
-            <img src="{$shop.logo}" alt="{$shop.name}">
-          </a>
-        {/if}
+{block name='header_top'}
+  <div class="header-top">
+    <div class="container">
+       <div class="row">
+        <div class="col-md-2 hidden-sm-down" id="_desktop_logo">
+          {if $shop.logo_details}
+            {if $page.page_name == 'index'}
+              <h1>
+                {renderLogo}
+              </h1>
+            {else}
+              {renderLogo}
+            {/if}
+          {/if}
+        </div>
+        <div class="header-top-right col-md-10 col-sm-12 position-static">
+          {hook h='displayTop'}
+        </div>
+        <div class="header-menu">
+	  {hook h='displayMainMenu'}
+	</div>
       </div>
-
-      {* SIMPLE NAV BUTTONS (Kategorie, Marki) *}
-      <nav class="simple-nav hidden-sm-down">
-        <a class="nav-link" href="#">Kategorie</a>
-        <a class="nav-link" href="#">Marki</a>
-      </nav>
-    </div>
-
-    {* SEARCH BAR *}
-    <div class="top-center hidden-sm-down">
-      <form action="{$link->getPageLink('search')}" method="get" class="search-form">
-        <input type="text" name="s" placeholder="Szukaj..." class="search-input">
-        <button type="submit" class="search-btn">🔍</button>
-      </form>
-    </div>
-
-    {* RIGHT SECTION - ACCOUNT, FAVORITES, CART *}
-    <div class="top-right hidden-sm-down">
-      <div id="_desktop_user_info"></div>
-      <div id="_desktop_cart"></div>
-    </div>
-
-    {* MOBILE VERSION *}
-    <div class="mobile-only hidden-md-up mobile-header">
-      <div class="mobile-left">
-        <div id="menu-icon">
-          <i class="material-icons">&#xE5D2;</i>
+      <div id="mobile_top_menu_wrapper" class="row hidden-md-up" style="display:none;">
+        <div class="js-top-menu mobile" id="_mobile_top_menu"></div>
+        <div class="js-top-menu-bottom">
+          <div id="_mobile_currency_selector"></div>
+          <div id="_mobile_language_selector"></div>
+          <div id="_mobile_contact_link"></div>
         </div>
       </div>
-
-      <div class="mobile-center" id="_mobile_logo"></div>
-
-      <div class="mobile-right">
-        <div id="_mobile_user_info"></div>
-        <div id="_mobile_cart"></div>
-      </div>
     </div>
-
   </div>
-
-  {* Keep top hooks for compatibility *}
   {hook h='displayNavFullWidth'}
 {/block}

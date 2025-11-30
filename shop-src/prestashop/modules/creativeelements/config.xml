@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>creativeelements</name>
+    <displayName><![CDATA[Creative Elements - Elementor based PageBuilder [in-stock]]]></displayName>
+    <version><![CDATA[1.4.10.4]]></version>
+    <description><![CDATA[The most advanced frontend drag &amp; drop page builder. Create high-end, pixel perfect websites at record speeds. Any theme, any page, any design.&lt;a href=&quot;https://addons.prestashop.com/administrative-tools/44064-creative-elements-elementor-based-pagebuilder.html&quot; target=&quot;_blank&quot;&gt; [Upgrade to PREMIUM]&lt;/a&gt;]]></description>
+    <author><![CDATA[WebshopWorks]]></author>
+    <tab><![CDATA[content_management]]></tab>
+    <is_configurable>1</is_configurable>
+    <need_instance>1</need_instance>
+	<limited_countries></limited_countries>
+</module>

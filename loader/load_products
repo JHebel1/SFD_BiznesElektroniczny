@@ -1,0 +1,296 @@
+import os
+import io
+import csv
+import json
+import random
+import requests
+import re
+import urllib3
+from PIL import Image
+from dotenv import load_dotenv
+from lxml import etree
+
+
+load_dotenv()
+urllib3.disable_warnings()
+
+
+API_URL = os.getenv("PS_API_URL")
+API_KEY = os.getenv("PS_API_KEY")
+LANG_ID = 1
+MAX_SIZE_KB = 3000
+
+def get_product_id_by_name(name, weight, price):
+
+    parameters = {
+        "filter[name]": f"%[{name}]%",
+        "filter[weight]": f"%[{weight}]%",
+        "filter[price]": f"%[{price}]%"
+    }
+
+    resp = requests.get(
+        f"{API_URL}/products",
+        auth=(API_KEY, ""),
+        params=parameters,
+        verify=False
+    )
+    if resp.status_code != 200:
+        return None
+
+    xml = etree.fromstring(resp.content)
+    ids = xml.xpath("//product/@id")
+
+    return ids[0] if ids else None
+
+def clean_html(html):
+    if not html:
+        return ""
+    html = html.replace("\xa0", " ")
+    html = re.sub(r"<iframe.*?</iframe>", "", html, flags=re.DOTALL)
+    html = re.sub(r"<script.*?</script>", "", html, flags=re.DOTALL)
+    html = re.sub(r"<style.*?</style>", "", html, flags=re.DOTALL)
+    return html.strip()
+
+def normalize_price(p):
+    return float(p.replace("zł", "").replace(",", ".").strip())
+
+def normalize_weight(w):
+    if not w:
+        return 0.0
+
+    w = w.lower().strip()
+
+    if "g" in w:
+        num = re.findall(r"[\d.,]+", w)
+        if num:
+            return float(num[0].replace(",", ".")) / 1000
+        return 0.0
+
+    if "kg" in w:
+        num = re.findall(r"[\d.,]+", w)
+        if num:
+            return float(num[0].replace(",", "."))
+        return 0.0
+
+    return 0.0
+def normalize_image_path(img_path: str) -> str:
+    img_path = img_path.strip()
+
+    img_path = img_path.replace("\\", "/")
+
+    while img_path.startswith("../"):
+        img_path = img_path[3:]
+    while img_path.startswith("./"):
+        img_path = img_path[2:]
+
+    img_path = img_path.lstrip("/")
+
+    base = ".."
+    full = os.path.join(base, img_path)
+
+    return full
+
+def compress_image_if_needed(full_path):
+    file_size_kb = os.path.getsize(full_path) / 1024
+
+    if file_size_kb < MAX_SIZE_KB:
+        return full_path
+
+    img = Image.open(full_path)
+
+    if img.mode in ("P", "RGBA", "LA"):
+        img = img.convert("RGB")
+
+    compressed_io = io.BytesIO()
+    quality = 85
+    while True:
+        compressed_io.seek(0)
+        img.save(compressed_io, format = "JPEG", optimize = True, quality = quality)
+        size_kb = compressed_io.tell() / 1024
+        if size_kb < MAX_SIZE_KB:
+            break
+        quality -= 5
+
+    print(f"📉 Po kompresji: {size_kb:.1f} KB (quality={quality})")
+    compressed_path = full_path + "_compressed.jpg"
+    with open(compressed_path, "wb") as f:
+        f.write(compressed_io.getvalue())
+
+    return compressed_path
+
+def upload_image(product_id, img_path):
+    if not img_path:
+        print("NOT IMG PATH")
+        return
+
+
+    full_path = normalize_image_path(img_path)
+
+    if not os.path.exists(full_path):
+        print(f"⚠ Zdjęcie nie istnieje: {full_path}")
+        return
+
+    full_path = compress_image_if_needed(full_path)
+
+
+    with open(full_path, "rb") as f:
+        files = {"image": f}
+
+        resp = requests.post(
+            f"{API_URL}/images/products/{product_id}",
+            auth=(API_KEY, ""),
+            files=files,
+            verify=False
+        )
+
+        if resp.status_code in (200, 201):
+            print(f" 🖼 Dodano zdjęcie do produktu {product_id}")
+        else:
+            print(f" ❌ Błąd zdjęcia: {resp.status_code}")
+            print(resp.text)
+
+def update_stock_quantity(product_id, qty):
+    params = {
+        "filter[id_product]": f"[{product_id}]",
+        "display": "full"
+    }
+    resp = requests.get(
+        f"{API_URL}/stock_availables",
+        auth=(API_KEY, ""),
+        params=params,
+        verify=False
+    )
+
+    root = etree.fromstring(resp.content)
+    stock_id_list = root.xpath("//stock_available/id/text()")
+    if not stock_id_list:
+        print("⚠ Brak stock_available dla produktu")
+        return False
+
+    stock_id = stock_id_list[0]
+
+    prestashop = etree.Element("prestashop", nsmap={"xlink": "http://www.w3.org/1999/xlink"})
+    s = etree.SubElement(prestashop, "stock_available")
+
+    etree.SubElement(s, "id").text = stock_id
+    etree.SubElement(s, "id_product").text = str(product_id)
+    etree.SubElement(s, "id_product_attribute").text = "0"
+    etree.SubElement(s, "quantity").text = str(qty)
+    etree.SubElement(s, "depends_on_stock").text = "0"
+    etree.SubElement(s, "out_of_stock").text = "2"
+    etree.SubElement(s, "id_shop").text = "1"
+
+    xml_payload = etree.tostring(prestashop, pretty_print=True)
+
+    resp2 = requests.put(
+        f"{API_URL}/stock_availables/{stock_id}",
+        auth=(API_KEY, ""),
+        data=xml_payload,
+        headers={"Content-Type": "application/xml"},
+        verify=False
+    )
+
+    if resp2.status_code in (200, 201):
+        print(f" 🟢 Ustawiono stan magazynowy {qty}")
+    else:
+        print("❌ Błąd aktualizacji stanu:", resp2.text)
+
+# ---------------------------------------------------
+# PRODUCT CREATION
+# ---------------------------------------------------
+
+def create_product(row, ps_cat_id, ps_brand_id):
+    name = row["name"]
+    price = normalize_price(row["price"])
+    weight = normalize_weight(row["weight"])
+    desc = row.get("description")
+
+    prestashop = etree.Element("prestashop", nsmap={"xlink": "http://www.w3.org/1999/xlink"})
+    p = etree.SubElement(prestashop, "product")
+
+    simple = {
+        "id_category_default": ps_cat_id,
+        "id_manufacturer": ps_brand_id,
+        "price": price,
+        "weight": weight,
+        "active": 1,
+        "id_shop_default": 1,
+        "available_for_order": 1,
+        "show_price": 1,
+        "state": 1,
+        "product_type" : "standard",
+        "type" : 1,
+        "advanced_stock_management" : 0,
+    }
+
+    for tag, val in simple.items():
+        el = etree.SubElement(p, tag)
+        el.text = etree.CDATA(str(val))
+
+    multilang_fields = {
+        "name": {"1": name},
+        "description": {"1": desc},
+    }
+
+    for field_name, lang_map in multilang_fields.items():
+        field_el = etree.SubElement(p, field_name)
+        for lang_id, text_val in lang_map.items():
+            lang_el = etree.SubElement(field_el, "language", id = str(LANG_ID))
+            lang_el.text = etree.CDATA(text_val)
+
+
+    # ASSOCIATIONS — tylko kategorie
+    assoc = etree.SubElement(p, "associations")
+    cats = etree.SubElement(assoc, "categories")
+    c = etree.SubElement(cats, "category")
+    etree.SubElement(c, "id").text = str(ps_cat_id)
+
+
+    xml_data = etree.tostring(prestashop, pretty_print=True, encoding="utf-8", xml_declaration=True)
+
+    headers = {"Content-Type": "application/xml", "Accept": "application/xml"}
+    resp = requests.post(
+        f"{API_URL}/products",
+        auth=(API_KEY, ""),
+        data=xml_data,
+        headers=headers,
+        verify=False
+    )
+
+
+    product_id = get_product_id_by_name(name, weight, price)
+    print("🟢 Utworzono produkt ID:", product_id)
+
+    # zdjęcia
+    upload_image(product_id, row["img"])
+    upload_image(product_id, row["second_img"])
+
+    # stany magazynowe
+    qty = random.randint(0, 10)
+    update_stock_quantity(product_id, qty)
+
+    return product_id
+
+
+with open("category_map.json", "r", encoding="utf-8") as f:
+    category_map = json.load(f)
+
+with open("brands_map.json", "r", encoding="utf-8") as f:
+    brands_map = json.load(f)
+
+with open("../scrapper-results/product.csv", newline="", encoding="utf-8") as f:
+    reader = csv.DictReader(f, delimiter=";")
+
+    for row in reader:
+        scrap_cat = row["category_id"]
+        if scrap_cat not in category_map:
+            print("⚠ Brak kategorii w mapie dla:", scrap_cat)
+            continue
+        scrap_brand = row["brand_id"]
+        if scrap_brand not in brands_map:
+            print("⚠ Brak marki w mapie dla:", scrap_brand)
+            continue
+
+        ps_cat = category_map[scrap_cat]
+        ps_brand = brands_map[scrap_brand]
+        create_product(row, ps_cat, ps_brand)

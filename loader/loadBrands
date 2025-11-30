@@ -1,0 +1,79 @@
+import csv
+import os
+import json
+import re
+import unicodedata
+import requests
+from collections import defaultdict
+from dotenv import load_dotenv
+from xml.etree import ElementTree as ET
+import urllib3
+
+load_dotenv()
+
+API_URL = os.getenv("PS_API_URL").rstrip("/")
+API_KEY = os.getenv("PS_API_KEY")
+LANG_ID = int(os.getenv("PS_LANG_ID", "1"))
+ROOT_CATEGORY = int(os.getenv("PS_ROOT_CATEGORY_ID", "2"))
+
+INPUT_FILE = "../scrapper-results/brands.csv"
+OUTPUT_MAP = "brands_map.json"
+urllib3.disable_warnings()
+
+
+def create_brans(name):
+
+    xml = f"""
+    <prestashop xmlns:xlink="http://www.w3.org/1999/xlink">
+        <manufacturer>
+            <active>1</active>
+            <name><![CDATA[{name}]]></name>
+        </manufacturer>
+    </prestashop>
+    """
+
+    response = requests.post(
+        f"{API_URL}/manufacturers",
+        auth=(API_KEY, ""),
+        headers={"Content-Type": "application/xml"},
+        data=xml.encode("utf-8"),
+        verify=False
+    )
+
+    if response.status_code not in (200, 201):
+        print("BŁĄD API dla marki:", name)
+        print(response.text)
+        return None
+
+    tree = ET.fromstring(response.content)
+    new_id = tree.find(".//id").text
+    print(f"DODANO: {name} (id={new_id})")
+
+    return int(new_id)
+
+brands = []
+
+with open(INPUT_FILE, newline="", encoding="utf-8") as f:
+    reader = csv.DictReader(f, delimiter=";")
+    for row in reader:
+        row["id"] = row["id"].strip()
+        brands.append(row)
+
+print(f"Wczytano {len(brands)} kategorii z CSV.")
+
+mapping = {}
+
+for brand in brands:
+    scrap_id = brand["id"]
+    name = brand["name"]
+
+    new_id = create_brans(name)
+
+    if new_id:
+        mapping[scrap_id] = new_id
+
+
+with open(OUTPUT_MAP, "w", encoding="utf-8") as f:
+    json.dump(mapping, f, indent=4)
+
+print("\n✓ Zakończono! Zapisano mapowanie do:", OUTPUT_MAP)

@@ -1,0 +1,119 @@
+#posnewsletterpopup-overlay {
+    background-color: #000;
+    height: 100%;
+    left: 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 5103;
+    opacity: 0;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    visibility: hidden;
+}
+
+#posnewsletterpopup {
+    background-color: #fefefe;
+    position: fixed;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    z-index: 5104;
+    width: 650px;
+    height: 415px;
+    margin: auto;
+    opacity: 0;
+    visibility: hidden;
+    transition: transform .3s ease-out, opacity .3s ease, visibility .3s ease;
+    -ms-transform: translate(-50%, -75%);
+    -webkit-transform: translate(-50%, -75%);
+    transform: translate(-50%, -75%);
+    left: 50%;
+    top: 50%;
+	text-align:center;
+	padding:60px;
+}
+#posnewsletterpopup .pnp-content h2{
+	font-size:24px;
+	text-transform:uppercase;
+	margin-bottom:30px;
+}
+#posnewsletterpopup.showed-pnp {
+    -ms-transform: translate(-50%,-50%);
+    -webkit-transform: translate(-50%,-50%);
+    transform: translate(-50%,-50%);
+    opacity: 1;
+    visibility: visible;
+}
+
+
+#posnewsletterpopup .pnp-content {
+}
+
+
+#posnewsletterpopup .pnp-newsletter-form .newsletter-input {
+    width: 100%;
+    height: 45px;
+	display:block;
+	max-width:450px;
+	margin:30px auto;
+	border-radius:5px;
+	border:none;
+	background:#ebebeb;
+}
+
+#posnewsletterpopup .pnp-newsletter-form .pos-btn-newsletter {
+    line-height:25px;
+	padding:10px 30px;
+	border-radius:5px;
+	border:none;
+	background:#ebebeb;
+	font-size:13px;
+	font-weight:600;
+	text-transform:uppercase;
+}
+#posnewsletterpopup .pnp-newsletter-form .pos-btn-newsletter:hover {
+    background:#333333;
+	color:#ffffff;
+}
+#posnewsletterpopup .pnp-close {
+    height: 25px;
+    top: -5px;
+    right: -5px;
+    position: absolute;
+    background: #333333;
+	color:#ffffff; 
+	cursor:pointer;
+}
+
+#posnewsletterpopup .pnp-close-checkbox, #posnewsletterpopup .pos-close-popup {
+    display: inline-block;
+}
+
+#posnewsletterpopup .pnp-close-checkbox {
+    vertical-align: middle;
+    font-size: 10px;
+	margin-top:20px;
+}
+
+#posnewsletterpopup .pnp-close-checkbox > div {
+    display: inline-block;
+    vertical-align: middle;
+}
+#posnewsletterpopup .pnp-close-checkbox  .custom-checkbox label {
+    vertical-align: -3px;
+	font-size:14px;
+}
+#posnewsletterpopup .pnp-close-checkbox  .custom-checkbox input[type=checkbox]+span {
+	border-color:#dddddd; 
+}
+#posnewsletterpopup-overlay.showed-popup {
+    opacity: 0.4;
+    visibility: visible;
+
+}
+
+@media screen and (max-width: 991px) {
+
+    #posnewsletterpopup, #posnewsletterpopup-overlay{
+      display:none;
+    }
+}
+

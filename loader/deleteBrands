@@ -1,0 +1,61 @@
+import requests
+from lxml import etree
+from dotenv import load_dotenv
+import os
+import urllib3
+
+urllib3.disable_warnings()
+load_dotenv()
+
+API_URL = os.getenv("PS_API_URL")
+API_KEY = os.getenv("PS_API_KEY")
+
+if not API_URL or not API_KEY:
+    raise ValueError("Missing PRESTASHOP_URL or PRESTASHOP_API_KEY")
+
+headers = {"Accept": "application/xml"}
+
+def delete_brand(brand_id: int):
+    url = f"{API_URL}/manufacturers/{brand_id}"
+    resp = requests.delete(url, auth=(API_KEY, ""), headers=headers, verify=False)
+
+    if resp.status_code in (200, 201):
+        print(f"🗑️ Usunięto marke ID: {brand_id}")
+    else:
+        print(f"❌ Błąd usuwania marki {brand_id}: {resp.status_code}")
+        print(resp.text)
+
+
+def get_all_brands():
+    url = f"{API_URL}/manufacturers?display=[id]"
+    resp = requests.get(url, auth=(API_KEY, ""), headers=headers, verify=False)
+
+    if resp.status_code != 200:
+        print("❌ Nie mogę pobrać listy marek")
+        print("STATUS:", resp.status_code)
+        print(resp.text)
+        return []
+
+    tree = etree.fromstring(resp.content)
+    ids = tree.xpath("//manufacturer/id/text()")
+    return [int(x) for x in ids]
+
+
+def main():
+    print("Pobieram listę marek…")
+    brand_ids = get_all_brands()
+
+    if not brand_ids:
+        print("Brak marek do usunięcia.")
+        return
+
+    print(f"Znaleziono {len(brand_ids)} marek. Usuwam…")
+
+    for pid in brand_ids:
+        delete_brand(pid)
+
+    print("\n✔ GOTOWE – wszystkie marki usunięte.")
+
+
+if __name__ == "__main__":
+    main()

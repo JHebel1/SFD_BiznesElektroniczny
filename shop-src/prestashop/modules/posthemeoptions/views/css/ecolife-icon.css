@@ -1,0 +1,30 @@
+/**
+* 2007-2021 PrestaShop
+*
+* NOTICE OF LICENSE
+*
+* This source file is subject to the Academic Free License (AFL 3.0)
+* that is bundled with this package in the file LICENSE.txt.
+* It is also available through the world-wide-web at this URL:
+* http://opensource.org/licenses/afl-3.0.php
+* If you did not receive a copy of the license and are unable to
+* obtain it through the world-wide-web, please send an email
+* to license@prestashop.com so we can send you a copy immediately.
+*
+* DISCLAIMER
+*
+* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+* versions in the future. If you wish to customize PrestaShop for your
+* needs please refer to http://www.prestashop.com for more information.
+*
+*  @author    PrestaShop SA <contact@prestashop.com>
+*  @copyright 2007-2021 PrestaShop SA
+*  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+*  International Registered Trademark & Property of PrestaShop SA
+*
+* Don't forget to prefix your containers with your own identifier
+* to avoid any conflicts with others containers.
+*/
+
+@font-face{font-family:ecolifeIcons;src:url(../fonts/ecolifeIcons.eot?iivjjr);src:url(../fonts/ecolifeIcons.eot?iivjjr#iefix) format('embedded-opentype'),url(../fonts/ecolifeIcons.ttf?iivjjr) format('truetype'),url(../fonts/ecolifeIcons.woff?iivjjr) format('woff'),url(../fonts/ecolifeIcons.svg?iivjjr#ecolifeIcons) format('svg');font-weight:400;font-style:normal;font-display:block}[class*=" ecicon-"],[class^=ecicon-]{font-family:ecolifeIcons!important;speak:never;font-style:normal;font-weight:400;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.ecicon-stroke-Bag:before{content:"\e900"}.ecicon-stroke-Eye:before{content:"\e901"}.ecicon-stroke-FullShoppingCart:before{content:"\e902"}.ecicon-stroke-Heart:before{content:"\e903"}.ecicon-stroke-Restart:before{content:"\e904"}.ecicon-stroke-Search:before{content:"\e905"}.ecicon-stroke-Settings:before{content:"\e906"}.ecicon-ion-android-cart:before{content:"\e907"}.ecicon-ion-android-favorite-outline:before{content:"\e908"}.ecicon-ion-android-person:before{content:"\e909"}.ecicon-ion-android-search:before{content:"\e90a"}.ecicon-ion-android-settings:before{content:"\e90b"}.ecicon-ion-bag:before{content:"\e90c"}.ecicon-ion-ios-cart:before{content:"\e90d"}.ecicon-ion-ios-cart-outline:before{content:"\e90e"}.ecicon-ion-ios-heart-outline:before{content:"\e90f"}.ecicon-ion-ios-search:before{content:"\e910"}.ecicon-ion-ios-search-strong:before{content:"\e911"}.ecicon-ion-ios-settings-strong:before{content:"\e912"}.ecicon-ion-ios-shuffle:before{content:"\e913"}.ecicon-ion-ios-shuffle-strong:before{content:"\e914"}.ecicon-ion-social-facebook:before{content:"\e915"}.ecicon-ion-social-google-outline:before{content:"\e916"}.ecicon-ion-social-googleplus-outline:before{content:"\e917"}.ecicon-ionsocial-instagram:before{content:"\e918"}.ecicon-ion-social-pinterest:before{content:"\e919"}.ecicon-ion-social-skype:before{content:"\e91a"}.ecicon-ion-social-tumblr:before{content:"\e91b"}.ecicon-ion-social-youtube:before{content:"\e91c"}
+

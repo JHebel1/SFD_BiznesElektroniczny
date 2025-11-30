@@ -62,6 +62,7 @@ async fn collect_product_links_for_category(
 
     let mut links = Vec::new();
 
+    println!("{}", links.len());
     for tile in document.select(&product_tile_selector) {
         if links.len() >= max_products {
             break;
