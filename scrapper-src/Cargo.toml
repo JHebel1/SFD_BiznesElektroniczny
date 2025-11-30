@@ -1,0 +1,12 @@
+[package]
+name = "rust-scrapper"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["gzip", "brotli", "json", "cookies", "rustls-tls"]}
+scraper = "0.24"
+anyhow  = "1"
+regex = "1.12.2"
+once_cell = "1.21.3"
