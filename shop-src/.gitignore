@@ -8,3 +8,4 @@ prestashop/modules/*/cache/
 prestashop/modules/*/logs/
 prestashop/config/xml/trusted_modules_list.xml
 prestashop/config/xml/untrusted_modules_list.xml
+prestashop/img/tmp/
