@@ -30,39 +30,16 @@ class CategoryPage(BasePage):
         """Initialize category page."""
         super().__init__(driver)
 
-    def _get_available_stock(self):
-        """Get available stock from product page. Returns None if can't determine."""
+    def _is_out_of_stock(self):
+        """Quick check if product is out of stock. Returns True if out of stock."""
         try:
-            # Try to find stock quantity on product page
-            stock_selectors = [
-                (By.CSS_SELECTOR, "#product-availability"),
-                (By.CSS_SELECTOR, ".product-quantities span"),
-                (By.CSS_SELECTOR, "[data-stock]"),
-                (By.CSS_SELECTOR, ".product-availability"),
-            ]
-
-            for selector in stock_selectors:
-                try:
-                    stock_elem = self.find_element(selector, timeout=1)
-                    stock_text = stock_elem.text.strip()
-
-                    # Try to extract number from text like "100 Items" or "Dostępnych produktów: 50"
-                    import re
-                    numbers = re.findall(r'\d+', stock_text)
-                    if numbers:
-                        return int(numbers[0])
-
-                    # Check for data attribute
-                    data_stock = stock_elem.get_attribute('data-stock')
-                    if data_stock:
-                        return int(data_stock)
-                except:
-                    continue
-
-            # If we can't find stock info, assume it's available (return high number)
-            return 99
+            # Just check if add to cart button is disabled - fastest check
+            add_btn = self.driver.find_element(By.CSS_SELECTOR, "button.add-to-cart")
+            if add_btn.get_attribute('disabled'):
+                return True
         except:
-            return 99  # Default to allowing purchase
+            pass
+        return False
 
     def get_all_products(self):
         """Get all product elements on the page."""
@@ -154,81 +131,51 @@ class CategoryPage(BasePage):
             product_link = product_element.find_element(*self.PRODUCT_NAME)
             safe_click(self.driver, product_link)
 
-            # Wait only for the add to cart button to appear (not full page load)
-            from selenium.webdriver.support.ui import WebDriverWait
-            from selenium.webdriver.support import expected_conditions as EC
-            try:
-                WebDriverWait(self.driver, 3).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, "button.add-to-cart, .add-to-cart, button[data-button-action='add-to-cart']"))
-                )
-                # Stop page load once we have the button - don't wait for images
+            # Wait for product page to load
+            time.sleep(1)
+
+            # Quick check if out of stock (button disabled)
+            if self._is_out_of_stock():
+                print(f"  ⚠ Product out of stock, skipping")
+                self.driver.get(category_url)
+                time.sleep(0.3)
+                return False
+
+            # Set quantity if more than 1
+            if quantity > 1:
                 try:
-                    self.driver.execute_script("window.stop();")
+                    qty_input = self.driver.find_element(By.CSS_SELECTOR, "input#quantity_wanted")
+                    # Use JavaScript to set value properly (clear doesn't always work)
+                    self.driver.execute_script("arguments[0].value = '';", qty_input)
+                    self.driver.execute_script("arguments[0].value = arguments[1];", qty_input, str(quantity))
+                    # Trigger change event for PrestaShop
+                    self.driver.execute_script("arguments[0].dispatchEvent(new Event('change'));", qty_input)
+                    time.sleep(0.3)
+                    print(f"  ✓ Quantity set to {quantity}")
+                except:
+                    print(f"  ⚠ Could not set quantity, using 1")
+
+            # Click add to cart button
+            try:
+                add_to_cart_btn = self.driver.find_element(By.CSS_SELECTOR, "button.add-to-cart")
+                self.scroll_to(add_to_cart_btn)
+                safe_click(self.driver, add_to_cart_btn)
+                time.sleep(0.8)
+
+                # Check if add failed (error message means stock issue) - use instant check
+                try:
+                    errors = self.driver.find_elements(By.CSS_SELECTOR, ".alert-danger")
+                    for error in errors:
+                        if error.is_displayed() and error.text:
+                            print(f"  ⚠ Error: {error.text[:50]}, skipping")
+                            self.driver.get(category_url)
+                            time.sleep(0.3)
+                            return False
                 except:
                     pass
             except:
-                time.sleep(0.5)  # Fallback - shorter
-
-            # Check available stock and limit quantity
-            available_stock = self._get_available_stock()
-            if available_stock is not None and available_stock > 0:
-                if quantity > available_stock:
-                    print(f"  ⚠ Requested {quantity} but only {available_stock} available, limiting")
-                    quantity = available_stock
-            elif available_stock == 0:
-                print(f"  ⚠ Product out of stock, skipping")
+                print("⚠ Could not find add to cart button")
                 self.driver.get(category_url)
-                return False
-
-            # Set quantity
-            quantity_selectors = [
-                (By.CSS_SELECTOR, "input#quantity_wanted"),
-                (By.CSS_SELECTOR, "input[name='qty']"),
-                (By.CSS_SELECTOR, ".product-quantity input"),
-                (By.CSS_SELECTOR, "input.qty"),
-            ]
-
-            for selector in quantity_selectors:
-                try:
-                    qty_input = self.find_element(selector, timeout=2)
-                    qty_input.clear()
-                    time.sleep(0.1)
-                    self.driver.execute_script("arguments[0].value = '';", qty_input)
-                    qty_input.send_keys(str(quantity))
-
-                    actual_value = qty_input.get_attribute('value')
-                    if actual_value == str(quantity):
-                        print(f"  ✓ Quantity set to {quantity}")
-                        time.sleep(0.2)
-                        break
-                except Exception as e:
-                    continue
-
-            # Try to find and click add to cart button on product detail page
-            add_to_cart_selectors = [
-                (By.CSS_SELECTOR, "button.add-to-cart"),
-                (By.CSS_SELECTOR, ".add-to-cart"),
-                (By.CSS_SELECTOR, "button[data-button-action='add-to-cart']"),
-                (By.CSS_SELECTOR, ".btn-primary.add-to-cart"),
-                (By.CSS_SELECTOR, "#add-to-cart-or-refresh button"),
-                (By.XPATH, "//button[contains(@class, 'add-to-cart')]"),
-            ]
-
-            added = False
-            for selector in add_to_cart_selectors:
-                try:
-                    add_to_cart_btn = self.find_element(selector, timeout=2)
-                    self.scroll_to(add_to_cart_btn)
-                    safe_click(self.driver, add_to_cart_btn)
-                    time.sleep(0.5)  # Short wait for AJAX to start
-                    added = True
-                    break
-                except:
-                    continue
-
-            if not added:
-                print("⚠ Could not find add to cart button on product page")
-                self.driver.get(category_url)  # Go back to category
                 return False
 
             # Check if modal appears and close it immediately
@@ -333,14 +280,11 @@ class CategoryPage(BasePage):
                         print(f"  ✓ Successfully added product '{product_name}' (quantity: {quantity})")
                         print(f"  Total products added so far: {len(added_products)}")
                         product_found = True
-
-                        # Small delay to ensure state is updated
                         time.sleep(0.3)
-
-                        # Break to re-fetch products for next iteration
-                        break
                     else:
-                        print(f"  ✗ Failed to add product '{product_name}'")
+                        print(f"  ✗ Failed to add product '{product_name}', will retry with fresh products")
+                    # Always break to re-fetch products (elements are stale after navigation)
+                    break
 
                 except Exception as e:
                     print(f"  ✗ Error processing product: {e}")
