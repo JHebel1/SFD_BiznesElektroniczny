@@ -100,7 +100,7 @@ class CheckoutPage(BasePage):
             # Check URL - if we're on account page, we're logged in
             current_url = self.driver.current_url
             if 'my-account' in current_url or 'account' in current_url:
-                print(f"✓ User is logged in (on account page: {current_url})")
+                print(f"User is logged in (on account page: {current_url})")
                 return True
 
             # Try to find logout link or user account indicators
@@ -120,7 +120,7 @@ class CheckoutPage(BasePage):
                 try:
                     element = self.find_element(selector, timeout=1)
                     if element and element.is_displayed():
-                        print(f"✓ User is logged in (found element: {selector})")
+                        print(f"User is logged in (found element: {selector})")
                         return True
                 except:
                     continue
@@ -134,15 +134,15 @@ class CheckoutPage(BasePage):
                 try:
                     user_info = self.driver.find_element(By.CSS_SELECTOR, ".user-info, .account, .header-user")
                     if user_info:
-                        print("✓ User is logged in (found user info in header)")
+                        print("User is logged in (found user info in header)")
                         return True
                 except:
                     pass
 
-            print(f"✗ User is NOT logged in (current URL: {current_url})")
+            print(f"User is NOT logged in (current URL: {current_url})")
             return False
         except Exception as e:
-            print(f"✗ Error checking login status: {e}")
+            print(f"Error checking login status: {e}")
             return False
 
     def login_with_credentials(self, email, password):
@@ -199,24 +199,24 @@ class CheckoutPage(BasePage):
                 login_btn = self.find_element(selector, timeout=2)
                 self.scroll_to(login_btn)
                 self.click(login_btn)
-                print(f"✓ Login button clicked with selector: {selector}")
+                print(f"Login button clicked with selector: {selector}")
 
                 # Wait for redirect/page load after login
                 time.sleep(3)
 
                 # Check if login was successful
                 if self.is_logged_in():
-                    print("✓ Login successful!")
+                    print("Login successful!")
                     return True
                 else:
-                    print("⚠ Login button clicked but still not logged in")
+                    print("Login button clicked but still not logged in")
                     # Try next selector
                     continue
             except Exception as e:
                 print(f"Could not click login with selector {selector}: {e}")
                 continue
 
-        print("✗ Could not find login button or login failed")
+        print("Could not find login button or login failed")
         return False
 
     def select_guest_checkout(self):
@@ -295,13 +295,13 @@ class CheckoutPage(BasePage):
             try:
                 password_input = self.find_element(selector, timeout=2)
                 fill_input(self.driver, password_input, customer_data['password'])
-                print(f"  ✓ Password filled")
+                print(f"  Password filled")
 
                 # Some forms require password confirmation
                 try:
                     password_confirm = self.driver.find_element(By.CSS_SELECTOR, "input[name='password_confirmation'], input[name='confirm-password']")
                     fill_input(self.driver, password_confirm, customer_data['password'])
-                    print(f"  ✓ Password confirmation filled")
+                    print(f"  Password confirmation filled")
                 except:
                     pass
 
@@ -332,7 +332,7 @@ class CheckoutPage(BasePage):
                 if not privacy_checkbox.is_selected():
                     # Use JavaScript click to avoid click interception
                     self.driver.execute_script("arguments[0].click();", privacy_checkbox)
-                    print("  ✓ Privacy checkbox checked")
+                    print("  Privacy checkbox checked")
                 break
             except:
                 continue
@@ -348,7 +348,7 @@ class CheckoutPage(BasePage):
                 if not psgdpr_checkbox.is_selected():
                     # Use JavaScript click to avoid click interception
                     self.driver.execute_script("arguments[0].click();", psgdpr_checkbox)
-                    print("  ✓ PSGDPR checkbox checked")
+                    print("  PSGDPR checkbox checked")
                 break
             except:
                 continue
@@ -369,7 +369,7 @@ class CheckoutPage(BasePage):
                 self.scroll_to(submit_btn)
                 time.sleep(0.3)
                 self.click(submit_btn)
-                print(f"✓ Clicked submit button with selector: {selector}")
+                print(f"Clicked submit button with selector: {selector}")
 
                 # Wait for registration to complete - just enough for the form to submit
                 time.sleep(2)
@@ -380,19 +380,19 @@ class CheckoutPage(BasePage):
 
                 # If we're on search page, wrong button was clicked - this shouldn't happen now
                 if 'search' in current_url:
-                    print("⚠ Ended up on search page - wrong button was clicked, retrying...")
+                    print("Ended up on search page - wrong button was clicked, retrying...")
                     self.driver.back()
                     time.sleep(1)
                     continue
 
                 # Registration successful - return immediately, don't waste time
-                print("✓ Registration form submitted successfully")
+                print("Registration form submitted successfully")
                 return
             except Exception as e:
                 print(f"Could not click submit with {selector}: {e}")
                 continue
 
-        print("⚠ Could not find submit button")
+        print("Could not find submit button")
 
     def fill_address_form(self, address_data):
         """Fill address form."""
@@ -402,7 +402,7 @@ class CheckoutPage(BasePage):
         # Make sure we're on the checkout page
         current_url = self.driver.current_url
         if 'order' not in current_url:
-            print(f"⚠ Not on checkout page, navigating there. Current URL: {current_url}")
+            print(f"Not on checkout page, navigating there. Current URL: {current_url}")
             checkout_url = f"{self.base_url}?controller=order"
             self.driver.get(checkout_url)
             time.sleep(1)
@@ -418,7 +418,7 @@ class CheckoutPage(BasePage):
                 EC.presence_of_element_located((By.CSS_SELECTOR, "#delivery-address, .address-form, [id*='address']"))
             )
         except:
-            print(f"⚠ Address form not found, current URL: {self.driver.current_url}")
+            print(f"Address form not found, current URL: {self.driver.current_url}")
             # Try scrolling down to reveal the form
             self.driver.execute_script("window.scrollTo(0, 300);")
             time.sleep(0.5)

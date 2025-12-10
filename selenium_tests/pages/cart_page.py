@@ -142,25 +142,25 @@ class CartPage(BasePage):
                 checkout_btn = self.find_element(selector, timeout=2)
                 self.scroll_to(checkout_btn)
                 self.click(checkout_btn)
-                print(f"✓ Clicked checkout button: {selector}")
+                print(f"Clicked checkout button: {selector}")
 
                 # Wait for checkout page to load
                 try:
                     WebDriverWait(self.driver, 5).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, "#checkout, .checkout-step, [id*='checkout']"))
                     )
-                    print("✓ Checkout page loaded")
+                    print("Checkout page loaded")
                     return
                 except:
                     # Check if URL contains 'order'
                     if 'order' in self.driver.current_url:
-                        print("✓ On checkout page (URL check)")
+                        print("On checkout page (URL check)")
                         return
             except:
                 continue
 
         # Fallback: navigate directly to checkout URL
-        print("⚠ Could not find checkout button, navigating directly to checkout")
+        print("Could not find checkout button, navigating directly to checkout")
         checkout_url = f"{self.base_url}?controller=order"
         self.driver.get(checkout_url)
         time.sleep(1)

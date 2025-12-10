@@ -69,7 +69,7 @@ class HomePage(BasePage):
                 search_input.clear()
                 search_input.send_keys(search_term)
                 search_input.send_keys(Keys.RETURN)
-                print(f"✓ Search performed using selector: {selector}")
+                print(f"Search performed using selector: {selector}")
                 time.sleep(0.5)  # Brief wait for search to initiate
                 return  # Success
             except:
@@ -94,7 +94,7 @@ class HomePage(BasePage):
                     # Very short timeout - menu should be loaded already
                     links = self.find_elements(selector, timeout=1)
                     if links and len(links) > 0:
-                        print(f"✓ Found {len(links)} links using selector: {selector}")
+                        print(f"Found {len(links)} links using selector: {selector}")
 
                         # Filter out invalid links quickly
                         valid_links = []
@@ -107,14 +107,14 @@ class HomePage(BasePage):
                             if '/' in href:
                                 valid_links.append(link)
 
-                        print(f"✓ Filtered to {len(valid_links)} valid category links")
+                        print(f"Filtered to {len(valid_links)} valid category links")
 
                         if len(valid_links) > 0:
                             return valid_links[:10]  # Return max 10 categories
                 except:
                     continue
 
-            print("⚠ No categories found with any selector")
+            print("No categories found with any selector")
             return []
         except Exception as e:
             print(f"Error in get_categories: {e}")
