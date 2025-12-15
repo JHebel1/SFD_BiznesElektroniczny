@@ -24,15 +24,34 @@
  *}
 {if !$configuration.is_catalog}
 {if ($product.quantity > 0 || $product.allow_oosp)}
-<div class="product-add-to-cart">	
- <form action="{$urls.pages.cart}" method="post" class="add-to-cart-or-refresh">
+<div class="product-add-to-cart">
+
+ {* <form action="{$urls.pages.cart}" method="post" class="add-to-cart-or-refresh">
    <input type="hidden" name="token" value="{$static_token}">
    <input type="hidden" name="id_product" value="{$product.id}" class="product_page_product_id">
    <input type="hidden" name="qty" value="{$product.minimal_quantity}" min="{$product.minimal_quantity}">
    <button class="button ajax_add_to_cart_button add-to-cart btn-default" data-button-action="add-to-cart" type="submit" title="{l s='Add to cart' d='Shop.Theme.Actions'}">
   		{l s='Add to cart' d='Shop.Theme.Actions'}
    </button>
+ </form> *}
+
+ <form action="{$urls.pages.cart}" method="post" class="add-to-cart-or-refresh">
+  <input type="hidden" name="token" value="{$static_token}">
+  <input type="hidden" name="ajax" value="1">
+  <input type="hidden" name="add" value="1">
+  <input type="hidden" name="action" value="update">
+
+  <input type="hidden" name="id_product"
+         value="{$product.id_product|default:$product.id}">
+  <input type="hidden" name="id_product_attribute"
+         value="{$product.id_product_attribute|default:0}">
+  <input type="hidden" name="qty"
+         value="{if $product.minimal_quantity && $product.minimal_quantity > 0}{$product.minimal_quantity}{else}1{/if}">
+  <button class="button ajax_add_to_cart_button add-to-cart btn-default" data-button-action="add-to-cart" type="submit" title="{l s='Add to cart' d='Shop.Theme.Actions'}">
+  		{l s='Add to cart' d='Shop.Theme.Actions'}
+   </button>
  </form>
+
 </div>
 {else}
 	<span class="ajax_add_to_cart_button disabled" title="{l s='Out of stock' d='Shop.Theme.Actions'}" >{l s='Add to cart' d='Shop.Theme.Actions'}</span>
