@@ -20,10 +20,11 @@ services:
         - PS_SSL_ENABLED=1
     volumes:
       - ./prestashop:/var/www/html:Z
-      - ./ssl:/etc/apache2/ssl
-      - ./config/php/ssl.conf:/etc/apache2/sites-available/ssl.conf
+      - ./ssl:/etc/apache2/ssl:Z
+      - ./config/php/ssl.conf:/etc/apache2/sites-available/ssl.conf:Z
+      - ./docker-entrypoint-init.sh:/docker-entrypoint-init.sh:Z
     restart: unless-stopped
-    command: /bin/bash -c "a2enmod ssl && a2ensite ssl && apache2-foreground"
+    entrypoint: ["/bin/bash", "/docker-entrypoint-init.sh"]
 
   db:
     image: mariadb:10.6
