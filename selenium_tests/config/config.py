@@ -14,9 +14,9 @@ class Config:
     BROWSER = os.getenv('BROWSER', 'chrome').lower()
     HEADLESS = os.getenv('HEADLESS', 'false').lower() == 'true'
 
-    IMPLICIT_WAIT = int(os.getenv('TIMEOUT', '10'))
-    EXPLICIT_WAIT = int(os.getenv('TIMEOUT', '10'))
-    PAGE_LOAD_TIMEOUT = 30
+    IMPLICIT_WAIT = int(os.getenv('TIMEOUT', '3'))
+    EXPLICIT_WAIT = int(os.getenv('TIMEOUT', '5'))
+    PAGE_LOAD_TIMEOUT = 10
 
     SCREENSHOT_ON_FAILURE = os.getenv('SCREENSHOT_ON_FAILURE', 'true').lower() == 'true'
     SCREENSHOTS_DIR = 'screenshots'

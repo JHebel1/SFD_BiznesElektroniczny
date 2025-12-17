@@ -27,22 +27,19 @@ class CartPage(BasePage):
 
     def open(self):
         """Open cart page."""
-        import time
         from selenium.webdriver.support.ui import WebDriverWait
         from selenium.webdriver.support import expected_conditions as EC
-        cart_url = f"{self.base_url}?controller=cart"
-        self.driver.get(cart_url)
+        self.driver.get(f"{self.base_url}?controller=cart")
 
-        # Wait only for cart container (not full page load)
         try:
-            WebDriverWait(self.driver, 5).until(
+            WebDriverWait(self.driver, 3).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, ".cart-grid, .cart-container, #main"))
             )
-            time.sleep(0.3)  # Brief stabilization
+            self.driver.execute_script("window.stop();")
         except:
-            time.sleep(0.5)  # Fallback
+            pass
 
-        self.close_popups()  # Close any popups (newsletter, etc.)
+        self.close_popups()
         return self
 
     def get_cart_items(self):
@@ -75,17 +72,14 @@ class CartPage(BasePage):
             remove_btn = item_element.find_element(*self.REMOVE_BUTTON)
             self.scroll_to(remove_btn)
             safe_click(self.driver, remove_btn)
-            time.sleep(1)  # Wait for cart to update
+            time.sleep(0.5)
             return True
         except Exception as e:
             print(f"Error removing product: {e}")
             return False
 
     def remove_products(self, count=3):
-        """
-        Remove specified number of products from cart.
-        Returns list of removed product names.
-        """
+        """Remove specified number of products from cart."""
         removed_products = []
 
         for _ in range(count):
@@ -93,18 +87,13 @@ class CartPage(BasePage):
             if not items:
                 break
 
-            # Get first item
             item = items[0]
-
             try:
-                # Get product name before removing
                 name_element = item.find_element(*self.PRODUCT_NAME)
                 product_name = name_element.text
 
-                # Remove the product
                 if self.remove_product(item):
                     removed_products.append(product_name)
-                    time.sleep(0.5)
             except Exception as e:
                 print(f"Error in remove_products: {e}")
                 continue
@@ -124,46 +113,13 @@ class CartPage(BasePage):
             return "0"
 
     def proceed_to_checkout(self):
-        """Click proceed to checkout button or navigate directly to checkout."""
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
-
-        # Try to click the checkout button
-        checkout_selectors = [
-            (By.CSS_SELECTOR, ".checkout a.btn-primary"),
-            (By.CSS_SELECTOR, ".checkout a"),
-            (By.CSS_SELECTOR, "a.btn-primary[href*='order']"),
-            (By.CSS_SELECTOR, "a[href*='controller=order']"),
-            (By.XPATH, "//a[contains(@href, 'order') and contains(@class, 'btn')]"),
-        ]
-
-        for selector in checkout_selectors:
-            try:
-                checkout_btn = self.find_element(selector, timeout=2)
-                self.scroll_to(checkout_btn)
-                self.click(checkout_btn)
-                print(f"Clicked checkout button: {selector}")
-
-                # Wait for checkout page to load
-                try:
-                    WebDriverWait(self.driver, 5).until(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, "#checkout, .checkout-step, [id*='checkout']"))
-                    )
-                    print("Checkout page loaded")
-                    return
-                except:
-                    # Check if URL contains 'order'
-                    if 'order' in self.driver.current_url:
-                        print("On checkout page (URL check)")
-                        return
-            except:
-                continue
-
-        # Fallback: navigate directly to checkout URL
-        print("Could not find checkout button, navigating directly to checkout")
-        checkout_url = f"{self.base_url}?controller=order"
-        self.driver.get(checkout_url)
-        time.sleep(1)
+        """Click proceed to checkout button."""
+        try:
+            checkout_btn = self.find_element((By.CSS_SELECTOR, ".checkout a.btn-primary"), timeout=2)
+            self.scroll_to(checkout_btn)
+            self.click(checkout_btn)
+        except:
+            self.driver.get(f"{self.base_url}?controller=order")
 
     def update_quantity(self, item_element, quantity):
         """Update product quantity."""

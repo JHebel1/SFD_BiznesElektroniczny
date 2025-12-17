@@ -29,44 +29,40 @@ class CategoryPage(BasePage):
         except:
             return False
 
+    def _get_available_quantity(self):
+        """Get the maximum available quantity for the current product."""
+        try:
+            el = self.driver.find_element(By.CSS_SELECTOR, "[data-stock]")
+            data_stock = el.get_attribute('data-stock')
+            print(f"  Available stock from data-stock: {data_stock}")
+            if data_stock and data_stock.isdigit() and int(data_stock) > 0:
+                return int(data_stock)
+        except:
+            pass
+
+        # Fallback
+        return 10
+
     def get_all_products(self):
         """Get all product elements on the page."""
         try:
             WebDriverWait(self.driver, 2).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "#js-product-list, .products, .product-list"))
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#js-product-list"))
             )
-            try:
-                self.driver.execute_script("window.stop();")
-            except:
-                pass
-            time.sleep(0.3)
+            self.driver.execute_script("window.stop();")
         except:
-            time.sleep(0.5)
+            pass
 
         self.close_popups()
-        print(f"Current URL: {self.driver.current_url}")
 
-        selectors = [
-            (By.CSS_SELECTOR, "#js-product-list article"),
-            (By.CSS_SELECTOR, ".products article"),
-            (By.CSS_SELECTOR, "article.product-miniature"),
-            (By.CSS_SELECTOR, ".product-miniature"),
-            (By.CSS_SELECTOR, "#js-product-list .thumbnail-container"),
-            (By.CSS_SELECTOR, ".thumbnail-container"),
-            (By.CSS_SELECTOR, ".item_in"),
-            (By.XPATH, "//article[contains(@class, 'product')]"),
-        ]
+        try:
+            products = self.find_elements((By.CSS_SELECTOR, "#js-product-list article"), timeout=3)
+            if products:
+                print(f"Found {len(products)} products")
+                return products
+        except:
+            pass
 
-        for selector in selectors:
-            try:
-                products = self.find_elements(selector, timeout=3)
-                if products and len(products) > 0:
-                    print(f"Found {len(products)} products using selector: {selector}")
-                    return products
-            except:
-                continue
-
-        print("No products found with any selector")
         return []
 
     def get_product_name(self, product_element):
@@ -87,76 +83,62 @@ class CategoryPage(BasePage):
 
             product_link = product_element.find_element(*self.PRODUCT_NAME)
             safe_click(self.driver, product_link)
-            time.sleep(1)
+
+            # Wait for product page
+            WebDriverWait(self.driver, 3).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "button.add-to-cart, .product-add-to-cart"))
+            )
+            self.driver.execute_script("window.stop();")
 
             if self._is_out_of_stock():
                 print("  Product out of stock, skipping")
                 self.driver.get(category_url)
-                time.sleep(0.3)
                 return False
+
+            available_qty = self._get_available_quantity()
+            if quantity > available_qty:
+                print(f"  Requested {quantity} but only {available_qty} available, adjusting")
+                quantity = available_qty
 
             if quantity > 1:
                 try:
                     qty_input = self.driver.find_element(By.CSS_SELECTOR, "input#quantity_wanted")
-                    self.driver.execute_script("arguments[0].value = '';", qty_input)
-                    self.driver.execute_script("arguments[0].value = arguments[1];", qty_input, str(quantity))
-                    self.driver.execute_script("arguments[0].dispatchEvent(new Event('change'));", qty_input)
-                    time.sleep(0.3)
+                    self.driver.execute_script("""
+                        arguments[0].value = arguments[1];
+                        arguments[0].dispatchEvent(new Event('change'));
+                    """, qty_input, str(quantity))
                     print(f"  Quantity set to {quantity}")
                 except:
                     print("  Could not set quantity, using 1")
 
             try:
                 add_to_cart_btn = self.driver.find_element(By.CSS_SELECTOR, "button.add-to-cart")
-                self.scroll_to(add_to_cart_btn)
                 safe_click(self.driver, add_to_cart_btn)
-                time.sleep(0.8)
 
-                try:
-                    errors = self.driver.find_elements(By.CSS_SELECTOR, ".alert-danger")
-                    for error in errors:
-                        if error.is_displayed() and error.text:
-                            print(f"  Error: {error.text[:50]}, skipping")
-                            self.driver.get(category_url)
-                            time.sleep(0.3)
-                            return False
-                except:
-                    pass
+                # Brief wait for cart to register the add
+                time.sleep(0.3)
+
+                errors = self.driver.find_elements(By.CSS_SELECTOR, ".alert-danger")
+                for error in errors:
+                    if error.is_displayed() and error.text:
+                        print(f"  Error: {error.text[:50]}, skipping")
+                        self.driver.get(category_url)
+                        return False
             except:
                 print("Could not find add to cart button")
                 self.driver.get(category_url)
                 return False
 
-            try:
-                modal = self.find_element(self.CART_MODAL, timeout=1)
-                if modal:
-                    self.close_cart_modal()
-                    time.sleep(0.2)
-            except:
-                time.sleep(0.3)
-
+            # Navigate back immediately - no need to close modal
             self.driver.get(category_url)
-
-            try:
-                WebDriverWait(self.driver, 2).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, "#js-product-list, .products"))
-                )
-                try:
-                    self.driver.execute_script("window.stop();")
-                except:
-                    pass
-                time.sleep(0.2)
-            except:
-                time.sleep(0.4)
+            self.driver.execute_script("window.stop();")
 
             return True
 
         except Exception as e:
             print(f"Error adding product to cart: {e}")
             try:
-                if 'category_url' in locals():
-                    self.driver.get(category_url)
-                    time.sleep(0.5)
+                self.driver.get(category_url)
             except:
                 pass
             return False
@@ -171,47 +153,26 @@ class CategoryPage(BasePage):
 
         while len(added_products) < count and attempts < max_attempts:
             attempts += 1
-            print(f"\n  Attempt {attempts}/{max_attempts} - Currently added: {len(added_products)}/{count}")
+            print(f"\n  Attempt {attempts}/{max_attempts} - Added: {len(added_products)}/{count}")
 
             products = self.get_all_products()
-
             if not products:
-                print("No products found on page")
                 break
 
-            available_products = list(products)
-            random.shuffle(available_products)
+            random.shuffle(products)
 
-            product_found = False
-            for product in available_products:
-                try:
-                    product_name = self.get_product_name(product)
-
-                    if product_name in added_product_names:
-                        print(f"  Skipping '{product_name}' (already added)")
-                        continue
-
-                    quantity = random.randint(1, 3)
-                    print(f"  Attempting to add '{product_name}' with quantity {quantity}")
-
-                    if self.add_product_to_cart(product, quantity=quantity, scroll=True):
-                        added_products.append({'name': product_name, 'quantity': quantity})
-                        added_product_names.add(product_name)
-                        print(f"  Successfully added product '{product_name}' (quantity: {quantity})")
-                        print(f"  Total products added so far: {len(added_products)}")
-                        product_found = True
-                        time.sleep(0.3)
-                    else:
-                        print(f"  Failed to add product '{product_name}', will retry with fresh products")
-                    break
-
-                except Exception as e:
-                    print(f"  Error processing product: {e}")
+            for product in products:
+                product_name = self.get_product_name(product)
+                if product_name in added_product_names:
                     continue
 
-            if not product_found:
-                print("  Could not find a new product to add in this iteration")
-                time.sleep(0.5)
+                quantity = random.randint(1, 3)
+                print(f"  Adding '{product_name}' qty {quantity}")
+
+                if self.add_product_to_cart(product, quantity=quantity, scroll=True):
+                    added_products.append({'name': product_name, 'quantity': quantity})
+                    added_product_names.add(product_name)
+                break
 
         print(f"\n  Finished: Added {len(added_products)} products")
         return added_products

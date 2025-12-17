@@ -49,7 +49,7 @@ if [ "$1" == "--html" ]; then
 elif [ "$1" == "--timing" ]; then
     pytest test_shop_workflow.py::test_full_workflow_timing -v
 else
-    pytest -v
+    pytest -v -s
 fi
 
 TEST_EXIT_CODE=$?

@@ -353,46 +353,15 @@ class CheckoutPage(BasePage):
             except:
                 continue
 
-        # Click submit/continue button within the customer-form specifically
-        # IMPORTANT: Target the button inside #customer-form to avoid clicking the search form button
-        submit_selectors = [
-            (By.CSS_SELECTOR, "#customer-form button.form-control-submit"),
-            (By.CSS_SELECTOR, "#customer-form button[type='submit']"),
-            (By.CSS_SELECTOR, "#customer-form .btn-primary"),
-            (By.CSS_SELECTOR, "form#customer-form button[type='submit']"),
-            (By.CSS_SELECTOR, "button.form-control-submit.float-xs-right"),
-            (By.XPATH, "//form[@id='customer-form']//button[@type='submit']"),
-        ]
-        for selector in submit_selectors:
-            try:
-                submit_btn = self.find_element(selector, timeout=2)
-                self.scroll_to(submit_btn)
-                time.sleep(0.3)
-                self.click(submit_btn)
-                print(f"Clicked submit button with selector: {selector}")
-
-                # Wait for registration to complete - just enough for the form to submit
-                time.sleep(2)
-
-                # Check current URL to see where we landed
-                current_url = self.driver.current_url
-                print(f"After registration, current URL: {current_url}")
-
-                # If we're on search page, wrong button was clicked - this shouldn't happen now
-                if 'search' in current_url:
-                    print("Ended up on search page - wrong button was clicked, retrying...")
-                    self.driver.back()
-                    time.sleep(1)
-                    continue
-
-                # Registration successful - return immediately, don't waste time
-                print("Registration form submitted successfully")
-                return
-            except Exception as e:
-                print(f"Could not click submit with {selector}: {e}")
-                continue
-
-        print("Could not find submit button")
+        # Click submit button
+        try:
+            submit_btn = self.find_element((By.CSS_SELECTOR, "#customer-form button.form-control-submit"), timeout=2)
+            self.scroll_to(submit_btn)
+            self.click(submit_btn)
+            time.sleep(1)
+            print("Registration form submitted successfully")
+        except Exception as e:
+            print(f"Could not click submit button: {e}")
 
     def fill_address_form(self, address_data):
         """Fill address form."""
@@ -468,9 +437,8 @@ class CheckoutPage(BasePage):
         # Confirm addresses
         confirm_btn = self.find_element(self.CONFIRM_ADDRESSES_BUTTON)
         self.scroll_to(confirm_btn)
-        time.sleep(0.5)
         self.click(confirm_btn)
-        time.sleep(2)
+        time.sleep(0.5)
 
     def select_carrier(self, carrier_index=0):
         """Select a carrier/shipping method."""
@@ -479,19 +447,16 @@ class CheckoutPage(BasePage):
         if carrier_radios and len(carrier_radios) > carrier_index:
             carrier_radio = carrier_radios[carrier_index]
             self.scroll_to(carrier_radio)
-            time.sleep(0.3)
             self.click(carrier_radio)
-            time.sleep(1)
+            time.sleep(0.3)
 
         # Confirm delivery option
         try:
-            confirm_btn = self.find_element(self.CONFIRM_DELIVERY_BUTTON, timeout=5)
+            confirm_btn = self.find_element(self.CONFIRM_DELIVERY_BUTTON, timeout=3)
             self.scroll_to(confirm_btn)
-            time.sleep(0.5)
             self.click(confirm_btn)
-            time.sleep(2)
+            time.sleep(0.5)
         except:
-            # Some themes might not have this button
             pass
 
     def get_available_carriers(self):
@@ -524,9 +489,8 @@ class CheckoutPage(BasePage):
         if payment_radios and len(payment_radios) > payment_index:
             payment_radio = payment_radios[payment_index]
             self.scroll_to(payment_radio)
-            time.sleep(0.3)
             self.click(payment_radio)
-            time.sleep(1)
+            time.sleep(0.3)
 
     def get_available_payment_methods(self):
         """Get list of available payment methods."""
@@ -545,19 +509,26 @@ class CheckoutPage(BasePage):
             terms_checkbox = self.find_element(self.TERMS_CHECKBOX)
             if not terms_checkbox.is_selected():
                 self.scroll_to(terms_checkbox)
-                time.sleep(0.3)
                 self.click(terms_checkbox)
-                time.sleep(0.5)
         except Exception as e:
             print(f"Error accepting terms: {e}")
 
     def place_order(self):
         """Click place order button."""
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+
         place_order_btn = wait_for_clickable(self.driver, self.PLACE_ORDER_BUTTON)
         self.scroll_to(place_order_btn)
-        time.sleep(0.5)
         self.click(place_order_btn)
-        time.sleep(3)
+
+        # Wait for confirmation page
+        try:
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#content-hook_order_confirmation, .order-confirmation, [id*='confirmation']"))
+            )
+        except:
+            time.sleep(2)  # Fallback
 
     def complete_checkout(self, customer_data, address_data, carrier_index=0, payment_method="cash"):
         """Complete entire checkout process."""

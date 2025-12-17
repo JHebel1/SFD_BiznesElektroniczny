@@ -61,16 +61,14 @@ class TestShopWorkflow:
 
             print("\n--- Search 1 ---")
             home_page.open()
-            home_page.search_product("a")  
-            time.sleep(2)
+            home_page.search_product("a")
             added = category_page.add_products_with_quantities(count=5)
             total_products_added += len(added)
             print(f"Added {len(added)} product entries from search 1")
 
             print("\n--- Search 2 ---")
             home_page.open()
-            home_page.search_product("e")  
-            time.sleep(1)
+            home_page.search_product("e")
             added = category_page.add_products_with_quantities(count=5)
             total_products_added += len(added)
             print(f"Added {len(added)} product entries from search 2")
@@ -79,23 +77,18 @@ class TestShopWorkflow:
             print("\n--- Adding products from Category 1 ---")
             if category_urls:
                 driver.get(category_urls[0])
-                time.sleep(1)
             else:
                 home_page.click_category(0)
-                time.sleep(1)
 
             added = category_page.add_products_with_quantities(count=products_per_category)
             total_products_added += len(added)
             print(f"Added {len(added)} product entries from category 1")
 
-            # Go back to home and navigate to second category
             if category_urls:
                 driver.get(category_urls[1])
-                time.sleep(1)
             else:
                 home_page.open()
                 home_page.click_category(1)
-                time.sleep(1)
 
             print("\n--- Adding products from Category 2 ---")
             added = category_page.add_products_with_quantities(count=products_per_category)
@@ -123,7 +116,6 @@ class TestShopWorkflow:
 
         print(f"Searching for: {search_term}")
         home_page.search_product(search_term)
-        time.sleep(1)
 
         category_page = CategoryPage(driver)
         products = category_page.get_all_products()
@@ -159,7 +151,6 @@ class TestShopWorkflow:
             categories = home_page.get_categories()
             if categories:
                 home_page.click_category(0)
-                time.sleep(1)
 
                 category_page = CategoryPage(driver)
                 products_needed = 4 - initial_count
@@ -215,12 +206,10 @@ class TestShopWorkflow:
         checkout_page.open_registration_page()
         checkout_page.fill_customer_form(self.customer_data)
 
-        # After registration, immediately go to checkout - don't waste time checking login status
+        # After registration, immediately go to checkout
         print("\n--- Proceeding to checkout ---")
-        cart_page.open()  # Go to cart first
-        time.sleep(0.5)
+        cart_page.open()
         cart_page.proceed_to_checkout()
-        time.sleep(1)
 
         print("\n--- Filling address information ---")
         checkout_page.fill_address_form(self.address_data)
@@ -240,7 +229,6 @@ class TestShopWorkflow:
         checkout_page.place_order()
 
         # Verify order confirmation
-        time.sleep(2)
         confirmation_page = OrderConfirmationPage(driver)
 
         assert confirmation_page.is_order_confirmed(), "Order confirmation not displayed"
@@ -259,7 +247,6 @@ class TestShopWorkflow:
         # Navigate to order history
         order_history_page = OrderHistoryPage(driver, Config.SHOP_URL)
         order_history_page.open()
-        time.sleep(1)
 
         # Get latest order status
         status = order_history_page.get_latest_order_status()
@@ -279,7 +266,6 @@ class TestShopWorkflow:
 
         order_history_page = OrderHistoryPage(driver, Config.SHOP_URL)
         order_history_page.open()
-        time.sleep(1)
 
         print("Attempting to download invoice...")
         result = order_history_page.download_latest_invoice()
