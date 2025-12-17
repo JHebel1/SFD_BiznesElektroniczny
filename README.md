@@ -1,35 +1,68 @@
-# SFD_BiznesElektroniczny
-This repository aims to copy content of: https://sklep.sfd.pl/ using Prestashop and other tools.
-## To run scraper, use:
-`cargo run`
+# Creators
 
-# Uruchomienie projektu
-Aby uruchomic projekt musisz znajdowac sie w folderze shop-src
-## Uruchomienie kontenera
+Adam Klamrowski (198199), Jakub Hebel (197719), Konrad Cichosz (197648), Marcel Kańduła (197677)
+
+# Description
+
+This project aims to copy content of: https://sklep.sfd.pl/ using Prestashop and other tools.
+
+# Prestashop version
+
+1.7.8.11
+
+# Running the project
+
+To run the project, you need to be in the `shop-src` folder.
+
+## Starting the container
+
 ```bash
 make up
 ```
 
-## Wczytanie bazy danych
+## Restoring the database
+
 ```bash
 make restore
 ```
 
-## Wylaczenie kontenera
+## Stopping the container
+
 ```bash
 make down
 ```
 
-## Zrobienie zrzutu bazy
+## Creating a database dump
+
 ```bash
 make dump
 ```
 
+## Checking if it works
 
-## Sprawdzenie działania
+- Prestashop: [http://localhost:8443](http://localhost:8443)
 
-* Prestashop: [http://localhost:8443](http://localhost:8443)
-* Admin panel [http://localhost:8443/admin123xyz](http://localhost:8443/admin123zyz)
--- email: jakubhebell@wp.pl
--- haslo: Biznesele 
+## To run scraper, use:
 
+`cargo run --package rust-scrapper --bin rust-scrapper {command}`
+
+## `categories`
+
+Scrapes all product categories from the store and generates:
+
+- `scrapper-results/categories.csv`
+
+## `brands`
+
+Scrapes all brands from the store and generates:
+
+- `scrapper-results/brands.csv`
+
+## `products`
+
+Scrapes product data for each category listed in `categories.csv` and generates:
+
+- `scrapper-results/products.csv`
+
+Includes name, price, brand, category mapping, description, images, composition, and more.  
+⚠️ Requires `categories.csv` to exist.

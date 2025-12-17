@@ -1,6 +1,6 @@
 services:
   prestashop:
-    image: prestashop/prestashop:1.7.8  
+    image: prestashop/prestashop:1.7.8
     container_name: prestashop
     depends_on:
       - db
@@ -8,20 +8,21 @@ services:
       - "8080:80"
       - "8443:443"
     environment:
-        - PS_DEV_MODE=1
-        - DB_SERVER=db
-        - DB_NAME=prestashop
-        - DB_USER=prestashop
-        - DB_PASSWD=prestashop
-        - PS_LANGUAGE=en
-        - PS_COUNTRY=US
-        - PS_FOLDER_ADMIN=admin
-        - PS_FOLDER_INSTALL=install
-        - PS_SSL_ENABLED=1
+      - PS_DEV_MODE=1
+      - DB_SERVER=db
+      - DB_NAME=prestashop
+      - DB_USER=prestashop
+      - DB_PASSWD=prestashop
+      - PS_LANGUAGE=en
+      - PS_COUNTRY=US
+      - PS_FOLDER_ADMIN=admin
+      - PS_FOLDER_INSTALL=install
+      - PS_SSL_ENABLED=1
     volumes:
       - ./prestashop:/var/www/html:Z
       - ./ssl:/etc/apache2/ssl:Z
       - ./config/php/ssl.conf:/etc/apache2/sites-available/ssl.conf:Z
+      - ./docker-entrypoint-init.sh:/docker-entrypoint-init.sh:Z
     restart: unless-stopped
     entrypoint: ["/bin/bash", "/docker-entrypoint-init.sh"]
 
@@ -37,6 +38,6 @@ services:
     command: --max_allowed_packet=64M
     volumes:
       - dbdata:/var/lib/mysql
-  
+
 volumes:
   dbdata:
