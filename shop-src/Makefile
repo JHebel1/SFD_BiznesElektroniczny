@@ -5,10 +5,11 @@ DB_USER=root
 DB_PASS=root
 
 
-up:	perm
+up:	
+
 	@echo "Starting docker environment..."
 	docker compose up -d
-	@sleep 3
+	sleep 3s
 	make perm
 
 down:
@@ -21,8 +22,7 @@ perm:
 	sudo chown -R 33:33 ./prestashop
 	sudo find ./prestashop -type d -exec chmod 755 {} \;
 	sudo find ./prestashop -type f -exec chmod 644 {} \;
-
-
+	
 dump:
 	@echo "Dumping database to dump.sql..."
 	docker exec $(DB_CONTAINER) mysqldump \
