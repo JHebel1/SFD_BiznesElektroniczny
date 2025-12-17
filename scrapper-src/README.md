@@ -1,13 +1,15 @@
 # How to Run the Scraper
 
-To run the scraper, use:
+## To run scraper, use:
 
+`cargo run --package rust-scrapper --bin rust-scrapper {command}`
 
-`cargo run -- {command}`
-or after building:
-`./rust-scrapper {command}`
+### or after building
+
+`target/debug/rust-scraper.exe {command}`
 
 ## `categories`
+
 Scrapes all product categories from the store and generates:
 
 - `scrapper-results/categories.csv`
@@ -16,6 +18,7 @@ Includes category IDs, URLs, names, depth levels, etc.
 This command should be run **first**, before scraping products.
 
 ### Format:
+
 - id -> category id scraped from page
 - name -> category name
 - url -> category url (index view for products in category)
@@ -25,6 +28,7 @@ This command should be run **first**, before scraping products.
 ---
 
 ## `brands`
+
 Scrapes all brands from the store and generates:
 
 - `scrapper-results/brands.csv`
@@ -32,6 +36,7 @@ Scrapes all brands from the store and generates:
 Useful if products reference brand ID.
 
 ### Format:
+
 - id -> brand id
 - name -> brand name
 - url -> brand url (index view for products in brand)
@@ -40,6 +45,7 @@ Useful if products reference brand ID.
 ---
 
 ## `products`
+
 Scrapes product data for each category listed in `categories.csv` and generates:
 
 - `scrapper-results/products.csv`
@@ -48,6 +54,7 @@ Includes name, price, brand, category mapping, description, images, composition,
 ⚠️ Requires `categories.csv` to exist.
 
 ### Format:
+
 - id -> product id
 - name -> product name
 - url -> product url (view page)
@@ -60,6 +67,6 @@ Includes name, price, brand, category mapping, description, images, composition,
 - description -> description
 - recommended_serving -> recommended serving
 - product composition -> product composition(skład)
-- reviews -> always empty 
+- reviews -> always empty
 
 ---
