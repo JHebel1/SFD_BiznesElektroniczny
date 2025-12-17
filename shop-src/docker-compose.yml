@@ -22,7 +22,6 @@ services:
       - ./prestashop:/var/www/html:Z
       - ./ssl:/etc/apache2/ssl:Z
       - ./config/php/ssl.conf:/etc/apache2/sites-available/ssl.conf:Z
-      - ./docker-entrypoint-init.sh:/docker-entrypoint-init.sh:Z
     restart: unless-stopped
     entrypoint: ["/bin/bash", "/docker-entrypoint-init.sh"]
 
