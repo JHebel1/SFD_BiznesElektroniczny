@@ -44,22 +44,16 @@ echo "Running tests..."
 echo "=========================================="
 echo ""
 
-# Check for command line arguments
 if [ "$1" == "--html" ]; then
-    # Run with HTML report
     pytest --html=reports/report.html --self-contained-html
 elif [ "$1" == "--timing" ]; then
-    # Run only the timing test
     pytest test_shop_workflow.py::test_full_workflow_timing -v
 else
-    # Run all tests
     pytest -v
 fi
 
-# Store exit code
 TEST_EXIT_CODE=$?
 
-# Deactivate virtual environment
 deactivate
 
 echo ""

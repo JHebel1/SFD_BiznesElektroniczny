@@ -61,7 +61,7 @@ class TestShopWorkflow:
 
             print("\n--- Search 1 ---")
             home_page.open()
-            home_page.search_product("a")  # Search for 'a' - will return many results
+            home_page.search_product("a")  
             time.sleep(2)
             added = category_page.add_products_with_quantities(count=5)
             total_products_added += len(added)
@@ -69,7 +69,7 @@ class TestShopWorkflow:
 
             print("\n--- Search 2 ---")
             home_page.open()
-            home_page.search_product("e")  # Search for 'e' - different results
+            home_page.search_product("e")  
             time.sleep(1)
             added = category_page.add_products_with_quantities(count=5)
             total_products_added += len(added)
@@ -150,14 +150,12 @@ class TestShopWorkflow:
         initial_count = cart_page.get_cart_items_count()
         print(f"Initial cart items: {initial_count}")
 
-        # If cart doesn't have enough items, add some
         if initial_count < 4:
             print(f"Cart has only {initial_count} items, need at least 4. Adding products...")
 
             home_page = HomePage(driver, Config.SHOP_URL)
             home_page.open()
 
-            # Get a category and add products
             categories = home_page.get_categories()
             if categories:
                 home_page.click_category(0)

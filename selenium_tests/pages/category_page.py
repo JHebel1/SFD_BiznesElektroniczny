@@ -162,7 +162,6 @@ class CategoryPage(BasePage):
             return False
 
     def add_products_with_quantities(self, count=10):
-        """Add specified number of unique products with varying quantities."""
         added_products = []
         added_product_names = set()
         attempts = 0
