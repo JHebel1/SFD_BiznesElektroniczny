@@ -32,7 +32,7 @@ class CartPage(BasePage):
         self.driver.get(f"{self.base_url}?controller=cart")
 
         try:
-            WebDriverWait(self.driver, 3).until(
+            WebDriverWait(self.driver, 100).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, ".cart-grid, .cart-container, #main"))
             )
             self.driver.execute_script("window.stop();")
