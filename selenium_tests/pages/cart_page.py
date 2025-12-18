@@ -68,11 +68,17 @@ class CartPage(BasePage):
 
     def remove_product(self, item_element):
         """Remove a product from cart."""
+        from selenium.webdriver.support.ui import WebDriverWait
         try:
+            items_before = len(self.find_elements(self.CART_ITEMS, timeout=3))
+
             remove_btn = item_element.find_element(*self.REMOVE_BUTTON)
             self.scroll_to(remove_btn)
             safe_click(self.driver, remove_btn)
-            time.sleep(0.5)
+
+            WebDriverWait(self.driver, 5).until(
+                lambda d: len(d.find_elements(*self.CART_ITEMS)) < items_before
+            )
             return True
         except Exception as e:
             print(f"Error removing product: {e}")
