@@ -25,7 +25,9 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
+.payment-detail {
+  display: none !important;
+}
 .icon-rt-bag-outline:before {
   content: "\e900";
 }
@@ -18567,11 +18569,13 @@ button.add-to-cart.loading:before {
   background: #f3f6f6;
   text-align: center;
   border-radius: 3px;
+  display: none;
 }
 .payment-detail p {
   font-weight: 600;
   margin: 0.9375rem 0 0 0;
   color: #253237;
+  display: none;
 }
 
 .blockreassurance_product {
@@ -24673,4 +24677,7 @@ body:not(.page-index) .sticky-inner.absolute-header-full {
 .h1.namne_details,
 .product_name_h1 {
   font-weight: var(--font-weight);
+}
+body .payment-detail {
+  display: none !important;
 }
