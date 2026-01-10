@@ -204,14 +204,15 @@ def create_product(row, ps_cat_id, ps_brand_id):
     price = normalize_price(row["price"])
     weight = normalize_weight(row["weight"])
     desc = row.get("description")
-
+    price_netto = round(price/1.23 ,2)
     prestashop = etree.Element("prestashop", nsmap={"xlink": "http://www.w3.org/1999/xlink"})
     p = etree.SubElement(prestashop, "product")
 
     simple = {
         "id_category_default": ps_cat_id,
         "id_manufacturer": ps_brand_id,
-        "price": price,
+        "price": price_netto,
+        "id_tax_rules_group": 1,
         "weight": weight,
         "active": 1,
         "id_shop_default": 1,
@@ -258,7 +259,7 @@ def create_product(row, ps_cat_id, ps_brand_id):
     )
 
 
-    product_id = get_product_id_by_name(name, weight, price)
+    product_id = get_product_id_by_name(name, weight, price_netto)
     print("🟢 Utworzono produkt ID:", product_id)
 
     # zdjęcia
