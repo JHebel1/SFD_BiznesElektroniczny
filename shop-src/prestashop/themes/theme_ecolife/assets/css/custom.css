@@ -25,7 +25,9 @@
 .animated.bounceOut {
   -webkit-animation-duration: .75s;
   animation-duration: .75s; }
-
+.payment-detail {
+  display: none;
+}
 @-webkit-keyframes bounce {
   from, 20%, 53%, 80%, to {
     -webkit-animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
