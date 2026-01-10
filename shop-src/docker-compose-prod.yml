@@ -7,7 +7,6 @@ services:
         mode: host
     environment:
       - PS_DEV_MODE=1
-      - _PS_MODE_DEV_=true
       - DB_SERVER=admin-mysql_db
       - DB_NAME=BE_197648
       - DB_USER=root
