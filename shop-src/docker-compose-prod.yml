@@ -1,0 +1,25 @@
+services:
+  prestashop:
+    image: jhebel1/be_197648_prestashop
+    ports:
+      - target: 443
+        published: 19764
+        mode: host
+    environment:
+      - PS_DEV_MODE=1
+      - DB_SERVER=admin-mysql_db
+      - DB_NAME=BE_197648
+      - DB_USER=root
+      - DB_PASSWD=student
+      - PS_SSL_ENABLED=1
+    command: /bin/bash -c "a2enmod ssl && a2ensite ssl && apache2-foreground"
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == student-swarm01
+    networks:
+      - admin-mysql_default
+
+networks:
+  admin-mysql_default:
+    external: true
