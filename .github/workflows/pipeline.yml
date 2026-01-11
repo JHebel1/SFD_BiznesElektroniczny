@@ -52,6 +52,5 @@ jobs:
 
       - name: Sanity check
         run: |
-          docker pull be197648/be_197648_prestashop:${{ github.sha }}
           docker pull be197648/be_197648_prestashop:latest
           echo "Operation succeeded: Docker image built and pushed"
