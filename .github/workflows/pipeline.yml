@@ -34,7 +34,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: jhebel/be_197648_prestashop
+          images: be197648/be_197648_prestashop
           tags: |
             type=raw,value=latest
             type=sha
@@ -52,6 +52,6 @@ jobs:
 
       - name: Sanity check
         run: |
-          docker pull jhebel/be_197648_prestashop:${{ github.sha }}
-          docker pull jhebel/be_197648_prestashop:latest
+          docker pull be197648/be_197648_prestashop:${{ github.sha }}
+          docker pull be197648/be_197648_prestashop:latest
           echo "Operation succeeded: Docker image built and pushed"
