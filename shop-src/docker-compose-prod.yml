@@ -1,6 +1,6 @@
 services:
   prestashop:
-    image: jhebel1/be_197648_prestashop
+    image: be197648/be_197648_prestashop
     ports:
       - target: 443
         published: 19764
@@ -14,6 +14,13 @@ services:
       - PS_SSL_ENABLED=1
     command: /bin/bash -c "a2enmod ssl && a2ensite ssl && apache2-foreground"
     deploy:
+      resources:
+        limits:
+          cpus: "2.5"
+          memory: 2.0G
+        reservations:
+          cpus: "1.0"
+          memory: 1.0G
       placement:
         constraints:
           - node.hostname == student-swarm01
