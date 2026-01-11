@@ -9,7 +9,7 @@ load_dotenv()
 class Config:
     """Test configuration settings."""
 
-    SHOP_URL = os.getenv('SHOP_URL', 'http://localhost:8080')
+    SHOP_URL = os.getenv('SHOP_URL', 'https://localhost:19764')
 
     BROWSER = os.getenv('BROWSER', 'chrome').lower()
     HEADLESS = os.getenv('HEADLESS', 'false').lower() == 'true'
